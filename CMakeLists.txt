@@ -1,16 +1,32 @@
 cmake_minimum_required(VERSION 3.2)
 
 project(NuGaT)
-set(PROJECT_VERSION "0.6.5")
+set(PROJECT_VERSION "0.6.0")
 
 
 set(NUGAT_SOURCE_DIR .)
 
-set(NUSMV_SOURCE_DIR "/home/lorenzo/Documents/software/ClionProjects/NuSMV-2.6.0/NuSMV"
-        CACHE PATH "Source directory of NuSMV")
+#set(NUSMV_SOURCE_DIR "/home/ssardina/src/NuSMV/NuSMV-2.6.0/NuSMV"
+#    CACHE PATH "Source directory of NuSMV")
+#set(NUSMV_BUILD_DIR "/opt/NuSMV-2.6.0/"
+#    CACHE PATH "Build directory of NuSMV")
 
-set(NUSMV_BUILD_DIR "/opt/NuSMV-2.6.0/"
-        CACHE PATH "Build directory of NuSMV")
+# User has to set up environment variables NUSMV_SOURCE_DIR and NUSMV_BUILD_DIR
+if(NOT EXISTS "$ENV{NUSMV_SOURCE_DIR}")
+    message(FATAL_ERROR "Could not find NUSMV_SOURCE_DIR environment variable")
+else()
+    set(NUSMV_SOURCE_DIR $ENV{NUSMV_SOURCE_DIR}
+            CACHE PATH "Source directory of NuSMV")
+endif(NOT EXISTS "$ENV{NUSMV_SOURCE_DIR}")
+
+if(NOT EXISTS "$ENV{NUSMV_BUILD_DIR}")
+    message(FATAL_ERROR "Could not find NUSMV_BUILD_DIR environment variable")
+else()
+    set(NUSMV_BUILD_DIR $ENV{NUSMV_BUILD_DIR}
+            CACHE PATH "Build directory of NuSMV")
+endif(NOT EXISTS "$ENV{NUSMV_BUILD_DIR}")
+
+
 
 
 include_directories("${NUSMV_BUILD_DIR}/include")
@@ -22,18 +38,19 @@ include_directories("${NUSMV_BUILD_DIR}/include/code/nusmv/shell")
 ## so we need to include those source dirs. shouldn't they be copied to the install dir too?
 #
 # for nusmv/core/parser/grammar.y
-include_directories("${NUSMV_SOURCE_DIR}/build/code/")
+include_directories(${NUSMV_SOURCE_DIR}/build/code/)
 # for nusmv/core/compile/type_checking/checkers/checkersInt.h
-include_directories("${NUSMV_SOURCE_DIR}/code")
+include_directories(${NUSMV_SOURCE_DIR}/code)
 # for compile/type_checking/checkers/CheckerBase_private.h
-include_directories("${NUSMV_SOURCE_DIR}/code/nusmv/core")
+include_directories(${NUSMV_SOURCE_DIR}/code/nusmv/core)
 
 
 #include_directories("${NUSMV_SOURCE_DIR}/build/build-MiniSat/minisat-37dc6c67e2af26379d88ce349eb9c4c6160e8543")
 
-include_directories("${NUGAT_SOURCE_DIR}")
-include_directories("${NUGAT_SOURCE_DIR}/src")
-include_directories("${NUGAT_SOURCE_DIR}/src/parser")
+# Include some dirs from NUGAT itself
+include_directories(${NUGAT_SOURCE_DIR})
+include_directories(${NUGAT_SOURCE_DIR}/src)
+include_directories(${NUGAT_SOURCE_DIR}/src/parser)
 
 
 set(SOURCE_FILES
@@ -99,7 +116,9 @@ set(SOURCE_FILES
         src/smgame/smgameMain.c
         src/smgame/smgameMisc.c
         src/smgame/smgameVers.c
+
         )
+
 
 
 file(GLOB_RECURSE NUSMV_SRC
@@ -133,15 +152,6 @@ list(REMOVE_ITEM NUSMV_SRC
 
 add_executable(NuGaT ${SOURCE_FILES} ${NUSMV_SRC} )
 
-# ALL THIS DOES NOT WORK, WE NEED TO LINK AGAINST MANY FILES .a
-#FIND_LIBRARY(NUSMV_LIBRARY NAMES nusmv /opt/NuSMV-2.6.0/lib/libnusmvshell.a)
-#find_library(NUSMV_LIBRARY NAMES nusmvshell.a nusmvaddonscore.a nusmvcore nusmvgrammar  nusmvrbc MiniSat
-#        HITNS /opt/NuSMV-2.6.0/lib/ NO_DEFAULT_PATH)
-##find_library(NUSMV_LIBRARY NAMES nusmvshell.a nusmvaddonscore.a
-#        PATHS ${NUSMV_BUILD_DIR}/lib/ NO_DEFAULT_PATH)
-#find_library(NUSMV_LIBRARY NAMES nusmvaddonscore.a
-#        PATHS /opt/NuSMV-2.6.0/lib/ NO_DEFAULT_PATH)
-
 
 
 # Link to NUSMV libraries
@@ -160,6 +170,7 @@ endforeach()
 
 # Link to system libraries (these should be found automatically in standard dirs)
 target_link_libraries(NuGaT
+
         libstdc++.a
         libxml2.a
         libreadline.a
