@@ -234,12 +234,12 @@ void Game_AfterCheckingSpec(PropGame_ptr prop,
 
       /* extract variables from game layers */
       layers = array_alloc(char *, 4);
-      array_insert_last(char *, layers, MODEL_LAYER_1);
-      array_insert_last(char *, layers, MODEL_LAYER_2);
+      array_insert_last(char *, layers, MODEL_LAYER(1));
+      array_insert_last(char *, layers, MODEL_LAYER(2));
       /* There shouldnt be any variables in the determinization layers. */
       {
-        SymbLayer_ptr dl1 = SymbTable_get_layer(st, DETERM_LAYER_1);
-        SymbLayer_ptr dl2 = SymbTable_get_layer(st, DETERM_LAYER_2);
+        SymbLayer_ptr dl1 = SymbTable_get_layer(st, DETERM_LAYER(1));
+        SymbLayer_ptr dl2 = SymbTable_get_layer(st, DETERM_LAYER(2));
         /**OLD_CODE_START
         nusmv_assert((dl1 == SYMB_LAYER(NULL)) ||
                      (NodeList_get_length(SymbLayer_get_all_symbols(dl1)) ==

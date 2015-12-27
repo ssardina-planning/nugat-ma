@@ -72,8 +72,7 @@ static char rcsid[] UTIL_UNUSED = "$Id: GameBeFsm.c,v 1.1.2.6 2010-02-10 14:57:1
 
 ******************************************************************************/
 typedef struct GameBeFsm_TAG {
-  BeFsm_ptr player_1;
-  BeFsm_ptr player_2;
+  BeFsm_ptr players[2];
 } GameBeFsm;
 
 /*---------------------------------------------------------------------------*/
@@ -94,8 +93,7 @@ typedef struct GameBeFsm_TAG {
 /* Static function prototypes                                                */
 /*---------------------------------------------------------------------------*/
 static void game_be_fsm_init ARGS((GameBeFsm_ptr self,
-                                   BeFsm_ptr player_1,
-                                   BeFsm_ptr player_2));
+                                   BeFsm_ptr *players));
 
 static void game_be_fsm_deinit ARGS((GameBeFsm_ptr self));
 
@@ -121,17 +119,18 @@ static void game_be_fsm_deinit ARGS((GameBeFsm_ptr self));
   SeeAlso     [ GameBeFsm_destroy ]
 
 ******************************************************************************/
-GameBeFsm_ptr GameBeFsm_create(BeFsm_ptr player_1, BeFsm_ptr player_2)
+GameBeFsm_ptr GameBeFsm_create(BeFsm_ptr *players)
 {
   GameBeFsm_ptr self;
+  int i;
 
-  BE_FSM_CHECK_INSTANCE(player_1);
-  BE_FSM_CHECK_INSTANCE(player_2);
+  BE_FSM_CHECK_INSTANCE(players[0]);
+  BE_FSM_CHECK_INSTANCE(players[1]);
 
   self = ALLOC(GameBeFsm, 1);
   GAME_BE_FSM_CHECK_INSTANCE(self);
 
-  game_be_fsm_init(self, player_1, player_2);
+  game_be_fsm_init(self, players);
 
   return self;
 }
@@ -153,12 +152,16 @@ GameBeFsm_ptr GameBeFsm_create(BeFsm_ptr player_1, BeFsm_ptr player_2)
 GameBeFsm_ptr GameBeFsm_copy(GameBeFsm_ptr self)
 {
   GameBeFsm_ptr copy;
+    BeFsm_ptr players[2];
+    int i;
 
   GAME_BE_FSM_CHECK_INSTANCE(self);
 
+    for(i=0;i<2;i++)
+    players[i] = BeFsm_copy(self->players[i]);
+
   game_be_fsm_init(copy,
-                   BeFsm_copy(self->player_1),
-                   BeFsm_copy(self->player_2));
+                   players);
 
   return copy;
 }
@@ -184,21 +187,19 @@ GameBeFsm_ptr GameBeFsm_create_from_sexp_fsm(BeEnc_ptr be_enc,
                                              const GameSexpFsm_ptr bfsm)
 {
   GameBeFsm_ptr self;
-  BoolSexpFsm_ptr bsexpfsm1;
-  BoolSexpFsm_ptr bsexpfsm2;
-  BeFsm_ptr befsm1;
-  BeFsm_ptr befsm2;
+  BoolSexpFsm_ptr bsexpfsms[2];
+  BeFsm_ptr befsms[2];
+  int i;
 
   BE_ENC_CHECK_INSTANCE(be_enc);
   GAME_SEXP_FSM_CHECK_INSTANCE(bfsm);
 
-  bsexpfsm1 = BOOL_SEXP_FSM(GameSexpFsm_get_player_1(bfsm));
-  bsexpfsm2 = BOOL_SEXP_FSM(GameSexpFsm_get_player_2(bfsm));
+  for(i=0;i<2;i++) {
+    bsexpfsms[i] = BOOL_SEXP_FSM(GameSexpFsm_get_player(bfsm,i));
+    befsms[i] = BeFsm_create_from_sexp_fsm(be_enc, bsexpfsms[i]);
+  }
 
-  befsm1 = BeFsm_create_from_sexp_fsm(be_enc, bsexpfsm1);
-  befsm2 = BeFsm_create_from_sexp_fsm(be_enc, bsexpfsm2);
-
-  self = GameBeFsm_create(befsm1, befsm2);
+  self = GameBeFsm_create(befsms);
 
   return self;
 }
@@ -233,31 +234,13 @@ void GameBeFsm_destroy(GameBeFsm_ptr self)
   SeeAlso     [ ]
 
 ******************************************************************************/
-BeFsm_ptr GameBeFsm_get_player_1(const GameBeFsm_ptr self)
+BeFsm_ptr GameBeFsm_get_player(const GameBeFsm_ptr self, int index)
 {
   GAME_BE_FSM_CHECK_INSTANCE(self);
 
-  return self->player_1;
+  return self->players[index];
 }
 
-
-/**Function********************************************************************
-
-  Synopsis    [ Returns the BE FSM of the second player. ]
-
-  Description [ self keeps ownership of the returned FSM. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ ]
-
-******************************************************************************/
-BeFsm_ptr GameBeFsm_get_player_2(const GameBeFsm_ptr self)
-{
-  GAME_BE_FSM_CHECK_INSTANCE(self);
-
-  return self->player_2;
-}
 
 /*---------------------------------------------------------------------------*/
 /* Definition of static functions                                            */
@@ -275,11 +258,12 @@ BeFsm_ptr GameBeFsm_get_player_2(const GameBeFsm_ptr self)
 
 ******************************************************************************/
 static void game_be_fsm_init(GameBeFsm_ptr self,
-                             BeFsm_ptr player_1,
-                             BeFsm_ptr player_2)
+                             BeFsm_ptr *players)
 {
-  self->player_1 = player_1;
-  self->player_2 = player_2;
+    int i;
+
+    for(i=0;i<2;i++)
+  self->players[i] = players[i];
 }
 
 /**Function********************************************************************
@@ -295,6 +279,8 @@ static void game_be_fsm_init(GameBeFsm_ptr self,
 ******************************************************************************/
 static void game_be_fsm_deinit(GameBeFsm_ptr self)
 {
-  BeFsm_destroy(self->player_1);
-  BeFsm_destroy(self->player_2);
+    int i;
+
+    for(i=0;i<2;i++)
+  BeFsm_destroy(self->players[i]);
 }

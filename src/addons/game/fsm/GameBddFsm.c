@@ -77,20 +77,14 @@ typedef struct GameBddFsm_TAG
   BddEnc_ptr enc;
   DDMgr_ptr dd;
 
-  BddFsm_ptr player_1;
-  BddFsm_ptr player_2;
+  BddFsm_ptr players[2];
 
-  bdd_ptr stateVarCube_1;
-  bdd_ptr stateVarCube_2;
-  bdd_ptr nextStateVarCube_1;   /* created for efficiency only */
-  bdd_ptr nextStateVarCube_2;   /* created for efficiency only */
-  bdd_ptr stateFrozenVarCube_1;
-  bdd_ptr stateFrozenVarCube_2;
+  bdd_ptr stateVarCubes[2];
+  bdd_ptr nextStateVarCubes[2];   /* created for efficiency only */
+  bdd_ptr stateFrozenVarCubes[2];
 
-  BddStates withSuccessors_1;   /* states with successor for player 1 */
-  BddStates withSuccessors_2;   /* states with successor for player 2 */
-  BddStates woSuccessors_1;     /* states without successor for player 1 */
-  BddStates woSuccessors_2;     /* states without successor for player 2 */
+  BddStates withSuccessorss[2];   /* states with successor for player 1 */
+  BddStates woSuccessorss[2];     /* states without successor for player 1 */
 } GameBddFsm;
 
 /*---------------------------------------------------------------------------*/
@@ -116,12 +110,9 @@ long gameBddFsm_totalMoveTotalTime;
 /*---------------------------------------------------------------------------*/
 static void game_bdd_fsm_init ARGS((GameBddFsm_ptr self,
                                     BddEnc_ptr enc,
-                                    BddFsm_ptr player_1,
-                                    bdd_ptr stateVarCube_1,
-                                    bdd_ptr stateFrozenVarCube_1,
-                                    BddFsm_ptr player_2,
-                                    bdd_ptr stateVarCube_2,
-                                    bdd_ptr stateFrozenVarCube_2));
+                                    BddFsm_ptr *players,
+                                    bdd_ptr stateVarCubes[2],
+                                    bdd_ptr stateFrozenVarCubes[2]));
 
 static void game_bdd_fsm_copy ARGS((const GameBddFsm_ptr self,
                                     GameBddFsm_ptr copy));
@@ -151,28 +142,28 @@ static void game_bdd_fsm_deinit ARGS((GameBddFsm_ptr self));
 
 ******************************************************************************/
 GameBddFsm_ptr GameBddFsm_create(BddEnc_ptr enc,
-                                 BddFsm_ptr player_1,
-                                 bdd_ptr stateVarCube_1,
-                                 bdd_ptr stateFrozenVarCube_1,
-                                 BddFsm_ptr player_2,
-                                 bdd_ptr stateVarCube_2,
-                                 bdd_ptr stateFrozenVarCube_2)
+                                 BddFsm_ptr *players,
+                                 bdd_ptr stateVarCubes[2],
+                                 bdd_ptr stateFrozenVarCubes[2])
 {
   GameBddFsm_ptr self;
+    boolean expr = false;
+    int i;
 
   BDD_ENC_CHECK_INSTANCE(enc);
-  BDD_FSM_CHECK_INSTANCE(player_1);
-  BDD_FSM_CHECK_INSTANCE(player_2);
+  for(i=0;i<2;i++) BDD_FSM_CHECK_INSTANCE(players[i]);
 
   self = ALLOC(GameBddFsm, 1);
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
   game_bdd_fsm_init(self, enc,
-                    player_1, stateVarCube_1, stateFrozenVarCube_1,
-                    player_2, stateVarCube_2, stateFrozenVarCube_2);
+                    players, stateVarCubes, stateFrozenVarCubes);
 
-  nusmv_assert(bdd_is_true(self->dd, BddFsm_get_input_constraints(player_1)) &&
-               bdd_is_true(self->dd, BddFsm_get_input_constraints(player_2)));
+    for(i=0;i<2-1;i++)
+    expr = bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i])) &&
+           bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i+1]));
+
+  nusmv_assert(expr);
 
   return self;
 }
@@ -223,38 +214,20 @@ GameBddFsm_ptr GameBddFsm_copy(const GameBddFsm_ptr self)
 
 /**Function********************************************************************
 
-  Synopsis    [ Returns the BDD FSM of player_1. ]
+  Synopsis    [ Returns the BDD FSM of player_i. ]
 
   Description [ Self keeps the ownership of the returned object. ]
 
   SideEffects [ ]
 
-  SeeAlso     [ GameBddFsm_get_player_2 ]
+  SeeAlso     [ ]
 
 ******************************************************************************/
-BddFsm_ptr GameBddFsm_get_player_1(const GameBddFsm_ptr self)
+BddFsm_ptr GameBddFsm_get_player(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return self->player_1;
-}
-
-/**Function********************************************************************
-
-  Synopsis    [ Returns the BDD FSM of player_2 ]
-
-  Description [ Self keeps the ownership of the returned object. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_player_1 ]
-
-******************************************************************************/
-BddFsm_ptr GameBddFsm_get_player_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return self->player_2;
+  return self->players[index];
 }
 
 /**Function********************************************************************
@@ -271,32 +244,11 @@ BddFsm_ptr GameBddFsm_get_player_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_state_var_cube_2 ]
 
 ******************************************************************************/
-bdd_ptr GameBddFsm_get_state_var_cube_1(const GameBddFsm_ptr self)
+bdd_ptr GameBddFsm_get_state_var_cube(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return self->stateVarCube_1;
-}
-
-/**Function********************************************************************
-
-  Synopsis    [ Returns the cube of state variables of the second
-                player. ]
-
-  Description [ This cube is a big AND of all boolean variables of the
-                player excluding frozen variables. Self keeps the
-                ownership of the returned object. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_state_var_cube_1 ]
-
-******************************************************************************/
-bdd_ptr GameBddFsm_get_state_var_cube_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return self->stateVarCube_2;
+  return self->stateVarCubes[index];
 }
 
 /**Function********************************************************************
@@ -313,33 +265,13 @@ bdd_ptr GameBddFsm_get_state_var_cube_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_next_state_var_cube_2 ]
 
 ******************************************************************************/
-bdd_ptr GameBddFsm_get_next_state_var_cube_1(const GameBddFsm_ptr self)
+bdd_ptr GameBddFsm_get_next_state_var_cube(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return self->nextStateVarCube_1;
+  return self->nextStateVarCubes[index];
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns the cube of state variables of the second player
-                in the next state. ]
-
-  Description [ This cube is a big AND of all boolean variables of the
-                player excluding frozen variables. Self keeps the
-                ownership of the returned object. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_next_state_var_cube_1 ]
-
-******************************************************************************/
-bdd_ptr GameBddFsm_get_next_state_var_cube_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return self->nextStateVarCube_2;
-}
 
 /**Function********************************************************************
 
@@ -355,33 +287,13 @@ bdd_ptr GameBddFsm_get_next_state_var_cube_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_state_frozen_var_cube_2 ]
 
 ******************************************************************************/
-bdd_ptr GameBddFsm_get_state_frozen_var_cube_1(const GameBddFsm_ptr self)
+bdd_ptr GameBddFsm_get_state_frozen_var_cube(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return self->stateFrozenVarCube_1;
+  return self->stateFrozenVarCubes[index];
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns the cube of state and frozen variables of the
-                second player. ]
-
-  Description [ This cube is a big AND of all boolean state and frozen
-                variables of the player. Self keeps the ownership of
-                the returned object. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_state_frozen_var_cube_1 ]
-
-******************************************************************************/
-bdd_ptr GameBddFsm_get_state_frozen_var_cube_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return self->stateFrozenVarCube_2;
-}
 
 /**Function********************************************************************
 
@@ -394,30 +306,13 @@ bdd_ptr GameBddFsm_get_state_frozen_var_cube_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_init_2 ]
 
 ******************************************************************************/
-BddStates GameBddFsm_get_init_1(const GameBddFsm_ptr self)
+BddStates GameBddFsm_get_init(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return BddFsm_get_init(self->player_1);
+  return BddFsm_get_init(self->players[index]);
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns init (initial) condition of the second player. ]
-
-  Description [ Returned BDD is referenced. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_init_1 ]
-
-******************************************************************************/
-BddStates GameBddFsm_get_init_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return BddFsm_get_init(self->player_2);
-}
 
 /**Function********************************************************************
 
@@ -430,29 +325,11 @@ BddStates GameBddFsm_get_init_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_invars_2 ]
 
 ******************************************************************************/
-BddInvarStates GameBddFsm_get_invars_1(const GameBddFsm_ptr self)
+BddInvarStates GameBddFsm_get_invars(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return BddFsm_get_state_constraints(self->player_1);
-}
-
-/**Function********************************************************************
-
-  Synopsis    [ Returns the invars of the second player. ]
-
-  Description [ Returned BDD is referenced. Free it after use. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_invars_1 ]
-
-******************************************************************************/
-BddInvarStates GameBddFsm_get_invars_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return BddFsm_get_state_constraints(self->player_2);
+  return BddFsm_get_state_constraints(self->players[index]);
 }
 
 /**Function********************************************************************
@@ -467,31 +344,13 @@ BddInvarStates GameBddFsm_get_invars_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_trans_2 ]
 
 ******************************************************************************/
-BddTrans_ptr GameBddFsm_get_trans_1(const GameBddFsm_ptr self)
+BddTrans_ptr GameBddFsm_get_trans(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return BddFsm_get_trans(self->player_1);
+  return BddFsm_get_trans(self->players[index]);
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns the trans of the second player. ]
-
-  Description [ Returned Trans belongs to self, i.e. do not modify or
-                delete it. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_trans_1 ]
-
-******************************************************************************/
-BddTrans_ptr GameBddFsm_get_trans_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return BddFsm_get_trans(self->player_2);
-}
 
 /**Function********************************************************************
 
@@ -510,36 +369,13 @@ BddTrans_ptr GameBddFsm_get_trans_2(const GameBddFsm_ptr self)
   SeeAlso     [ GameBddFsm_get_monolitic_trans_2 ]
 
 ******************************************************************************/
-bdd_ptr GameBddFsm_get_monolitic_trans_1(const GameBddFsm_ptr self)
+bdd_ptr GameBddFsm_get_monolitic_trans(const GameBddFsm_ptr self, int index)
 {
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  return BddFsm_get_monolithic_trans_bdd(self->player_1);
+  return BddFsm_get_monolithic_trans_bdd(self->players[index]);
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns the trans of the second player as a monolitic BDD. ]
-
-  Description [ NOTE: invariants are not added to the returned
-                transition.
-
-                ADVICE: Probably, GameBddFsm_get_move is required, not
-                this function.
-
-                Returned BDD is referenced. Free it after using. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ GameBddFsm_get_monolitic_trans_1 ]
-
-******************************************************************************/
-bdd_ptr GameBddFsm_get_monolitic_trans_2(const GameBddFsm_ptr self)
-{
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
-
-  return BddFsm_get_monolithic_trans_bdd(self->player_2);
-}
 
 /**Function********************************************************************
 
@@ -574,32 +410,32 @@ bdd_ptr GameBddFsm_get_monolitic_trans_2(const GameBddFsm_ptr self)
 
 ******************************************************************************/
 BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
-                                           GamePlayer player)
+                                           int player)
 {
   BddStates* withSuccessors;
   BddStates* withoutSuccessors;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  withSuccessors = PLAYER_1 == player
-    ? &self->withSuccessors_1 : &self->withSuccessors_2;
-  withoutSuccessors = PLAYER_1 == player
-    ? &self->woSuccessors_1 : &self->woSuccessors_2;
+  withSuccessors = 1 == player
+    ? &self->withSuccessorss[0] : &self->withSuccessorss[1];
+  withoutSuccessors = 1 == player
+    ? &self->woSuccessorss[0] : &self->woSuccessorss[1];
 
   /* check the cache. Compute if result has not been computed before */
   if (BDD_STATES(NULL) == *withSuccessors) {
-    bdd_ptr constr_1, constr_2, with, without;
+    bdd_ptr constrs[2], with, without;
 
     /* with and without successor states are computed here only */
     nusmv_assert((bdd_ptr) NULL == *withoutSuccessors);
 
-    constr_1 = GameBddFsm_get_invars_1(self);
-    constr_2 = GameBddFsm_get_invars_2(self);
+    constrs[0] = GameBddFsm_get_invars(self,0);
+    constrs[1] = GameBddFsm_get_invars(self,1);
 
-    if (PLAYER_1 == player) { /* FIRST PLAYER */
+    if (1 == player) { /* FIRST PLAYER */
       bdd_ptr tmp;
-      tmp = BddEnc_state_var_to_next_state_var(self->enc, constr_1);
-      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans_1(self),
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
+      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,0),
                                                tmp);
       without = bdd_not(self->dd, with);
       bdd_free(self->dd, tmp);
@@ -607,32 +443,32 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
     else { /* SECOND PLAYER */
       bdd_ptr tmp;
       bdd_ptr trans;
-      tmp = BddEnc_state_var_to_next_state_var(self->enc, constr_2);
-      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans_2(self),
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[1]);
+      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,1),
                                                tmp);
       without = bdd_not(self->dd, with);
       bdd_free(self->dd, tmp);
 
-      tmp = BddEnc_state_var_to_next_state_var(self->enc, constr_1);
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
       bdd_and_accumulate(self->dd, &with, tmp);
       bdd_and_accumulate(self->dd, &without, tmp);
       bdd_free(self->dd, tmp);
 
-      trans = BddFsm_get_monolithic_trans_bdd(self->player_1);
+      trans = BddFsm_get_monolithic_trans_bdd(self->players[0]);
       bdd_and_accumulate(self->dd, &with, trans);
       bdd_and_accumulate(self->dd, &without, trans);
       bdd_free(self->dd, trans);
     }
 
-    bdd_and_accumulate(self->dd, &with, constr_1);
-    bdd_and_accumulate(self->dd, &with, constr_2);
-    bdd_and_accumulate(self->dd, &without, constr_1);
-    bdd_and_accumulate(self->dd, &without, constr_2);
+    bdd_and_accumulate(self->dd, &with, constrs[0]);
+    bdd_and_accumulate(self->dd, &with, constrs[1]);
+    bdd_and_accumulate(self->dd, &without, constrs[0]);
+    bdd_and_accumulate(self->dd, &without, constrs[1]);
     *withSuccessors = with;
     *withoutSuccessors = without;
 
-    bdd_free(self->dd, constr_2);
-    bdd_free(self->dd, constr_1);
+    bdd_free(self->dd, constrs[1]);
+    bdd_free(self->dd, constrs[0]);
   }
 
   return *withSuccessors;
@@ -672,14 +508,14 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
 
 ******************************************************************************/
 BddStates GameBddFsm_without_successor_states(GameBddFsm_ptr self,
-                                              GamePlayer player)
+                                              int player)
 {
   BddStates* withoutSuccessors;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  withoutSuccessors = PLAYER_1 == player
-    ? &self->woSuccessors_1 : &self->woSuccessors_2;
+  withoutSuccessors = 1 == player
+    ? &self->woSuccessorss[0] : &self->woSuccessorss[1];
 
   /* Check the cache. Compute if result has not been computed before. */
   if (BDD_STATES(NULL) == *withoutSuccessors) {
@@ -729,7 +565,7 @@ BddStates GameBddFsm_without_successor_states(GameBddFsm_ptr self,
 ******************************************************************************/
 BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
                                                BddStates goal,
-                                               GamePlayer player)
+                                               int player)
 {
   /* Rewriting of the above formulas:
 
@@ -738,7 +574,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
      S_2 = Inv1 & Inv2 & not E p1'.Tr1 & Inv1' & not E p2'.Tr2 & Inv2' & goal
   */
 
-  bdd_ptr tmp, constr_1, constr_2, result;
+  bdd_ptr tmp, constrs[2], result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
@@ -748,11 +584,11 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
        time = util_cpu_time();
 
 
-  constr_1 = GameBddFsm_get_invars_1(self);
-  constr_2 = GameBddFsm_get_invars_2(self);
+  constrs[0] = GameBddFsm_get_invars(self,0);
+  constrs[1] = GameBddFsm_get_invars(self,1);
 
   /* depending on the player 'goal' or 'not goal' is used */
-  result = PLAYER_1 == player ? bdd_not(self->dd, goal) : bdd_dup(goal);
+  result = 1 == player ? bdd_not(self->dd, goal) : bdd_dup(goal);
 
       gameBddFsm_notGoalTotalTime += util_cpu_time() - time;
       time = util_cpu_time();
@@ -764,7 +600,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
   */
 
   /* add the second player constraints and move to the next state */
-  bdd_and_accumulate(self->dd, &result, constr_2);
+  bdd_and_accumulate(self->dd, &result, constrs[1]);
         gameBddFsm_andInvar2TotalTime += util_cpu_time() - time;
         time = util_cpu_time();
   tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
@@ -774,7 +610,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
         time = util_cpu_time();
 
   /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
-  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans_2(self),
+  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,1),
                                                 result);
   bdd_free(self->dd, result);
         gameBddFsm_trans2TotalTime += util_cpu_time() - time;
@@ -785,7 +621,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
         time = util_cpu_time();
 
   /* add the first player constraints moved to the next state */
-  tmp = BddEnc_state_var_to_next_state_var(self->enc, constr_1);
+  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
         gameBddFsm_moveInvar1TotalTime += util_cpu_time() - time;
         time = util_cpu_time();
   bdd_and_accumulate(self->dd, &result, tmp);
@@ -794,23 +630,23 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
         time = util_cpu_time();
 
   /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
-  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans_1(self),
+  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
                                                 result);
   bdd_free(self->dd, result);
   /* negate if the game is for player 2 */
-  result = PLAYER_2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
+  result = 2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
   bdd_free(self->dd, tmp);
         gameBddFsm_trans1TotalTime += util_cpu_time() - time;
         time = util_cpu_time();
 
   /* apply both constraints on the current state */
-  bdd_and_accumulate(self->dd, &result, constr_1);
-  bdd_and_accumulate(self->dd, &result, constr_2);
+  bdd_and_accumulate(self->dd, &result, constrs[0]);
+  bdd_and_accumulate(self->dd, &result, constrs[1]);
         gameBddFsm_andInvar1AndInvar2TotalTime += util_cpu_time() - time;
         time = util_cpu_time();
 
-  bdd_free(self->dd, constr_1);
-  bdd_free(self->dd, constr_2);
+  bdd_free(self->dd, constrs[0]);
+  bdd_free(self->dd, constrs[1]);
 
   /* this would make the player win only if opponent survive.
      Probably, this is not good because if this is a goal state it may not
@@ -853,40 +689,40 @@ BddStates GameBddFsm_get_weak_forward_image(const GameBddFsm_ptr self,
      transtion) which just have been abstracted.
   */
 
-  bdd_ptr constr_1, constr_2, trans_1, trans_2, tmp, result;
+  bdd_ptr constrs[2], transs[2], tmp, result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  constr_1 = GameBddFsm_get_invars_1(self);
-  constr_2 = GameBddFsm_get_invars_2(self);
-  trans_1 = BddFsm_get_monolithic_trans_bdd(self->player_1);
-  trans_2 = BddFsm_get_monolithic_trans_bdd(self->player_2);
+  constrs[0] = GameBddFsm_get_invars(self,0);
+  constrs[1] = GameBddFsm_get_invars(self,1);
+  transs[0] = BddFsm_get_monolithic_trans_bdd(self->players[0]);
+  transs[1] = BddFsm_get_monolithic_trans_bdd(self->players[1]);
 
   /* compute the formula
-     Exist p1 (Exist p2, tr2 & (tr1 & constr_1 & constr_2 & states))
+     Exist p1 (Exist p2, tr2 & (tr1 & constrs[0] & constrs[1] & states))
   */
   tmp = bdd_dup(states);
-  bdd_and_accumulate(self->dd, &tmp, constr_1);
-  bdd_and_accumulate(self->dd, &tmp, constr_2);
-  bdd_and_accumulate(self->dd, &tmp, trans_1);
+  bdd_and_accumulate(self->dd, &tmp, constrs[0]);
+  bdd_and_accumulate(self->dd, &tmp, constrs[1]);
+  bdd_and_accumulate(self->dd, &tmp, transs[0]);
 
-  result = BddTrans_get_forward_image_state(GameBddFsm_get_trans_2(self), tmp);
+  result = BddTrans_get_forward_image_state(GameBddFsm_get_trans(self,1), tmp);
   bdd_free(self->dd, tmp);
 
-  tmp = bdd_forsome(self->dd, result, GameBddFsm_get_state_var_cube_1(self));
+  tmp = bdd_forsome(self->dd, result, GameBddFsm_get_state_var_cube(self,0));
   bdd_free(self->dd, result);
 
   /* move to the current state and add the remaining invariants */
   result = BddEnc_next_state_var_to_state_var(self->enc, tmp);
   bdd_free(self->dd, tmp);
 
-  bdd_and_accumulate(self->dd, &result, constr_1);
-  bdd_and_accumulate(self->dd, &result, constr_2);
+  bdd_and_accumulate(self->dd, &result, constrs[0]);
+  bdd_and_accumulate(self->dd, &result, constrs[1]);
 
-  bdd_free(self->dd, constr_1);
-  bdd_free(self->dd, constr_2);
-  bdd_free(self->dd, trans_1);
-  bdd_free(self->dd, trans_2);
+  bdd_free(self->dd, constrs[0]);
+  bdd_free(self->dd, constrs[1]);
+  bdd_free(self->dd, transs[0]);
+  bdd_free(self->dd, transs[1]);
 
   return BDD_STATES(result);
 }
@@ -932,27 +768,27 @@ BddStates GameBddFsm_get_weak_forward_image(const GameBddFsm_ptr self,
 ******************************************************************************/
 BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
                               BddStates toState,
-                              GamePlayer player)
+                              int player)
 {
-  bdd_ptr tmp, constr_1, constr_2, result;
+  bdd_ptr tmp, constrs[2], result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  constr_1 = GameBddFsm_get_invars_1(self);
-  constr_2 = GameBddFsm_get_invars_2(self);
+  constrs[0] = GameBddFsm_get_invars(self,0);
+  constrs[1] = GameBddFsm_get_invars(self,1);
 
-  if (PLAYER_1 == player) {
+  if (1 == player) {
     /* Any p2', Trans_2(p1,p2,p1',p2') & Invar_2(p1',p2') -> States(p1',p2')
          is the same as
        not Exist p2', trans & invar' & not toState'
     */
     tmp = bdd_not(self->dd, toState);
-    bdd_and_accumulate(self->dd, &tmp, constr_2);
+    bdd_and_accumulate(self->dd, &tmp, constrs[1]);
 
     result = BddEnc_state_var_to_next_state_var(self->enc, tmp);
     bdd_free(self->dd, tmp);
 
-    tmp = BddTrans_get_backward_image_state(GameBddFsm_get_trans_2(self),
+    tmp = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,1),
                                             result);
     bdd_free(self->dd, result);
     result = bdd_not(self->dd, tmp);
@@ -960,28 +796,28 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
 
     bdd_and_accumulate(self->dd,
                        &result,
-                       GameBddFsm_with_successor_states(self, PLAYER_2));
+                       GameBddFsm_with_successor_states(self, 2));
    }
   else {
-    tmp = bdd_and(self->dd, toState, constr_1);
-    bdd_and_accumulate(self->dd, &tmp, constr_2);
+    tmp = bdd_and(self->dd, toState, constrs[0]);
+    bdd_and_accumulate(self->dd, &tmp, constrs[1]);
     result = BddEnc_state_var_to_next_state_var(self->enc, tmp);
     bdd_free(self->dd, tmp);
 
-    tmp = BddFsm_get_monolithic_trans_bdd(self->player_1);
+    tmp = BddFsm_get_monolithic_trans_bdd(self->players[0]);
     bdd_and_accumulate(self->dd, &result, tmp);
     bdd_free(self->dd, tmp);
 
-    tmp = BddFsm_get_monolithic_trans_bdd(self->player_2);
+    tmp = BddFsm_get_monolithic_trans_bdd(self->players[1]);
     bdd_and_accumulate(self->dd, &result, tmp);
     bdd_free(self->dd, tmp);
 
-    bdd_and_accumulate(self->dd, &result, constr_1);
-    bdd_and_accumulate(self->dd, &result, constr_2);
+    bdd_and_accumulate(self->dd, &result, constrs[0]);
+    bdd_and_accumulate(self->dd, &result, constrs[1]);
   }
 
-  bdd_free(self->dd, constr_1);
-  bdd_free(self->dd, constr_2);
+  bdd_free(self->dd, constrs[0]);
+  bdd_free(self->dd, constrs[1]);
 
   return result;
 }
@@ -1002,21 +838,21 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
 
                 If "quantifiers" is "N" (normal)
                 for player 1:
-                  Exist p1, constr_1(p1)
-                            & Any p2, constr_2(p1,p2) -> GoalStates(p1,p2)
+                  Exist p1, constrs[0](p1)
+                            & Any p2, constrs[1](p1,p2) -> GoalStates(p1,p2)
                 for player 2:
-                  Any p1, constr_1(p1)
-                          -> Exist p2, constr_2(p1,p2) & GoalStates(p1,p2)
+                  Any p1, constrs[0](p1)
+                          -> Exist p2, constrs[1](p1,p2) & GoalStates(p1,p2)
 
                 If "quantifiers" is "A" (universal)
                 for both players
-                  Any p1, constr_1(p1)
-                          -> (Any p2, constr_2(p1,p2) -> GoalStates(p1,p2))
+                  Any p1, constrs[0](p1)
+                          -> (Any p2, constrs[1](p1,p2) -> GoalStates(p1,p2))
 
                 If "quantifiers" is "E" (existential)
                 for both players
-                  Exist p1, constr_1(p1)
-                            & Exist p2, constr_2(p1,p2) & GoalStates(p1,p2)
+                  Exist p1, constrs[0](p1)
+                            & Exist p2, constrs[1](p1,p2) & GoalStates(p1,p2)
 
                 Note: there is no transition here.
 
@@ -1025,10 +861,10 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
                 Note: all provided constraints must be already
                       conjoined with invariants, i.e.
 
-                      constr_1 <= GameBddFsm_get_invars_1(),
-                      constr_2 <= GameBddFsm_get_invars_2(),
-                      goalStates <= GameBddFsm_get_invars_1()
-                                    & GameBddFsm_get_invars_2().
+                      constrs[0] <= GameBddFsm_get_invars(,0),
+                      constrs[1] <= GameBddFsm_get_invars(,1),
+                      goalStates <= GameBddFsm_get_invars(,0)
+                                    & GameBddFsm_get_invars(,1).
 
                 Note: all provided bdd_ptr are expected to have
                       current-state and frozen vars only, and contain
@@ -1043,10 +879,9 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
 
 ******************************************************************************/
 EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
-                                             BddStates constr_1,
-                                             BddStates constr_2,
+                                             BddStates *constrs,
                                              BddStates goalStates,
-                                             GamePlayer player,
+                                             int player,
                                              char quantifiers)
 {
   /* For developers: if the code of this function changes then
@@ -1080,7 +915,7 @@ EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
 
   switch (quantifiers) {
   case 'N': /* Normal interpretation of initial conditions */
-    if (PLAYER_1 == player) {
+    if (1 == player) {
       p1Negation = false;
       p2Negation = true;
       goalNegation = true;
@@ -1111,16 +946,16 @@ EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
   /* negate the goal states */
   result = goalNegation ? bdd_not(dd_manager, goalStates) : bdd_dup(goalStates);
 
-  bdd_and_accumulate(dd_manager, &result, constr_2);
+  bdd_and_accumulate(dd_manager, &result, constrs[1]);
   tmp = bdd_forsome(dd_manager,
                     result,
-                    GameBddFsm_get_state_frozen_var_cube_2(self));
+                    GameBddFsm_get_state_frozen_var_cube(self,1));
   bdd_free(dd_manager, result);
 
   result = p2Negation ? bdd_not(dd_manager, tmp) : bdd_dup(tmp);
   bdd_free(dd_manager, tmp);
 
-  bdd_and_accumulate(dd_manager, &result, constr_1);
+  bdd_and_accumulate(dd_manager, &result, constrs[0]);
 
   /* NEW_CODE */
   /* Here is an optimisation:  (E p.G) != 0 <=> G != 0 and
@@ -1163,10 +998,9 @@ EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
 
 ******************************************************************************/
 EXTERN BddStates GameBddFsm_player_satisfies_from(const GameBddFsm_ptr self,
-                                                  BddStates constr_1,
-                                                  BddStates constr_2,
+                                                  BddStates constrs[2],
                                                   BddStates goalStates,
-                                                  GamePlayer player,
+                                                  int player,
                                                   char quantifiers)
 {
   /* For developers: this is exactly the same as in
@@ -1203,7 +1037,7 @@ EXTERN BddStates GameBddFsm_player_satisfies_from(const GameBddFsm_ptr self,
 
   switch (quantifiers) {
   case 'N': /* Normal interpretation of initial conditions */
-    if (PLAYER_1 == player) {
+    if (1 == player) {
       p1Negation = false;
       p2Negation = true;
       goalNegation = true;
@@ -1234,21 +1068,21 @@ EXTERN BddStates GameBddFsm_player_satisfies_from(const GameBddFsm_ptr self,
   /* negate the goal states */
   result = goalNegation ? bdd_not(dd_manager, goalStates) : bdd_dup(goalStates);
 
-  bdd_and_accumulate(dd_manager, &result, constr_2);
+  bdd_and_accumulate(dd_manager, &result, constrs[1]);
   tmp = bdd_forsome(dd_manager,
                     result,
-                    GameBddFsm_get_state_frozen_var_cube_2(self));
+                    GameBddFsm_get_state_frozen_var_cube(self,1));
   bdd_free(dd_manager, result);
 
   result = p2Negation ? bdd_not(dd_manager, tmp) : bdd_dup(tmp);
   bdd_free(dd_manager, tmp);
 
-  bdd_and_accumulate(dd_manager, &result, constr_1);
+  bdd_and_accumulate(dd_manager, &result, constrs[0]);
 
   /* --- THIS PART IS DIFFERENT FROM GameBddFsm_can_player_satisfy --- */
   tmp = bdd_forsome(dd_manager,
                     result,
-                    GameBddFsm_get_state_frozen_var_cube_1(self));
+                    GameBddFsm_get_state_frozen_var_cube(self,0));
   bdd_free(dd_manager, result);
 
   result = p1Negation ? bdd_not(dd_manager, tmp) : bdd_dup(tmp);
@@ -1275,14 +1109,17 @@ EXTERN BddStates GameBddFsm_player_satisfies_from(const GameBddFsm_ptr self,
 ******************************************************************************/
 void GameBddFsm_print_info(const GameBddFsm_ptr self, OStream_ptr file)
 {
-  GAME_BDD_FSM_CHECK_INSTANCE(self);
+    int i;
+
+    GAME_BDD_FSM_CHECK_INSTANCE(self);
   nusmv_assert((OStream_ptr) NULL != file);
 
   OStream_printf(file, "Statistics on Game BDD FSM.\n");
-  OStream_printf(file, "Statistics on player 1 :\n");
-  BddFsm_print_info(self->player_1, file);
-  OStream_printf(file, "Statistics on player 2 :\n");
-  BddFsm_print_info(self->player_2, file);
+
+    for(i=0;i<2;i++) {
+        OStream_printf(file, "Statistics on player %d :\n", i);
+        BddFsm_print_info(self->players[i], file);
+    }
 }
 
 /**Function********************************************************************
@@ -1313,58 +1150,60 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
   nusmv_assert(self->enc == other->enc);
   nusmv_assert(self->dd == other->dd);
 
-  /* var cubes: union of players' cubes */
+    int i;
+
+    /* var cubes: union of players' cubes */
   {
     bdd_ptr tmp;
 
-    tmp = self->stateVarCube_1;
-    self->stateVarCube_1 = bdd_cube_union(self->dd,
-                                          self->stateVarCube_1,
-                                          other->stateVarCube_1);
+    tmp = self->stateVarCubes[0];
+    self->stateVarCubes[0] = bdd_cube_union(self->dd,
+                                          self->stateVarCubes[0],
+                                          other->stateVarCubes[0]);
     bdd_free(self->dd, tmp);
-    tmp = self->stateVarCube_2;
-    self->stateVarCube_2 = bdd_cube_union(self->dd,
-                                          self->stateVarCube_2,
-                                          other->stateVarCube_2);
+    tmp = self->stateVarCubes[1];
+    self->stateVarCubes[1] = bdd_cube_union(self->dd,
+                                          self->stateVarCubes[1],
+                                          other->stateVarCubes[1]);
     bdd_free(self->dd, tmp);
-    tmp = self->nextStateVarCube_1;
-    self->nextStateVarCube_1 = bdd_cube_union(self->dd,
-                                              self->nextStateVarCube_1,
-                                              other->nextStateVarCube_1);
+    tmp = self->nextStateVarCubes[0];
+    self->nextStateVarCubes[0] = bdd_cube_union(self->dd,
+                                              self->nextStateVarCubes[0],
+                                              other->nextStateVarCubes[0]);
     bdd_free(self->dd, tmp);
-    tmp = self->nextStateVarCube_2;
-    self->nextStateVarCube_2 = bdd_cube_union(self->dd,
-                                              self->nextStateVarCube_2,
-                                              other->nextStateVarCube_2);
+    tmp = self->nextStateVarCubes[1];
+    self->nextStateVarCubes[1] = bdd_cube_union(self->dd,
+                                              self->nextStateVarCubes[1],
+                                              other->nextStateVarCubes[1]);
     bdd_free(self->dd, tmp);
-    tmp = self->stateFrozenVarCube_1;
-    self->stateFrozenVarCube_1 = bdd_cube_union(self->dd,
-                                                self->stateFrozenVarCube_1,
-                                                other->stateFrozenVarCube_1);
+    tmp = self->stateFrozenVarCubes[0];
+    self->stateFrozenVarCubes[0] = bdd_cube_union(self->dd,
+                                                self->stateFrozenVarCubes[0],
+                                                other->stateFrozenVarCubes[0]);
     bdd_free(self->dd, tmp);
-    tmp = self->stateFrozenVarCube_2;
-    self->stateFrozenVarCube_2 = bdd_cube_union(self->dd,
-                                                self->stateFrozenVarCube_2,
-                                                other->stateFrozenVarCube_2);
+    tmp = self->stateFrozenVarCubes[1];
+    self->stateFrozenVarCubes[1] = bdd_cube_union(self->dd,
+                                                self->stateFrozenVarCubes[1],
+                                                other->stateFrozenVarCubes[1]);
     bdd_free(self->dd, tmp);
   }
 
   /* w, w/o successors cache: reset */
-  if (self->withSuccessors_1) {
-    bdd_free(self->dd, self->withSuccessors_1);
-    self->withSuccessors_1 = BDD_STATES(NULL);
+  if (self->withSuccessorss[0]) {
+    bdd_free(self->dd, self->withSuccessorss[0]);
+    self->withSuccessorss[0] = BDD_STATES(NULL);
   }
-  if (self->withSuccessors_2) {
-    bdd_free(self->dd, self->withSuccessors_2);
-    self->withSuccessors_2 = BDD_STATES(NULL);
+  if (self->withSuccessorss[1]) {
+    bdd_free(self->dd, self->withSuccessorss[1]);
+    self->withSuccessorss[1] = BDD_STATES(NULL);
   }
-  if (self->woSuccessors_1) {
-    bdd_free(self->dd, self->woSuccessors_1);
-    self->woSuccessors_1 = BDD_STATES(NULL);
+  if (self->woSuccessorss[0]) {
+    bdd_free(self->dd, self->woSuccessorss[0]);
+    self->woSuccessorss[0] = BDD_STATES(NULL);
   }
-  if (self->woSuccessors_2) {
-    bdd_free(self->dd, self->woSuccessors_2);
-    self->woSuccessors_2 = BDD_STATES(NULL);
+  if (self->woSuccessorss[1]) {
+    bdd_free(self->dd, self->woSuccessorss[1]);
+    self->woSuccessorss[1] = BDD_STATES(NULL);
   }
 
   /* player_1, 2: synchronous product of players */
@@ -1372,16 +1211,12 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
     bdd_ptr one;
 
     one = bdd_true(self->dd);
-    BddFsm_apply_synchronous_product_custom_varsets(self->player_1,
-                                                    other->player_1,
-                                                    self->stateVarCube_1,
+      for(i=0;i<2;i++)
+    BddFsm_apply_synchronous_product_custom_varsets(self->players[i],
+                                                    other->players[i],
+                                                    self->stateVarCubes[i],
                                                     one,
-                                                    self->nextStateVarCube_1);
-    BddFsm_apply_synchronous_product_custom_varsets(self->player_2,
-                                                    other->player_2,
-                                                    self->stateVarCube_2,
-                                                    one,
-                                                    self->nextStateVarCube_2);
+                                                    self->nextStateVarCubes[i]);
     bdd_free(self->dd, one);
   }
 }
@@ -1403,30 +1238,31 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
 ******************************************************************************/
 static void game_bdd_fsm_init(GameBddFsm_ptr self,
                               BddEnc_ptr enc,
-                              BddFsm_ptr player_1,
-                              bdd_ptr stateVarCube_1,
-                              bdd_ptr stateFrozenVarCube_1,
-                              BddFsm_ptr player_2,
-                              bdd_ptr stateVarCube_2,
-                              bdd_ptr stateFrozenVarCube_2)
+                              BddFsm_ptr *players,
+                              bdd_ptr stateVarCubes[2],
+                              bdd_ptr stateFrozenVarCubes[2])
 {
-  self->enc = enc;
-  self->dd = BddEnc_get_dd_manager(enc);
-  self->player_1 = player_1;
-  self->player_2 = player_2;
-  self->stateVarCube_1 = bdd_dup(stateVarCube_1);
-  self->stateVarCube_2 = bdd_dup(stateVarCube_2);
-  self->nextStateVarCube_1 = BddEnc_state_var_to_next_state_var(enc,
-                                                                stateVarCube_1);
-  self->nextStateVarCube_2 = BddEnc_state_var_to_next_state_var(enc,
-                                                                stateVarCube_2);
-  self->stateFrozenVarCube_1 = bdd_dup(stateFrozenVarCube_1);
-  self->stateFrozenVarCube_2 = bdd_dup(stateFrozenVarCube_2);
+    int i;
 
-  self->withSuccessors_1 = BDD_STATES(NULL);
-  self->withSuccessors_2 = BDD_STATES(NULL);
-  self->woSuccessors_1 = BDD_STATES(NULL);
-  self->woSuccessors_2 = BDD_STATES(NULL);
+    self->enc = enc;
+  self->dd = BddEnc_get_dd_manager(enc);
+
+    for(i=0;i<2;i++) {
+
+        self->players[i] = players[i];
+
+        self->stateVarCubes[i] = bdd_dup(stateVarCubes[i]);
+
+        self->nextStateVarCubes[i] = BddEnc_state_var_to_next_state_var(enc, stateVarCubes[i]);
+
+        self->stateFrozenVarCubes[i] = bdd_dup(stateFrozenVarCubes[i]);
+
+        self->withSuccessorss[i] = BDD_STATES(NULL);
+
+        self->woSuccessorss[i] = BDD_STATES(NULL);
+
+    }
+
 }
 
 /**Function********************************************************************
@@ -1442,25 +1278,28 @@ static void game_bdd_fsm_init(GameBddFsm_ptr self,
 ******************************************************************************/
 static void game_bdd_fsm_copy(const GameBddFsm_ptr self, GameBddFsm_ptr copy)
 {
+    int i;
+
   copy->enc = self->enc;
   copy->dd = self->dd;
-  copy->player_1 = BddFsm_copy(self->player_1);
-  copy->player_2 = BddFsm_copy(self->player_2);
-  copy->stateVarCube_1 = bdd_dup(self->stateVarCube_1);
-  copy->stateVarCube_2 = bdd_dup(self->stateVarCube_2);
-  copy->nextStateVarCube_1 = bdd_dup(self->nextStateVarCube_1);
-  copy->nextStateVarCube_2 = bdd_dup(self->nextStateVarCube_2);
-  copy->stateFrozenVarCube_1 = bdd_dup(self->stateFrozenVarCube_1);
-  copy->stateFrozenVarCube_2 = bdd_dup(self->stateFrozenVarCube_2);
 
-  copy->withSuccessors_1 = self->withSuccessors_1 != BDD_STATES(NULL)
-    ? bdd_dup(self->withSuccessors_1) : BDD_STATES(NULL);
-  copy->withSuccessors_2 = self->withSuccessors_2 != BDD_STATES(NULL)
-    ? bdd_dup(self->withSuccessors_2) : BDD_STATES(NULL);
-  copy->woSuccessors_1 = self->woSuccessors_1 != BDD_STATES(NULL)
-    ? bdd_dup(self->woSuccessors_1) : BDD_STATES(NULL);
-  copy->woSuccessors_2 = self->woSuccessors_2 != BDD_STATES(NULL)
-    ? bdd_dup(self->woSuccessors_2) : BDD_STATES(NULL);
+    for(i=0;i<2;i++) {
+
+        copy->players[i] = BddFsm_copy(self->players[i]);
+
+        copy->stateVarCubes[i] = bdd_dup(self->stateVarCubes[i]);
+
+        copy->nextStateVarCubes[i] = bdd_dup(self->nextStateVarCubes[i]);
+
+        copy->stateFrozenVarCubes[i] = bdd_dup(self->stateFrozenVarCubes[i]);
+
+        copy->withSuccessorss[i] = self->withSuccessorss[i] != BDD_STATES(NULL)
+                                   ? bdd_dup(self->withSuccessorss[i]) : BDD_STATES(NULL);
+
+        copy->woSuccessorss[i] = self->woSuccessorss[i] != BDD_STATES(NULL)
+                                 ? bdd_dup(self->woSuccessorss[i]) : BDD_STATES(NULL);
+
+    }
 }
 
 
@@ -1477,17 +1316,19 @@ static void game_bdd_fsm_copy(const GameBddFsm_ptr self, GameBddFsm_ptr copy)
 ******************************************************************************/
 static void game_bdd_fsm_deinit(GameBddFsm_ptr self)
 {
-  BddFsm_destroy(self->player_1);
-  BddFsm_destroy(self->player_2);
-  bdd_free(self->dd, self->stateVarCube_1);
-  bdd_free(self->dd, self->stateVarCube_2);
-  bdd_free(self->dd, self->nextStateVarCube_1);
-  bdd_free(self->dd, self->nextStateVarCube_2);
-  bdd_free(self->dd, self->stateFrozenVarCube_1);
-  bdd_free(self->dd, self->stateFrozenVarCube_2);
+    int i;
 
-  if (self->withSuccessors_1) bdd_free(self->dd, self->withSuccessors_1);
-  if (self->withSuccessors_2) bdd_free(self->dd, self->withSuccessors_2);
-  if (self->woSuccessors_1) bdd_free(self->dd, self->woSuccessors_1);
-  if (self->woSuccessors_2) bdd_free(self->dd, self->woSuccessors_2);
+    for(i=0;i<2;i++) {
+        BddFsm_destroy(self->players[i]);
+
+        bdd_free(self->dd, self->stateVarCubes[i]);
+
+        bdd_free(self->dd, self->nextStateVarCubes[i]);
+
+        bdd_free(self->dd, self->stateFrozenVarCubes[i]);
+
+        if (self->withSuccessorss[i]) bdd_free(self->dd, self->withSuccessorss[i]);
+
+        if (self->woSuccessorss[i]) bdd_free(self->dd, self->woSuccessorss[i]);
+    }
 }

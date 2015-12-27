@@ -703,6 +703,7 @@ EOF
 
 TODO
 
+    *   IMPORTANT : include generation of input.l and grammar.y in cmake build and run
     *   check outstream usage in "CommandGameShowProperty()" for gameCmd.c file (usage of setter?)
     *   there are 4 stderr in smgameMain.c from the old version of NuGaT ( need to replace with errstream? )
     *   check 'expand_bounded_arrays' overall implementation

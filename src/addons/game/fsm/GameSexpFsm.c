@@ -73,14 +73,13 @@ static char rcsid[] UTIL_UNUSED = "$Id: GameSexpFsm.c,v 1.1.2.9 2010-02-05 22:42
 
 ******************************************************************************/
 typedef struct GameSexpFsm_TAG {
-  SexpFsm_ptr player_1;
-  SexpFsm_ptr player_2;
+  SexpFsm_ptr players[2];
 
   /* Each player's scalar FSMs contain a complete set of variables
      (which is used for COI).  These fields are the subsets of
      variables belonging to a particular player. */
-  Set_t vars_set_1;
-  Set_t vars_set_2;
+  Set_t vars_sets[2];
+
 } GameSexpFsm;
 
 /*---------------------------------------------------------------------------*/
@@ -95,10 +94,8 @@ typedef struct GameSexpFsm_TAG {
 /* Static function prototypes                                                */
 /*---------------------------------------------------------------------------*/
 static void game_sexp_fsm_init ARGS((GameSexpFsm_ptr self,
-                                     SexpFsm_ptr player_1,
-                                     SexpFsm_ptr player_2,
-                                     Set_t vars_set_1,
-                                     Set_t vars_set_2));
+                                     SexpFsm_ptr *players,
+                                     Set_t vars_sets[2]));
 
 static void game_sexp_fsm_deinit ARGS((GameSexpFsm_ptr self));
 
@@ -139,29 +136,33 @@ static void game_sexp_fsm_deinit ARGS((GameSexpFsm_ptr self));
 ******************************************************************************/
 GameSexpFsm_ptr GameSexpFsm_create(NuSMVEnv_ptr env,
                                    Set_t all_vars_set,
-                                   FlatHierarchy_ptr hierarchy_1,
-                                   FlatHierarchy_ptr hierarchy_2,
-                                   Set_t vars_set_1,
-                                   Set_t vars_set_2)
+                                   FlatHierarchy_ptr hierarchies[2],
+                                   Set_t vars_sets[2])
 {
   GameSexpFsm_ptr self;
+    SexpFsm_ptr players[2];
+    int i;
+    boolean expr = false;
 
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
 
-  FLAT_HIERARCHY_CHECK_INSTANCE(hierarchy_1);
-  FLAT_HIERARCHY_CHECK_INSTANCE(hierarchy_2);
+    for(i=0;i<2;i++)
+  FLAT_HIERARCHY_CHECK_INSTANCE(hierarchies[i]);
 
   self = ALLOC(GameSexpFsm, 1);
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
-  game_sexp_fsm_init(self,
-                     SexpFsm_create(hierarchy_1, all_vars_set),
-                     SexpFsm_create(hierarchy_2, all_vars_set),
-                     vars_set_1,
-                     vars_set_2);
+    for(i=0;i<2;i++)
+    players[i] = SexpFsm_create(hierarchies[i], all_vars_set);
 
-  if (Nil != FlatHierarchy_get_invar(hierarchy_1) ||
-      Nil != FlatHierarchy_get_invar(hierarchy_2)) {
+  game_sexp_fsm_init(self,
+                     players,
+                     vars_sets);
+
+    for(i=0;i<2-1;i++)
+    expr = Nil != FlatHierarchy_get_invar(hierarchies[i]) || Nil != FlatHierarchy_get_invar(hierarchies[i+1]);
+
+  if (expr) {
     ErrorMgr_rpterr(errmgr,"Game has an invariant construct (INVAR or ASSIGN)."
            "This is not implemented at the moment.\n");
     /* For developers: the problem is how images are
@@ -189,17 +190,20 @@ GameSexpFsm_ptr GameSexpFsm_create(NuSMVEnv_ptr env,
 GameSexpFsm_ptr GameSexpFsm_copy(const GameSexpFsm_ptr self)
 {
   GameSexpFsm_ptr copy;
+    int i;
+    SexpFsm_ptr players[2];
 
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
   copy = ALLOC(GameSexpFsm, 1);
   GAME_SEXP_FSM_CHECK_INSTANCE(copy);
 
+    for(i=0;i<2;i++)
+        players[i] = SexpFsm_copy(self->players[i]);
+
   game_sexp_fsm_init(copy,
-                     SexpFsm_copy(self->player_1),
-                     SexpFsm_copy(self->player_2),
-                     self->vars_set_1,
-                     self->vars_set_2);
+                     players,
+                     self->vars_sets);
 
   return copy;
 }
@@ -244,29 +248,26 @@ void GameSexpFsm_destroy(GameSexpFsm_ptr self)
 ******************************************************************************/
 GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
                                               BddEnc_ptr enc,
-                                              SymbLayer_ptr det_layer_1,
-                                              SymbLayer_ptr det_layer_2)
+                                              SymbLayer_ptr det_layers[2])
 {
   GameSexpFsm_ptr result;
+  int i;
 
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
   BDD_ENC_CHECK_INSTANCE(enc);
-  SYMB_LAYER_CHECK_INSTANCE(det_layer_1); /* must be a valid layer */
-  SYMB_LAYER_CHECK_INSTANCE(det_layer_2); /* must be a valid layer */
-  nusmv_assert(!SexpFsm_is_boolean(self->player_1));
+  for(i=0;i<2;i++)
+    SYMB_LAYER_CHECK_INSTANCE(det_layers[i]); /* must be a valid layer */
+  nusmv_assert(!SexpFsm_is_boolean(self->players[0]));
 
   result = ALLOC(GameSexpFsm, 1);
   GAME_SEXP_FSM_CHECK_INSTANCE(result);
 
-  result->player_1 = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->player_1,
+    for(i=0;i<2;i++)
+  result->players[i] = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->players[i],
                                                                  enc,
-                                                                 det_layer_1));
-  result->player_2 = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->player_2,
-                                                                 enc,
-                                                                 det_layer_2));
-
-  result->vars_set_1 = Set_Copy(self->vars_set_1);
-  result->vars_set_2 = Set_Copy(self->vars_set_2);
+                                                                 det_layers[i]));
+    for(i=0;i<2;i++)
+  result->vars_sets[i] = Set_Copy(self->vars_sets[i]);
 
   return result;
 }
@@ -286,11 +287,16 @@ GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
 boolean GameSexpFsm_is_boolean(const GameSexpFsm_ptr self)
 {
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
-  nusmv_assert(SexpFsm_is_boolean(self->player_1) ==
-               SexpFsm_is_boolean(self->player_2));
+    boolean expr = false;
+    int i;
+
+    for(i=0;i<2-1;i++)
+        expr += SexpFsm_is_boolean(self->players[i]) == SexpFsm_is_boolean(self->players[i+1]);
+
+  nusmv_assert(expr);
 
   /* players are both boolean or both scalar */
-  return SexpFsm_is_boolean(self->player_1);
+  return SexpFsm_is_boolean(self->players[0]);
 }
 
 /**Function********************************************************************
@@ -310,7 +316,7 @@ NodeList_ptr GameSexpFsm_get_all_vars_set(const GameSexpFsm_ptr self)
 {
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
-  return SexpFsm_get_vars_list(self->player_1);
+  return SexpFsm_get_vars_list(self->players[0]); // only player1
 }
 
 /**Function********************************************************************
@@ -327,33 +333,13 @@ NodeList_ptr GameSexpFsm_get_all_vars_set(const GameSexpFsm_ptr self)
   SeeAlso     [ ]
 
 ******************************************************************************/
-NodeList_ptr GameSexpFsm_get_vars_list_1(const GameSexpFsm_ptr self)
+NodeList_ptr GameSexpFsm_get_vars_list(const GameSexpFsm_ptr self, int index)
 {
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
-  return Set_Set2List(self->vars_set_1);
+  return Set_Set2List(self->vars_sets[index]);
 }
 
-/**Function********************************************************************
-
-  Synopsis    [ Returns the list of variables belonging to the second
-                player only. ]
-
-  Description [ This list of vars is provided during
-                construction. self keeps ownership (i.e., do not
-                change it). ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ ]
-
-******************************************************************************/
-NodeList_ptr GameSexpFsm_get_vars_list_2(const GameSexpFsm_ptr self)
-{
-  GAME_SEXP_FSM_CHECK_INSTANCE(self);
-
-  return Set_Set2List(self->vars_set_2);
-}
 
 /**Function********************************************************************
 
@@ -366,29 +352,11 @@ NodeList_ptr GameSexpFsm_get_vars_list_2(const GameSexpFsm_ptr self)
   SeeAlso     [ ]
 
 ******************************************************************************/
-SexpFsm_ptr GameSexpFsm_get_player_1(const GameSexpFsm_ptr self)
+SexpFsm_ptr GameSexpFsm_get_player(const GameSexpFsm_ptr self, int index)
 {
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
-  return self->player_1;
-}
-
-/**Function********************************************************************
-
-  Synopsis    [ Returns the scalar FSM of the second player. ]
-
-  Description [ Returned object continues to belong to self. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ ]
-
-******************************************************************************/
-SexpFsm_ptr GameSexpFsm_get_player_2(const GameSexpFsm_ptr self)
-{
-  GAME_SEXP_FSM_CHECK_INSTANCE(self);
-
-  return self->player_2;
+  return self->players[index];
 }
 
 /*---------------------------------------------------------------------------*/
@@ -407,15 +375,16 @@ SexpFsm_ptr GameSexpFsm_get_player_2(const GameSexpFsm_ptr self)
 
 ******************************************************************************/
 static void game_sexp_fsm_init(GameSexpFsm_ptr self,
-                               SexpFsm_ptr player_1,
-                               SexpFsm_ptr player_2,
-                               Set_t vars_set_1,
-                               Set_t vars_set_2)
+                               SexpFsm_ptr *players,
+                               Set_t vars_sets[2])
 {
-  self->player_1 = player_1;
-  self->player_2 = player_2;
-  self->vars_set_1 = Set_Copy(vars_set_1);
-  self->vars_set_2 = Set_Copy(vars_set_2);
+    int i;
+
+    for(i=0;i<2;i++)
+  self->players[i] = players[i];
+
+    for(i=0;i<2;i++)
+  self->vars_sets[i] = Set_Copy(vars_sets[i]);
 }
 
 /**Function********************************************************************
@@ -431,8 +400,11 @@ static void game_sexp_fsm_init(GameSexpFsm_ptr self,
 ******************************************************************************/
 static void game_sexp_fsm_deinit(GameSexpFsm_ptr self)
 {
-  SexpFsm_destroy(self->player_1);
-  SexpFsm_destroy(self->player_2);
-  Set_ReleaseSet(self->vars_set_1);
-  Set_ReleaseSet(self->vars_set_2);
+    int i;
+
+    for(i=0;i<2;i++)
+  SexpFsm_destroy(self->players[i]);
+
+    for(i=0;i<2;i++)
+  Set_ReleaseSet(self->vars_sets[i]);
 }

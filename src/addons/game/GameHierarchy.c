@@ -68,8 +68,7 @@ static char rcsid[] UTIL_UNUSED = "$Id: GameHierarchy.c,v 1.1.2.3 2010-02-08 16:
 
 ******************************************************************************/
 struct GameHierarchy_TAG {
-  FlatHierarchy_ptr player_1;
-  FlatHierarchy_ptr player_2;
+  FlatHierarchy_ptr players[2];
   node_ptr spec_expr;
   node_ptr ltlspec_expr;
   node_ptr invarspec_expr;
@@ -90,8 +89,7 @@ typedef struct GameHierarchy_TAG GameHierarchy;
 /*---------------------------------------------------------------------------*/
 
 static void game_hierarchy_init ARGS((GameHierarchy_ptr self,
-                                      FlatHierarchy_ptr player1,
-                                      FlatHierarchy_ptr player2,
+                                      FlatHierarchy_ptr *players,
                                       node_ptr spec,
                                       node_ptr ltlspec,
                                       node_ptr invarspec,
@@ -146,8 +144,7 @@ static void game_hierarchy_deinit ARGS((GameHierarchy_ptr self));
   SeeAlso     [ GameHierarchy_destroy, FlatHierarchy_create ]
 
 ******************************************************************************/
-GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr player1,
-                                       FlatHierarchy_ptr player2,
+GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr *players,
                                        node_ptr spec,
                                        node_ptr ltlspec,
                                        node_ptr invarspec,
@@ -165,8 +162,7 @@ GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr player1,
   GAME_HIERARCHY_CHECK_INSTANCE(self);
 
   game_hierarchy_init(self,
-                      player1,
-                      player2,
+                      players,
                       spec,
                       ltlspec,
                       invarspec,
@@ -206,7 +202,7 @@ void GameHierarchy_destroy(GameHierarchy_ptr self)
 
 /**Function********************************************************************
 
-  Synopsis    [ Getter for player_1. ]
+  Synopsis    [ Getter for player(index). ]
 
   Description [ self keeps ownership of result. ]
 
@@ -215,29 +211,11 @@ void GameHierarchy_destroy(GameHierarchy_ptr self)
   SeeAlso     [ ]
 
 ******************************************************************************/
-FlatHierarchy_ptr GameHierarchy_get_player_1(GameHierarchy_ptr self)
+FlatHierarchy_ptr GameHierarchy_get_player(GameHierarchy_ptr self, int index)
 {
-  GAME_HIERARCHY_CHECK_INSTANCE(self);
+    GAME_HIERARCHY_CHECK_INSTANCE(self);
 
-  return(self->player_1);
-}
-
-/**Function********************************************************************
-
-  Synopsis    [ Getter for player_2. ]
-
-  Description [ self keeps ownership of result. ]
-
-  SideEffects [ ]
-
-  SeeAlso     [ ]
-
-******************************************************************************/
-FlatHierarchy_ptr GameHierarchy_get_player_2(GameHierarchy_ptr self)
-{
-  GAME_HIERARCHY_CHECK_INSTANCE(self);
-
-  return(self->player_2);
+    return(self->players[index]);
 }
 
 /**Function********************************************************************
@@ -472,8 +450,7 @@ node_ptr GameHierarchy_get_genreactivity(GameHierarchy_ptr self)
 
 ******************************************************************************/
 void game_hierarchy_init(GameHierarchy_ptr self,
-                         FlatHierarchy_ptr player1,
-                         FlatHierarchy_ptr player2,
+                         FlatHierarchy_ptr *players,
                          node_ptr spec,
                          node_ptr ltlspec,
                          node_ptr invarspec,
@@ -487,8 +464,8 @@ void game_hierarchy_init(GameHierarchy_ptr self,
                          node_ptr ltlgame,
                          node_ptr genreactivity)
 {
-  self->player_1       = player1;
-  self->player_2       = player2;
+  self->players[0] = players[0];
+  self->players[1] = players[1];
   self->spec_expr      = spec;
   self->ltlspec_expr   = ltlspec;
   self->pslspec_expr   = pslspec;
@@ -516,9 +493,11 @@ void game_hierarchy_init(GameHierarchy_ptr self,
 ******************************************************************************/
 void game_hierarchy_deinit(GameHierarchy_ptr self)
 {
-  FlatHierarchy_destroy(self->player_1);
-  FlatHierarchy_destroy(self->player_2);
+  int i;
 
-  self->player_1 = FLAT_HIERARCHY(NULL);
-  self->player_2 = FLAT_HIERARCHY(NULL);
+    for(i=0;i<2;i++)
+  FlatHierarchy_destroy(self->players[i]);
+
+    for(i=0;i<2;i++)
+  self->players[i] = FLAT_HIERARCHY(NULL);
 }

@@ -126,10 +126,8 @@ typedef struct GameSexpFsm_TAG* GameSexpFsm_ptr;
 /* constructors */
 
 EXTERN GameSexpFsm_ptr GameSexpFsm_create ARGS((NuSMVEnv_ptr env,Set_t all_vars_set,
-                                                FlatHierarchy_ptr hierarchy_1,
-                                                FlatHierarchy_ptr hierarchy_2,
-                                                Set_t vars_set_1,
-                                                Set_t vars_set_2));
+                                                FlatHierarchy_ptr hierarchies[2],
+                                                Set_t vars_sets[2]));
 
 EXTERN GameSexpFsm_ptr GameSexpFsm_copy ARGS((const GameSexpFsm_ptr self));
 
@@ -142,8 +140,7 @@ EXTERN void GameSexpFsm_destroy ARGS((GameSexpFsm_ptr self));
 EXTERN GameSexpFsm_ptr
 GameSexpFsm_scalar_to_boolean ARGS((const GameSexpFsm_ptr self,
                                     BddEnc_ptr enc,
-                                    SymbLayer_ptr det_layer_1,
-                                    SymbLayer_ptr det_layer_2));
+                                    SymbLayer_ptr det_layers[2]));
 
 /* access functions */
 
@@ -157,8 +154,6 @@ GameSexpFsm_get_vars_list_1 ARGS((const GameSexpFsm_ptr self));
 EXTERN NodeList_ptr
 GameSexpFsm_get_vars_list_2 ARGS((const GameSexpFsm_ptr self));
 
-EXTERN SexpFsm_ptr GameSexpFsm_get_player_1 ARGS((const GameSexpFsm_ptr self));
-
-EXTERN SexpFsm_ptr GameSexpFsm_get_player_2 ARGS((const GameSexpFsm_ptr self));
+EXTERN SexpFsm_ptr GameSexpFsm_get_player ARGS((const GameSexpFsm_ptr self, int index));
 
 #endif /* __GAME_SEXP_FSM_H__ */

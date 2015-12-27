@@ -136,6 +136,50 @@ void Game_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
 
 /**Function********************************************************************
 
+  Synopsis    [ Checks a reach-target Atl-game specification. ]
+
+  Description [ 'prop' is a given property to be checked. It must be a
+                REACHTARGET game specification.
+
+                During checking (if required) all corresponding info
+                is printed, such as strategy, success messages, etc. ]
+
+  SideEffects [ ]
+
+  SeeAlso     [ ]
+
+******************************************************************************/
+void AtlGame_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
+{
+    boolean construct_strategy;
+    Game_RealizabilityStatus status;
+    GameStrategy_ptr strategy;
+
+    NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(prop));
+    OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
+
+    nusmv_assert(PROP_GAME(NULL) != prop &&
+                 PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)));
+
+    /* initialization and initial printing */
+    strategy = GAME_STRATEGY(NULL);
+    construct_strategy = (((params != (gameParams_ptr) NULL) &&
+                           params->strategy_printout) ||
+                          opt_game_print_strategy(opts));
+    Game_BeforeCheckingSpec(prop);
+
+    /* the checking itself */
+    status = AtlGame_UseStrongReachabilityAlgorithm(prop,
+                                                 (construct_strategy ?
+                                                  (&strategy) :
+                                                  (GameStrategy_ptr*) NULL));
+
+    /* printing the results and cleaning up */
+    Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+}
+
+/**Function********************************************************************
+
   Synopsis    [ Checks an avoid-target game specification. ]
 
   Description [ prop is a given property to be checked. It must be an
@@ -176,6 +220,50 @@ void Game_CheckAvoidTargetSpec(PropGame_ptr prop, gameParams_ptr params)
 
   /* printing the results and cleaning up */
   Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+}
+
+/**Function********************************************************************
+
+  Synopsis    [ Checks an avoid-target Atl-game specification. ]
+
+  Description [ prop is a given property to be checked. It must be an
+                AVOIDTARGET game specification.
+
+                During checking all required info is printed, such as
+                strategy, success messages, etc. ]
+
+  SideEffects [ ]
+
+  SeeAlso     [ ]
+
+******************************************************************************/
+void AtlGame_CheckAvoidTargetSpec(PropGame_ptr prop, gameParams_ptr params)
+{
+    boolean construct_strategy;
+    Game_RealizabilityStatus status;
+    GameStrategy_ptr strategy;
+
+    NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(prop));
+    OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
+
+    nusmv_assert(PROP_GAME(NULL) != prop &&
+                 PropGame_AvoidTarget == Prop_get_type(PROP(prop)));
+
+    /* initialization and initial printing */
+    strategy = GAME_STRATEGY(NULL);
+    construct_strategy = (((params != (gameParams_ptr) NULL) &&
+                           params->strategy_printout) ||
+                          opt_game_print_strategy(opts));
+    Game_BeforeCheckingSpec(prop);
+
+    /* the checking itself */
+    status = AtlGame_UseStrongReachabilityAlgorithm(prop,
+                                                 (construct_strategy ?
+                                                  (&strategy) :
+                                                  (GameStrategy_ptr*) NULL));
+
+    /* printing the results and cleaning up */
+    Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
 }
 
 /**Function********************************************************************
@@ -324,6 +412,8 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   FILE* outstream = StreamMgr_get_output_stream(streams);
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
+    int i;
+
   PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
                PropGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
@@ -331,13 +421,13 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
                PropGame_AvoidDeadlock == Prop_get_type(PROP(prop)));
 
   /* flag which player this game is for */
-  GamePlayer player =
-    (UStringMgr_find_string(strings,PLAYER_NAME_1) == PropGame_get_player(prop))
-    ? PLAYER_1 : PLAYER_2;
-  GamePlayer opponent = PLAYER_1 == player ? PLAYER_2 : PLAYER_1;
+  int player =
+    (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop))
+    ? 1 : 2;
+  int opponent = 1 == player ? 2 : 1;
   char quantifiers = opt_game_game_initial_condition(oh);
 
-  bdd_ptr init_1, init_2, invar_1, invar_2;
+  bdd_ptr inits[2], invars[2];
   bdd_ptr originalTarget;  /* A target to be reached. */
   bdd_ptr allReachStates;  /* All the states from which the target can
                               be reached. */
@@ -349,14 +439,13 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   boolean isFixedpointReached = false;
   int pathLength = 0;
 
-  /* prepare the initial states (obtain them and add the invariants) */
-  init_1 = GameBddFsm_get_init_1(fsm);
-  init_2 = GameBddFsm_get_init_2(fsm);
-  invar_1 = GameBddFsm_get_invars_1(fsm);
-  invar_2 = GameBddFsm_get_invars_2(fsm);
+    for(i=0;i<2;i++) {
+      /* prepare the initial states (obtain them and add the invariants) */
+      inits[i] = GameBddFsm_get_init(fsm,i);
+      invars[i] = GameBddFsm_get_invars(fsm,i);
 
-  bdd_and_accumulate(dd_manager, &init_1, invar_1);
-  bdd_and_accumulate(dd_manager, &init_2, invar_2);
+      bdd_and_accumulate(dd_manager, &inits[i], invars[i]);
+    }
 
   /* initialize the original target states (reachability or avoidance target) */
   if (PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
@@ -369,8 +458,8 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     originalTarget = bdd_false(dd_manager);
   }
 
-  bdd_and_accumulate(dd_manager, &originalTarget, invar_1);
-  bdd_and_accumulate(dd_manager, &originalTarget, invar_2);
+  bdd_and_accumulate(dd_manager, &originalTarget, invars[0]);
+  bdd_and_accumulate(dd_manager, &originalTarget, invars[1]);
 
   /* For avoidance games it is necessary to reverse the player and, as
      result, initial quantifiers (because now we play for the
@@ -378,8 +467,8 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   */
   if (PropGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
       PropGame_AvoidDeadlock == Prop_get_type(PROP(prop))) {
-    player = PLAYER_1 == player ? PLAYER_2 : PLAYER_1;
-    opponent = PLAYER_1 == opponent ? PLAYER_2 : PLAYER_1;
+    player = 1 == player ? 2 : 1;
+    opponent = 1 == opponent ? 2 : 1;
     quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
       : quantifiers == 'E' ? 'A'
       : quantifiers == 'A' ? 'E'
@@ -390,7 +479,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   reachStateList = cons(nodemgr,(node_ptr)bdd_dup(originalTarget), Nil);
 
   /* check whether the target can be reached at the initial state */
-  isTargetReached = GameBddFsm_can_player_satisfy(fsm, init_1, init_2,
+  isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
                                                   allReachStates, player,
                                                   quantifiers);
 
@@ -399,11 +488,11 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   */
   {
     /* init is zero */
-    if (bdd_is_false(dd_manager, init_1) || bdd_is_false(dd_manager, init_2)) {
+    if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
       fprintf(errstream, "\n********   WARNING   ********\n"
               "Initial states set for %s is empty.\n"
               "******** END WARNING ********\n",
-              bdd_is_false(dd_manager, init_1) ? PLAYER_NAME_1 : PLAYER_NAME_2);
+              bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2));
       /* to skip the loop below */
       isFixedpointReached = true;
     }
@@ -451,7 +540,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
 
     /* check reachability only if fixpoint has not been reached */
     if (!isFixedpointReached) {
-      isTargetReached = GameBddFsm_can_player_satisfy(fsm, init_1, init_2,
+      isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
                                                       allReachStates, player,
                                                       quantifiers);
     }
@@ -541,9 +630,9 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
       } /* while */
 
       /* add back the opponent-deadlock moves for the first player */
-      if (PLAYER_1 == player) {
+      if (1 == player) {
         bdd_or_accumulate(dd_manager, &trans,
-                          GameBddFsm_without_successor_states(fsm, PLAYER_2));
+                          GameBddFsm_without_successor_states(fsm, 2));
       }
 
       /* free the list of reach-states differences, i.e. diffReachStateList */
@@ -586,9 +675,9 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
       /* for player 1 GameBddFsm_get_move removes opponent deadlock states.
          Add them back now.
       */
-      if (PLAYER_1 == opponent) {
+      if (1 == opponent) {
         bdd_or_accumulate(dd_manager, &trans,
-                          GameBddFsm_without_successor_states(fsm, PLAYER_2));
+                          GameBddFsm_without_successor_states(fsm, 2));
       }
 
       zero = bdd_false(dd_manager);
@@ -632,10 +721,10 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
 
   bdd_free(dd_manager, allReachStates);
   bdd_free(dd_manager, originalTarget);
-  bdd_free(dd_manager, init_1);
-  bdd_free(dd_manager, init_2);
-  bdd_free(dd_manager, invar_1);
-  bdd_free(dd_manager, invar_2);
+  bdd_free(dd_manager, inits[0]);
+  bdd_free(dd_manager, inits[1]);
+  bdd_free(dd_manager, invars[0]);
+  bdd_free(dd_manager, invars[1]);
 
 
   return
@@ -644,6 +733,359 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     )
     ? (isTargetReached ? GAME_REALIZABLE : GAME_UNREALIZABLE)
     : (isTargetReached ? GAME_UNREALIZABLE : GAME_REALIZABLE);
+}
+
+/******************************************************************************/
+Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
+                                                             GameStrategy_ptr* strategy)
+{
+
+    NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(prop));
+    GameBddFsm_ptr fsm = PropGame_get_game_bdd_fsm(prop);
+    BddEnc_ptr enc = BDD_ENC(NuSMVEnv_get_value(env, ENV_BDD_ENCODER));
+    DDMgr_ptr dd_manager = BddEnc_get_dd_manager(enc);
+
+    const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
+    const UStringMgr_ptr strings = USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR));
+    const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
+
+    OptsHandler_ptr oh = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
+    StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
+    FILE* outstream = StreamMgr_get_output_stream(streams);
+    FILE* errstream = StreamMgr_get_error_stream(streams);
+
+    int i,ntotp,np,no;
+
+    PROP_GAME_CHECK_INSTANCE(prop);
+    nusmv_assert(PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)) ||
+                 PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
+                 PropAtlGame_ReachDeadlock == Prop_get_type(PROP(prop)) ||
+                 PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop)));
+
+    /* flag which player this game is for */
+    int players[2];
+
+   // for(i=0;i<2;i++) players[i] = (UStringMgr_find_string(strings,PLAYER_NAME(i)) == PropGame_get_player(prop)) ? 1 : 0; // players in << , >> , opponents are players with 0 value
+    int player = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 1 : 2;
+    int opponent = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 2 : 1;
+
+    char quantifiers = opt_game_game_initial_condition(oh);
+
+    bdd_ptr inits[2], invars[2];
+    bdd_ptr originalTarget;  /* A target to be reached. */
+    bdd_ptr allReachStates;  /* All the states from which the target can
+                              be reached. */
+    node_ptr reachStateList; /* A list of consecutive states from which
+                              the target can be reached. */
+    boolean isTargetReached; /* True if the target is reachable by a
+                              player (for reachability game) or an
+                              opponent (for avoidance game). */
+    boolean isFixedpointReached = false;
+    int pathLength = 0;
+
+    for(i=0;i<2;i++) {
+        /* prepare the initial states (obtain them and add the invariants) */
+        inits[i] = GameBddFsm_get_init(fsm,i);
+        invars[i] = GameBddFsm_get_invars(fsm,i);
+
+        bdd_and_accumulate(dd_manager, &inits[i], invars[i]);
+    }
+
+    /* initialize the original target states (reachability or avoidance target) */
+    if (PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)) ||
+        PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop))) {
+        originalTarget =
+                BddEnc_expr_to_bdd(enc, Prop_get_expr_core(PROP(prop)), Nil);
+    }
+    else {
+        /* create empty set of target states */
+        originalTarget = bdd_false(dd_manager);
+    }
+
+    bdd_and_accumulate(dd_manager, &originalTarget, invars[0]);
+    bdd_and_accumulate(dd_manager, &originalTarget, invars[1]);
+
+    /* For avoidance games it is necessary to reverse the player and, as
+       result, initial quantifiers (because now we play for the
+       opponent).
+    */
+    if (PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
+        PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop))) {
+
+        for(i=0;i<2;i++) players[i] = !players[i];
+//        players = 1 == players ? 2 : 1;
+//        opponents = 1 == opponents ? 2 : 1;
+        quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
+                                         : quantifiers == 'E' ? 'A'
+                                                              : quantifiers == 'A' ? 'E'
+                                                                                   : (ErrorMgr_internal_error(errmgr,"unknown quantifiers"), 0);
+    }
+
+    allReachStates = bdd_dup(originalTarget);
+    reachStateList = cons(nodemgr,(node_ptr)bdd_dup(originalTarget), Nil);
+
+    /* check whether the target can be reached at the initial state */
+    isTargetReached = false;
+
+    for(i=0;i<2;i++) // 0000000000000000000000
+    isTargetReached |= GameBddFsm_can_player_satisfy(fsm, inits,
+                                                    allReachStates, players[i],
+                                                    quantifiers);
+
+    /* Makes a few checks and prints a few warning in the case of
+       suspicious input, i.e., if init is zero, target is zero or one.
+    */
+    {
+        /* init is zero */
+        if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
+            fprintf(errstream, "\n********   WARNING   ********\n"
+                            "Initial states set for %s is empty.\n"
+                            "******** END WARNING ********\n",
+                    bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2)); //00000000000000
+            /* to skip the loop below */
+            isFixedpointReached = true;
+        }
+        /* target is zero (check only reach-target and avoid-target specs) */
+        if ((PropAtlGame_ReachTarget == Prop_get_type(PROP(prop))
+             || PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)))
+            && bdd_is_false(dd_manager, originalTarget)) {
+            fprintf(errstream, "\n********   WARNING   ********\n"
+                    "The target states set is empty.\n"
+                    "******** END WARNING ********\n");
+            /* continue the check because deadlock state may allow to win */
+        }
+        /* target is reached at step zero */
+        if (isTargetReached) {
+            fprintf(errstream, "\n********   WARNING   ********\n"
+                    "The target states are reached at step 0.\n"
+                    "Probably this is not what was intended.\n"
+                    "******** END WARNING ********\n");
+        }
+    }
+
+    /* ------------ main loop ------------------*/
+    /* loops stop if fixed-point is reached or target is reached from init */
+    while (!isFixedpointReached && !isTargetReached) {
+
+        bdd_ptr preImage;
+        bdd_ptr previousReachStates = bdd_dup(allReachStates);
+
+        if(opt_verbose_level_gt(oh, 0)) {
+            fprintf(outstream, "\n-----------------------------\n"
+                    "Reach-target algorithm: iteration %d\n", pathLength);
+        }
+
+        // pre-image can be computed with not-reach-state constraint on
+        // returned value, since only "new" reach states are of importance.
+        // This can speed up computation of pre-image.
+
+        /* compute the strong pre-image for reach states and given player. */
+        isFixedpointReached = false;
+        for(i=0;i<2 && !isFixedpointReached && !isTargetReached;i++) { // 0000000000000000000000
+            preImage = GameBddFsm_get_strong_backward_image(fsm, allReachStates,
+                                                            players[i]);
+
+            bdd_or_accumulate(dd_manager, &allReachStates, preImage);
+
+            isFixedpointReached = (previousReachStates == allReachStates);
+
+            /* check reachability only if fixpoint has not been reached */
+            if (!isFixedpointReached) {
+                isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
+                                                                allReachStates, players[i],
+                                                                quantifiers);
+            }
+        }
+
+        /* add to the list of reach states sets */
+        reachStateList = cons(nodemgr,(node_ptr)bdd_dup(allReachStates), reachStateList);
+        pathLength++;
+
+        bdd_free(dd_manager, preImage);
+        bdd_free(dd_manager, previousReachStates);
+    } /* while */
+
+
+    /* auxiliary info */
+    if(opt_verbose_level_gt(oh, 0)) {
+        fprintf(outstream,
+                "The number of iterations for strategy computation is %d.\n",
+                pathLength);
+    }
+
+
+    /*-----------------------------------------------------------------------*/
+    /*-------------         STRATEGY COMPUTATION        ---------------------*/
+    /*-----------------------------------------------------------------------*/
+    /* strategy is computed only if the container for the strategy is provided.
+       The strategy is computed for the player if the game is won and for the
+       opponents if the game is lost.
+
+    */
+    if ((GameStrategy_ptr*) NULL != strategy) {
+        bdd_ptr trans = bdd_false(dd_manager);
+
+        /* Compute the transitions for the strategy */
+
+        /* The target is reached =>
+           the player won in a reachability game or lost in an avoidance game
+        */
+        if (isTargetReached) {
+            node_ptr iter;
+            node_ptr targ, diff;
+            node_ptr diffReachStateList;
+
+            /* At first, create a list of differences between consecutive
+               reach states.
+               NB: reachStateList list is decreasing, i.e. first step is at
+               the beginning, the original target is at the end.
+            */
+            for (iter = reachStateList, diffReachStateList = Nil;
+                 iter != Nil && cdr(iter) != Nil;
+                 iter = cdr(iter)) {
+                bdd_ptr not_prev = bdd_not(dd_manager, (bdd_ptr)car(cdr(iter)));
+                bdd_ptr and = bdd_and(dd_manager, (bdd_ptr)car(iter), not_prev);
+                bdd_free(dd_manager, not_prev);
+                diffReachStateList = cons(nodemgr,(node_ptr)and, diffReachStateList);
+            }
+            diffReachStateList = reverse(diffReachStateList);
+
+            /* Compute moves (transitions). They should include also opponent-deadlock
+               moves
+            */
+            targ = cdr(reachStateList);
+            diff = diffReachStateList;
+
+            while (targ != Nil) {
+                bdd_ptr move;
+                /* move =
+                   for player 1 :
+                   diff & trans1 & next(invar1) &
+                   Any p2', trans2 & next(invar2) -> next(targ)
+                   for player 2 :
+                   diff & trans1 & next(invar1) &
+                   trans2 & next(invar2) & next(targ)
+
+                   Actually, for the first player opponent-deadlock moves are
+                   removed by GameBddFsm_get_move.  They will be added later
+                   in a separate field.
+                */
+                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), player);
+                bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
+
+                bdd_or_accumulate(dd_manager, &trans, move);
+
+                bdd_free(dd_manager, move);
+                targ = cdr(targ);
+                diff = cdr(diff);
+                nusmv_assert((Nil == targ) == (Nil == diff));
+            } /* while */
+
+            /* add back the opponent-deadlock moves for the first player */
+            if (1 == player) {
+                bdd_or_accumulate(dd_manager, &trans,
+                                  GameBddFsm_without_successor_states(fsm, 2));
+            }
+
+            /* free the list of reach-states differences, i.e. diffReachStateList */
+            while (diffReachStateList != Nil) {
+                node_ptr n = cdr(diffReachStateList);
+                bdd_free(dd_manager, (bdd_ptr)car(diffReachStateList));
+                free_node(nodemgr,diffReachStateList);
+                diffReachStateList = n;
+            }
+
+            /* construct the strategy */
+            *strategy =
+                    GameStrategy_construct(env,
+                                           fsm,
+                                           player,
+                            /* initial quantifiers have been
+                               reversed => reverse */
+                                           (quantifiers !=
+                                            opt_game_game_initial_condition(oh)),
+                                           originalTarget,
+                                           allReachStates,
+                                           trans);
+
+        } /* end of if (isTargetReached) */
+
+            /* fixed point is reached =>
+               the player lost in a reachability game or won in an avoidance game
+            */
+        else if (isFixedpointReached) {
+            bdd_ptr winStates, zero;
+
+            /* for the player (opponent) it is just necessary to stay in the
+               not-reach states */
+            winStates = bdd_not(dd_manager, allReachStates);
+
+            trans = GameBddFsm_get_move(fsm, winStates, opponent);
+            bdd_and_accumulate(dd_manager, &trans, winStates);
+
+
+            /* for player 1 GameBddFsm_get_move removes opponent deadlock states.
+               Add them back now.
+            */
+            if (1 == opponent) {
+                bdd_or_accumulate(dd_manager, &trans,
+                                  GameBddFsm_without_successor_states(fsm, 2));
+            }
+
+            zero = bdd_false(dd_manager);
+
+            /* construct the strategy */
+            *strategy =
+                    GameStrategy_construct(env,
+                                           fsm,
+                                           opponent,
+                            /*initial quantifiers have been reversed
+                              => keep them */
+                                           (quantifiers ==
+                                            opt_game_game_initial_condition(oh)),
+                                           zero,
+                                           winStates,
+                                           trans);
+
+            bdd_free(dd_manager, zero);
+            bdd_free(dd_manager, winStates);
+        } /* end of else if (isFixedpointReached)*/
+
+        else {
+            /* if the target is not reached then the fixpoint is reached always */
+            nusmv_assert(false);
+        }
+
+    }
+
+    /* end of reach- or avoid- strategy computation */
+
+
+    /*-----    FREE THE CREATED OBJECTS    --------------------------------------*/
+
+    /* free reachStateList */
+    while (reachStateList != Nil) {
+        node_ptr n = cdr(reachStateList);
+        bdd_free(dd_manager, (bdd_ptr)car(reachStateList));
+        free_node(nodemgr,reachStateList);
+        reachStateList = n;
+    }
+
+    bdd_free(dd_manager, allReachStates);
+    bdd_free(dd_manager, originalTarget);
+
+    for(i=0;i<2;i++) {
+        bdd_free(dd_manager, inits[i]);
+        bdd_free(dd_manager, invars[i]);
+    }
+
+
+    return
+            ( PropAtlGame_ReachTarget == Prop_get_type(PROP(prop))
+              || PropAtlGame_ReachDeadlock == Prop_get_type(PROP(prop))
+            )
+            ? (isTargetReached ? GAME_REALIZABLE : GAME_UNREALIZABLE)
+            : (isTargetReached ? GAME_UNREALIZABLE : GAME_REALIZABLE);
 }
 
 

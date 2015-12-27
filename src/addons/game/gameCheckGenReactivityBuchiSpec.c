@@ -82,7 +82,7 @@ EXTERN options_ptr options;
 /*---------------------------------------------------------------------------*/
 static boolean
 game_compute_gen_reactivity ARGS((NuSMVEnv_ptr env,node_ptr specExp,
-                                  GamePlayer player,
+                                  int player,
                                   GameBddFsm_ptr fsm,
                                   Game_InitTermination earlierTermination,
                                   GameStrategy_ptr* strategy,
@@ -168,7 +168,7 @@ void Game_CheckGenReactivitySpec(PropGame_ptr prop, gameParams_ptr params)
                              &layer,
                              &var);
 
-    if (UStringMgr_find_string(strings,PLAYER_NAME_1) == PropGame_get_player(prop)) {
+    if (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) {
       varList1 = cons(nodemgr,var, Nil);
       varList2 = Nil;
     }
@@ -257,7 +257,7 @@ void Game_CheckBuchiGameSpec(PropGame_ptr prop, gameParams_ptr params)
                              &layer,
                              &var);
 
-    if (UStringMgr_find_string(strings,PLAYER_NAME_1) == PropGame_get_player(prop)) {
+    if (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) {
       varList1 = cons(nodemgr,var, Nil);
       varList2 = Nil;
     }
@@ -307,7 +307,7 @@ void Game_CheckBuchiGameSpec(PropGame_ptr prop, gameParams_ptr params)
 ******************************************************************************/
 boolean Game_ComputeGenReactivity(NuSMVEnv_ptr env,
                                   node_ptr specExp,
-                                  GamePlayer player,
+                                  int player,
                                   GameBddFsm_ptr fsm,
                                   Game_InitTermination earlierTermination,
                                   bdd_ptr overapproxWinStates,
@@ -592,7 +592,7 @@ static int totalYIterations = 0;
 static int totalXIterations = 0;
 static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
                                            node_ptr specExp,
-                                          GamePlayer player,
+                                          int player,
                                           GameBddFsm_ptr fsm,
                                         Game_InitTermination earlierTermination,
                                           GameStrategy_ptr* strategy,
@@ -611,7 +611,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   FILE* outstream = StreamMgr_get_output_stream(streams);
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
-  bdd_ptr init_1, init_2, invar_1, invar_2;
+  bdd_ptr inits[2], invars[2];
   bdd_ptr Z;
   boolean isSomeInitFalse = false;
   boolean isZFixpointReached = false;
@@ -624,19 +624,19 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   node_ptr* xResults; /* an array of lists of list of values of X */
 
   /* prepare the initial states (obtain them and add the invariants) */
-  init_1 = GameBddFsm_get_init_1(fsm);
-  init_2 = GameBddFsm_get_init_2(fsm);
-  invar_1 = GameBddFsm_get_invars_1(fsm);
-  invar_2 = GameBddFsm_get_invars_2(fsm);
+  inits[0] = GameBddFsm_get_init(fsm,0);
+  inits[1] = GameBddFsm_get_init(fsm,1);
+  invars[0] = GameBddFsm_get_invars(fsm,0);
+  invars[1] = GameBddFsm_get_invars(fsm,1);
 
-  bdd_and_accumulate(dd_manager, &init_1, invar_1);
-  bdd_and_accumulate(dd_manager, &init_2, invar_2);
+  bdd_and_accumulate(dd_manager, &inits[0], invars[0]);
+  bdd_and_accumulate(dd_manager, &inits[1], invars[1]);
 
   /* check what will be our initial values in
      greatest and least fixpoint computations
   */
   if (NULL == overapproxWinStates) {
-    overapproxWinStates = bdd_and(dd_manager, invar_1, invar_2);
+    overapproxWinStates = bdd_and(dd_manager, invars[0],invars[1]);
   }
   else {
     overapproxWinStates = bdd_dup(overapproxWinStates);
@@ -674,8 +674,8 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
 
       for (i = 0; i < *NUM;  expIter = cdr(expIter)) {
         (*constraints)[i] = BddEnc_expr_to_bdd(enc, car(expIter), Nil);
-        bdd_and_accumulate(dd_manager, &((*constraints)[i]), invar_1);
-        bdd_and_accumulate(dd_manager, &((*constraints)[i]), invar_2);
+        bdd_and_accumulate(dd_manager, &((*constraints)[i]), invars[0]);
+        bdd_and_accumulate(dd_manager, &((*constraints)[i]), invars[1]);
 
         if (bdd_is_false(dd_manager, (*constraints)[i])) {
           fprintf(errstream,
@@ -730,12 +730,12 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
 
   /* Check whether an initial condition is zero and print a
      corresponding warning. */
-  if (bdd_is_false(dd_manager, init_1) || bdd_is_false(dd_manager, init_2)) {
+  if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
     fprintf(errstream,
             "\n********   WARNING   ********\n"
             "Initial states set for %s is empty.\n"
             "******** END WARNING ********\n",
-            bdd_is_false(dd_manager, init_1) ? PLAYER_NAME_1 : PLAYER_NAME_2);
+            bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2));
     isSomeInitFalse = true;
     /* to skip the main loop below */
     if (earlierTermination != GAME_INIT_TERM_NONE) {
@@ -764,8 +764,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   case GAME_INIT_TERM_NORMAL:
     isRealizable =
       GameBddFsm_can_player_satisfy(fsm,
-                                    init_1,
-                                    init_2,
+                                    inits,
                                     Z,
                                     player,
                                     opt_game_game_initial_condition(oh));
@@ -777,8 +776,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
     */
     bdd_ptr initCheck =
       GameBddFsm_player_satisfies_from(fsm,
-                                       init_1,
-                                       init_2,
+                                       inits,
                                        Z,
                                        player,
                                        opt_game_game_initial_condition(oh));
@@ -958,8 +956,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
     case GAME_INIT_TERM_NORMAL:
       isRealizable =
         GameBddFsm_can_player_satisfy(fsm,
-                                      init_1,
-                                      init_2,
+                                      inits,
                                       Z,
                                       player,
                                       opt_game_game_initial_condition(oh));
@@ -971,8 +968,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
       */
       bdd_ptr initCheck =
         GameBddFsm_player_satisfies_from(fsm,
-                                         init_1,
-                                         init_2,
+                                         inits,
                                          Z,
                                          player,
                                          opt_game_game_initial_condition(oh));
@@ -1009,8 +1005,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
    if (GAME_INIT_TERM_NONE == earlierTermination) {
      isRealizable =
        GameBddFsm_can_player_satisfy(fsm,
-                                     init_1,
-                                     init_2,
+                                     inits,
                                      Z,
                                      player,
                                      opt_game_game_initial_condition(oh));
@@ -1230,10 +1225,10 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   bdd_free(dd_manager, overapproxWinStates);
   bdd_free(dd_manager, underapproxWinStates);
 
-  bdd_free(dd_manager, init_1);
-  bdd_free(dd_manager, init_2);
-  bdd_free(dd_manager, invar_1);
-  bdd_free(dd_manager, invar_2);
+  bdd_free(dd_manager, inits[0]);
+  bdd_free(dd_manager, inits[1]);
+  bdd_free(dd_manager, invars[0]);
+  bdd_free(dd_manager, invars[1]);
 
   if (winningStates) *winningStates = Z;
   else bdd_free(dd_manager, Z);
@@ -1292,11 +1287,9 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
   /* flag which player this game is for */
-  GamePlayer player =
-    (UStringMgr_find_string(strings,PLAYER_NAME_1) == PropGame_get_player(prop))
-    ? PLAYER_1 : PLAYER_2;
-
-  bdd_ptr init_1, init_2, invar_1, invar_2;
+  int player = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 1 : 2;
+    
+  bdd_ptr inits[2], invars[2];
   bdd_ptr Z;
   boolean isZFixpointReached = false;
   boolean isRealizable;
@@ -1309,13 +1302,13 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
 
   /* prepare the initial states (obtain them and add the
      invariants) */
-  init_1 = GameBddFsm_get_init_1(fsm);
-  init_2 = GameBddFsm_get_init_2(fsm);
-  invar_1 = GameBddFsm_get_invars_1(fsm);
-  invar_2 = GameBddFsm_get_invars_2(fsm);
+  inits[0] = GameBddFsm_get_init(fsm,0);
+  inits[1] = GameBddFsm_get_init(fsm,1);
+  invars[0] = GameBddFsm_get_invars(fsm,0);
+  invars[1] = GameBddFsm_get_invars(fsm,1);
 
-  bdd_and_accumulate(dd_manager, &init_1, invar_1);
-  bdd_and_accumulate(dd_manager, &init_2, invar_2);
+  bdd_and_accumulate(dd_manager, &inits[0], invars[0]);
+  bdd_and_accumulate(dd_manager, &inits[1], invars[1]);
 
   /* initialize the buchiConditions and container for results */
   {
@@ -1333,8 +1326,8 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
     buchiConditions = ALLOC(bdd_ptr, buchiConditionsN);
     for (i = 0; i < buchiConditionsN; ++i, iter = cdr(iter)) {
       buchiConditions[i] = BddEnc_expr_to_bdd(enc, car(iter), Nil);
-      bdd_and_accumulate(dd_manager, &buchiConditions[i], invar_1);
-      bdd_and_accumulate(dd_manager, &buchiConditions[i], invar_2);
+      bdd_and_accumulate(dd_manager, &buchiConditions[i], invars[0]);
+      bdd_and_accumulate(dd_manager, &buchiConditions[i], invars[1]);
     }
     nusmv_assert(i == buchiConditionsN &&
                  Nil == iter); /* both are of the same length */
@@ -1354,11 +1347,11 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
   {
     int i;
     /* init is zero */
-    if (bdd_is_false(dd_manager, init_1) || bdd_is_false(dd_manager, init_2)) {
+    if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
       fprintf(errstream, "\n********   WARNING   ********\n"
               "Initial states set for %s is empty.\n"
               "******** END WARNING ********\n",
-              bdd_is_false(dd_manager, init_1) ? PLAYER_NAME_1 : PLAYER_NAME_2);
+              bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2));
       /* to skip the main loop below */
       isZFixpointReached = true;
     }
@@ -1388,14 +1381,13 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
     Z = bdd_false(dd_manager);
   }
   else {
-    Z = bdd_and(dd_manager, invar_1, invar_2); /* Z = all states */
+    Z = bdd_and(dd_manager, invars[0], invars[1]); /* Z = all states */
   }
 
   /* Is it realizable or not? Used for earlier (fault) termination. */
   isRealizable =
     GameBddFsm_can_player_satisfy(fsm,
-                                  init_1,
-                                  init_2,
+                                  inits,
                                   Z,
                                   player,
                                   opt_game_game_initial_condition(opt));
@@ -1478,8 +1470,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
        is no need to go further as the game is unrealizable. */
     isRealizable =
       GameBddFsm_can_player_satisfy(fsm,
-                                    init_1,
-                                    init_2,
+                                    inits,
                                     Z,
                                     player,
                                     opt_game_game_initial_condition(opt));
@@ -1613,10 +1604,10 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
   }
 
   bdd_free(dd_manager, Z);
-  bdd_free(dd_manager, init_1);
-  bdd_free(dd_manager, init_2);
-  bdd_free(dd_manager, invar_1);
-  bdd_free(dd_manager, invar_2);
+  bdd_free(dd_manager, inits[0]);
+  bdd_free(dd_manager, inits[1]);
+  bdd_free(dd_manager, invars[0]);
+  bdd_free(dd_manager, invars[1]);
 
   return isRealizable;
 }

@@ -119,8 +119,8 @@ void Game_CommandWriteFlatModel(NuSMVEnv_ptr env,FILE* ofileid)
 
   layer1 = array_alloc(const char*, 1);
   layer2 = array_alloc(const char*, 1);
-  array_insert_last(const char*, layer1, MODEL_LAYER_1);
-  array_insert_last(const char*, layer2, MODEL_LAYER_2);
+  array_insert_last(const char*, layer1, MODEL_LAYER(1));
+  array_insert_last(const char*, layer2, MODEL_LAYER(2));
 
   fprintf(ofileid, "\n-- Begin GAME Flat Model\n");
   fprintf(ofileid, "GAME\n");
@@ -129,15 +129,15 @@ void Game_CommandWriteFlatModel(NuSMVEnv_ptr env,FILE* ofileid)
                           ofileid,
                           st,
                           layer1,
-                          PLAYER_NAME_1,
-                          GameHierarchy_get_player_1(mainGameHierarchy),
+                          PLAYER_NAME(1),
+                          GameHierarchy_get_player(mainGameHierarchy,0),
                           true);
   Compile_WriteFlattenFsm(env,
                           ofileid,
                           st,
                           layer2,
-                          PLAYER_NAME_2,
-                          GameHierarchy_get_player_2(mainGameHierarchy),
+                          PLAYER_NAME(2),
+                          GameHierarchy_get_player(mainGameHierarchy,1),
                           true);
 
   /* currently games cannot have usual NuSMV specifications */
@@ -224,28 +224,28 @@ void Game_CommandWriteBooleanModel(NuSMVEnv_ptr env,FILE* ofileid)
   /* For each player: create a list of all model layers, i.e., scalar
      and boolean, then print. */
   layers = NodeList_create();
-  NodeList_append(layers, (node_ptr) SymbTable_get_layer(st, MODEL_LAYER_1));
+  NodeList_append(layers, (node_ptr) SymbTable_get_layer(st, MODEL_LAYER(1)));
   NodeList_append(layers, (node_ptr) SymbTable_get_layer(st,
-                            BoolEnc_scalar_layer_to_bool_layer(bool_enc,MODEL_LAYER_1)));
+                            BoolEnc_scalar_layer_to_bool_layer(bool_enc,MODEL_LAYER(1))));
   Compile_WriteBoolFsm(env,
                        ofileid,
                        st,
                        layers,
-                       PLAYER_NAME_1,
-                       BOOL_SEXP_FSM(GameSexpFsm_get_player_1(bool_fsm)),
+                       PLAYER_NAME(1),
+                       BOOL_SEXP_FSM(GameSexpFsm_get_player(bool_fsm,0)),
                        true);
   NodeList_destroy(layers);
 
   layers = NodeList_create();
-  NodeList_append(layers, (node_ptr) SymbTable_get_layer(st, MODEL_LAYER_2));
+  NodeList_append(layers, (node_ptr) SymbTable_get_layer(st, MODEL_LAYER(2)));
   NodeList_append(layers, (node_ptr) SymbTable_get_layer(st,
-                            BoolEnc_scalar_layer_to_bool_layer(bool_enc,MODEL_LAYER_2)));
+                            BoolEnc_scalar_layer_to_bool_layer(bool_enc,MODEL_LAYER(2))));
   Compile_WriteBoolFsm(env,
                        ofileid,
                        st,
                        layers,
-                       PLAYER_NAME_2,
-                       BOOL_SEXP_FSM(GameSexpFsm_get_player_2(bool_fsm)),
+                       PLAYER_NAME(2),
+                       BOOL_SEXP_FSM(GameSexpFsm_get_player(bool_fsm,1)),
                        true);
   NodeList_destroy(layers);
 

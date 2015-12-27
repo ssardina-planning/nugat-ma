@@ -116,12 +116,9 @@ typedef struct GameBddFsm_TAG*  GameBddFsm_ptr;
 /* Constructors */
 
 EXTERN GameBddFsm_ptr GameBddFsm_create ARGS((BddEnc_ptr enc,
-                                              BddFsm_ptr player_1,
-                                              bdd_ptr stateVarCube_1,
-                                              bdd_ptr stateFrozenVarCube_1,
-                                              BddFsm_ptr player_2,
-                                              bdd_ptr stateVarCube_2,
-                                              bdd_ptr stateFrozenVarCube_2));
+                                              BddFsm_ptr *players,
+                                              bdd_ptr stateVarCubes[2],
+                                              bdd_ptr stateFrozenVarCubes[2]));
 
 EXTERN GameBddFsm_ptr GameBddFsm_copy ARGS((const GameBddFsm_ptr self));
 
@@ -131,54 +128,35 @@ EXTERN void GameBddFsm_destroy ARGS((GameBddFsm_ptr self));
 
 /* Accessors */
 
-EXTERN BddFsm_ptr GameBddFsm_get_player_1 ARGS((const GameBddFsm_ptr self));
+EXTERN BddFsm_ptr GameBddFsm_get_player ARGS((const GameBddFsm_ptr self, int index));
 
-EXTERN BddFsm_ptr GameBddFsm_get_player_2 ARGS((const GameBddFsm_ptr self));
-
-EXTERN bdd_ptr GameBddFsm_get_state_var_cube_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN bdd_ptr GameBddFsm_get_state_var_cube_2 ARGS((const GameBddFsm_ptr self));
+EXTERN bdd_ptr GameBddFsm_get_state_var_cube ARGS((const GameBddFsm_ptr self, int index));
 
 EXTERN bdd_ptr
-GameBddFsm_get_next_state_var_cube_1 ARGS((const GameBddFsm_ptr self));
+GameBddFsm_get_next_state_var_cube ARGS((const GameBddFsm_ptr self, int index));
 
 EXTERN bdd_ptr
-GameBddFsm_get_next_state_var_cube_2 ARGS((const GameBddFsm_ptr self));
+GameBddFsm_get_state_frozen_var_cube ARGS((const GameBddFsm_ptr self, int index));
+
+EXTERN BddStates GameBddFsm_get_init ARGS((const GameBddFsm_ptr self, int index));
+
+EXTERN BddInvarStates GameBddFsm_get_invars ARGS((const GameBddFsm_ptr self, int index));
+
+EXTERN BddTrans_ptr GameBddFsm_get_trans ARGS((const GameBddFsm_ptr self, int index));
 
 EXTERN bdd_ptr
-GameBddFsm_get_state_frozen_var_cube_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN bdd_ptr
-GameBddFsm_get_state_frozen_var_cube_2 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddStates GameBddFsm_get_init_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddStates GameBddFsm_get_init_2 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddInvarStates GameBddFsm_get_invars_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddInvarStates GameBddFsm_get_invars_2 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddTrans_ptr GameBddFsm_get_trans_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN BddTrans_ptr GameBddFsm_get_trans_2 ARGS((const GameBddFsm_ptr self));
-
-EXTERN bdd_ptr
-GameBddFsm_get_monolitic_trans_1 ARGS((const GameBddFsm_ptr self));
-
-EXTERN bdd_ptr
-GameBddFsm_get_monolitic_trans_2 ARGS((const GameBddFsm_ptr self));
+GameBddFsm_get_monolitic_trans ARGS((const GameBddFsm_ptr self, int index));
 
 EXTERN BddStates GameBddFsm_with_successor_states ARGS((GameBddFsm_ptr self,
-                                                        GamePlayer player));
+                                                        int player));
 
 EXTERN BddStates GameBddFsm_without_successor_states ARGS((GameBddFsm_ptr self,
-                                                           GamePlayer player));
+                                                           int player));
 
 EXTERN BddStates
 GameBddFsm_get_strong_backward_image ARGS((const GameBddFsm_ptr self,
                                            BddStates states,
-                                           GamePlayer player));
+                                           int player));
 
 EXTERN BddStates
 GameBddFsm_get_weak_forward_image ARGS((const GameBddFsm_ptr self,
@@ -186,21 +164,19 @@ GameBddFsm_get_weak_forward_image ARGS((const GameBddFsm_ptr self,
 
 EXTERN BddStates GameBddFsm_get_move ARGS((const GameBddFsm_ptr self,
                                            BddStates states,
-                                           GamePlayer player));
+                                           int player));
 
 EXTERN boolean GameBddFsm_can_player_satisfy ARGS((const GameBddFsm_ptr self,
-                                                   BddStates constr_1,
-                                                   BddStates constr_2,
+                                                   BddStates *constrs,
                                                    BddStates goalStates,
-                                                   GamePlayer player,
+                                                   int player,
                                                    char quantifiers));
 
 EXTERN BddStates
 GameBddFsm_player_satisfies_from ARGS((const GameBddFsm_ptr self,
-                                       BddStates constr_1,
-                                       BddStates constr_2,
+                                       BddStates constrs[2],
                                        BddStates goalStates,
-                                       GamePlayer player,
+                                       int player,
                                        char quantifiers));
 
 EXTERN void GameBddFsm_print_info ARGS((const GameBddFsm_ptr self, OStream_ptr file));

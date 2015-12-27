@@ -129,11 +129,11 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG*
                      the reached bound is large enough to conclude
                      unrealizability.
 
-                - player1_ba: The B\"uchi automaton when curr_player
-                  == PLAYER_1. Owned.
+                - players_ba[0]: The B\"uchi automaton when curr_player
+                  == 1. Owned.
 
-                - player2_ba: The B\"uchi automaton when curr_player
-                  == PLAYER_2. Owned.
+                - players_ba[1]: The B\"uchi automaton when curr_player
+                  == 2. Owned.
 
                 - bdd_enc: The BDD encoder. Not owned.
 
@@ -150,10 +150,10 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG*
                 - curr_player: The current player. Note that this may
                   be different from the player in prop.
 
-                - curr_player1_monitor_layer: The current layer where
+                - curr_players_monitor_layer[0]: The current layer where
                   player1 monitor variables will be added. Owned.
 
-                - curr_player2_monitor_layer: The current layer where
+                - curr_players_monitor_layer[1]: The current layer where
                   player2 monitor variables will be added. Owned.
 
                 - node_ptr curr_goal: The current goal. Not
@@ -162,11 +162,11 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG*
                 - curr_unique_number: A unique number to obtain
                   distinct variable names.
 
-                - curr_player1_monitor_sexp: The current player1
+                - curr_players_monitor_sexp[0]: The current player1
                   monitor as a node_ptr module. Not owned/shared
                   node_ptr.
 
-                - curr_player2_monitor_sexp: The current player2
+                - curr_players_monitor_sexp[1]: The current player2
                   monitor as a node_ptr module. Not owned/shared
                   node_ptr.
 
@@ -198,7 +198,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   PropGame_ptr prop;
 
   /* The player in prop. */
-  GamePlayer player;
+  int player;
 
   /* Parameters (see game.h) */
   gameParams_ptr params;
@@ -212,12 +212,9 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   /* Whom are we playing for. */
   Game_Who w;
 
-  /* The B\"uchi automaton when curr_player == PLAYER_1. */
-  Game_SF07_gba_ptr player1_ba;
-
-  /* The B\"uchi automaton when curr_player == PLAYER_2. */
-  Game_SF07_gba_ptr player2_ba;
-
+  /* The B\"uchi automaton when curr_player == PLAYER_i. */
+  Game_SF07_gba_ptr players_ba[2];
+    
   /* The BDD encoder. */
   BddEnc_ptr bdd_enc;
 
@@ -239,13 +236,10 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
 
   /* The current player. Note that this may be different from the
      player in prop. */
-  GamePlayer curr_player;
+  int curr_player;
 
   /* The current layer where player1 monitor variables will be added. */
-  SymbLayer_ptr curr_player1_monitor_layer;
-
-  /* The current layer where player2 monitor variables will be added. */
-  SymbLayer_ptr curr_player2_monitor_layer;
+  SymbLayer_ptr curr_players_monitor_layer[2];
 
   /* The current goal. */
   node_ptr curr_goal;
@@ -254,10 +248,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   int curr_unique_number;
 
   /* The current player1 monitor as a node_ptr module. */
-  node_ptr curr_player1_monitor_sexp;
-
-  /* The current player2 monitor as a node_ptr module. */
-  node_ptr curr_player2_monitor_sexp;
+  node_ptr curr_players_monitor_sexp[2];
 
   /* A deep (not find_noded) copy of the body of the current player2
      monitor. For strategy printing. */
@@ -325,7 +316,7 @@ ARGS((NuSMVEnv_ptr env,Game_SF07_StructCheckLTLGameSF07_ptr self));
 static void Game_SF07_StructCheckLTLGameSF07_create_iteration
 ARGS((Game_SF07_StructCheckLTLGameSF07_ptr self,
       unsigned int k,
-      GamePlayer player,
+      int player,
       int curr_unique_number));
 
 static void Game_SF07_StructCheckLTLGameSF07_destroy_iteration
@@ -334,7 +325,7 @@ ARGS((NodeMgr_ptr nodemgr,Game_SF07_StructCheckLTLGameSF07_ptr self));
 static void Game_SF07_StructCheckLTLGameSF07_run_iteration
 ARGS((NuSMVEnv_ptr env,Game_SF07_StructCheckLTLGameSF07_ptr self,
       unsigned int curr_k,
-      GamePlayer curr_player));
+      int curr_player));
 
 static void Game_SF07_StructCheckLTLGameSF07_construct_ba
 ARGS((NuSMVEnv_ptr env,Game_SF07_StructCheckLTLGameSF07_ptr self));
@@ -410,7 +401,7 @@ void Game_CheckLtlGameSpecSF07(PropGame_ptr prop,
 {
   Game_SF07_StructCheckLTLGameSF07_ptr cls;
   unsigned int curr_k;
-  GamePlayer curr_player;
+  int curr_player;
   boolean done;
 
   NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(prop));
@@ -457,13 +448,13 @@ void Game_CheckLtlGameSpecSF07(PropGame_ptr prop,
   curr_k = kmin;
   done = false;
   while ((!done) && (curr_k <= kmax)) {
-    if (((w == GAME_WHO_PROTAGONIST) && (cls->player == PLAYER_1)) ||
-        ((w == GAME_WHO_ANTAGONIST) && (cls->player == PLAYER_2)) ||
-        ((w == GAME_WHO_BOTH) && (cls->player == PLAYER_1)) ||
+    if (((w == GAME_WHO_PROTAGONIST) && (cls->player == 1)) ||
+        ((w == GAME_WHO_ANTAGONIST) && (cls->player == 2)) ||
+        ((w == GAME_WHO_BOTH) && (cls->player == 1)) ||
         (w == GAME_WHO_PLAYER_1)) {
-      curr_player = PLAYER_1;
+      curr_player = 1;
     } else {
-      curr_player = PLAYER_2;
+      curr_player = 2;
     }
     Game_SF07_StructCheckLTLGameSF07_run_iteration(env,cls, curr_k, curr_player);
     if ((Prop_get_status(PROP(cls->prop)) == Prop_True) ||
@@ -472,10 +463,10 @@ void Game_CheckLtlGameSpecSF07(PropGame_ptr prop,
     }
 
     if ((!done) && (w == GAME_WHO_BOTH)) {
-      if (curr_player == PLAYER_1) {
-        curr_player = PLAYER_2;
+      if (curr_player == 1) {
+        curr_player = 2;
       } else {
-        curr_player = PLAYER_1;
+        curr_player = 1;
       }
       Game_SF07_StructCheckLTLGameSF07_run_iteration(env,cls, curr_k, curr_player);
       if ((Prop_get_status(PROP(cls->prop)) == Prop_True) ||
@@ -606,8 +597,8 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
   res->kmin = kmin;
   res->kmax = kmax;
   res->w = w;
-  res->player1_ba = GAME_SF07_GBA(NULL);
-  res->player2_ba = GAME_SF07_GBA(NULL);
+  res->players_ba[0] = GAME_SF07_GBA(NULL);
+  res->players_ba[1] = GAME_SF07_GBA(NULL);
 
   res->bdd_enc = NuSMVEnv_get_value(env, ENV_BDD_ENCODER);
   res->bool_enc =
@@ -621,11 +612,11 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
 
   /* The iteration-variant parts. */
 
-  res->curr_player1_monitor_layer = SYMB_LAYER(NULL);
-  res->curr_player2_monitor_layer = SYMB_LAYER(NULL);
+  res->curr_players_monitor_layer[0] = SYMB_LAYER(NULL);
+  res->curr_players_monitor_layer[1] = SYMB_LAYER(NULL);
   res->curr_goal = Nil;
-  res->curr_player1_monitor_sexp = Nil;
-  res->curr_player2_monitor_sexp = Nil;
+  res->curr_players_monitor_sexp[0] = Nil;
+  res->curr_players_monitor_sexp[1] = Nil;
   res->curr_player2_monitor_sexp_copy = Nil;
   res->curr_monitor_game_bdd_fsm = GAME_BDD_FSM(NULL);
   res->curr_product_game_bdd_fsm = GAME_BDD_FSM(NULL);
@@ -657,11 +648,11 @@ static void Game_SF07_StructCheckLTLGameSF07_destroy
   /* The iteration-invariant parts. */
 
   /* Don't destroy prop: doesn't belong here. */
-  if (self->player1_ba) {
-    Game_SF07_gba_destroy(self->player1_ba);
+  if (self->players_ba[0]) {
+    Game_SF07_gba_destroy(self->players_ba[0]);
   }
-  if (self->player2_ba) {
-    Game_SF07_gba_destroy(self->player2_ba);
+  if (self->players_ba[1]) {
+    Game_SF07_gba_destroy(self->players_ba[1]);
   }
   /* Don't destroy params: doesn't belong here. */
   /* Don't destroy bdd_enc: doesn't belong here. */
@@ -675,8 +666,8 @@ static void Game_SF07_StructCheckLTLGameSF07_destroy
 
   /* The iteration-variant parts. */
 
-  nusmv_assert(self->curr_player1_monitor_layer == SYMB_LAYER(NULL));
-  nusmv_assert(self->curr_player2_monitor_layer == SYMB_LAYER(NULL));
+  nusmv_assert(self->curr_players_monitor_layer[0] == SYMB_LAYER(NULL));
+  nusmv_assert(self->curr_players_monitor_layer[1] == SYMB_LAYER(NULL));
   /* Don't destroy goal: node_ptr are shared. */
   /* Don't destroy player1_monitor_sexp: node_ptr are shared. */
   /* Don't destroy player2_monitor_sexp: node_ptr are shared. */
@@ -704,7 +695,7 @@ static void
 Game_SF07_StructCheckLTLGameSF07_create_iteration
 (Game_SF07_StructCheckLTLGameSF07_ptr self,
  unsigned int curr_k,
- GamePlayer curr_player,
+ int curr_player,
  int curr_unique_number)
 {
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
@@ -715,19 +706,19 @@ Game_SF07_StructCheckLTLGameSF07_create_iteration
                ((self->w == GAME_WHO_ANTAGONIST) &&
                 (self->player != curr_player)) ||
                (self->w == GAME_WHO_BOTH) ||
-               ((self->w == GAME_WHO_PLAYER_1) && (curr_player == PLAYER_1)) ||
-               ((self->w == GAME_WHO_PLAYER_2) && (curr_player == PLAYER_2)));
+               ((self->w == GAME_WHO_PLAYER_1) && (curr_player == 1)) ||
+               ((self->w == GAME_WHO_PLAYER_2) && (curr_player == 2)));
 
   self->curr_k = curr_k;
   self->curr_player = curr_player;
-  self->curr_player1_monitor_layer =
+  self->curr_players_monitor_layer[0] =
     SymbTable_create_layer(self->symb_table, NULL, SYMB_LAYER_POS_BOTTOM);
-  self->curr_player2_monitor_layer =
+  self->curr_players_monitor_layer[1] =
     SymbTable_create_layer(self->symb_table, NULL, SYMB_LAYER_POS_BOTTOM);
   self->curr_goal = Nil;
   self->curr_unique_number = curr_unique_number;
-  self->curr_player1_monitor_sexp = Nil;
-  self->curr_player2_monitor_sexp = Nil;
+  self->curr_players_monitor_sexp[0] = Nil;
+  self->curr_players_monitor_sexp[1] = Nil;
   self->curr_player2_monitor_sexp_copy = Nil;
   self->curr_monitor_game_bdd_fsm = GAME_BDD_FSM(NULL);
   self->curr_product_game_bdd_fsm = GAME_BDD_FSM(NULL);
@@ -754,37 +745,37 @@ static void Game_SF07_StructCheckLTLGameSF07_destroy_iteration
 
   /* Remove player1_monitor_layer. */
   if (BaseEnc_layer_occurs(BASE_ENC(self->bdd_enc),
-                        SymbLayer_get_name(self->curr_player1_monitor_layer))) {
+                        SymbLayer_get_name(self->curr_players_monitor_layer[0]))) {
     BaseEnc_remove_layer(BASE_ENC(self->bdd_enc),
-                         SymbLayer_get_name(self->curr_player1_monitor_layer));
+                         SymbLayer_get_name(self->curr_players_monitor_layer[0]));
   }
   if (BaseEnc_layer_occurs(BASE_ENC(self->bool_enc),
-                        SymbLayer_get_name(self->curr_player1_monitor_layer))) {
+                        SymbLayer_get_name(self->curr_players_monitor_layer[0]))) {
     BaseEnc_remove_layer(BASE_ENC(self->bool_enc),
-                         SymbLayer_get_name(self->curr_player1_monitor_layer));
+                         SymbLayer_get_name(self->curr_players_monitor_layer[0]));
   }
-  SymbTable_remove_layer(self->symb_table, self->curr_player1_monitor_layer);
-  self->curr_player1_monitor_layer = SYMB_LAYER(NULL);
+  SymbTable_remove_layer(self->symb_table, self->curr_players_monitor_layer[0]);
+  self->curr_players_monitor_layer[0] = SYMB_LAYER(NULL);
   /* Remove player2_monitor_layer. */
   if (BaseEnc_layer_occurs(BASE_ENC(self->bdd_enc),
-                        SymbLayer_get_name(self->curr_player2_monitor_layer))) {
+                        SymbLayer_get_name(self->curr_players_monitor_layer[1]))) {
     BaseEnc_remove_layer(BASE_ENC(self->bdd_enc),
-                         SymbLayer_get_name(self->curr_player2_monitor_layer));
+                         SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   }
   if (BaseEnc_layer_occurs(BASE_ENC(self->bool_enc),
-                        SymbLayer_get_name(self->curr_player2_monitor_layer))) {
+                        SymbLayer_get_name(self->curr_players_monitor_layer[1]))) {
     BaseEnc_remove_layer(BASE_ENC(self->bool_enc),
-                         SymbLayer_get_name(self->curr_player2_monitor_layer));
+                         SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   }
-  SymbTable_remove_layer(self->symb_table, self->curr_player2_monitor_layer);
-  self->curr_player2_monitor_layer = SYMB_LAYER(NULL);
+  SymbTable_remove_layer(self->symb_table, self->curr_players_monitor_layer[1]);
+  self->curr_players_monitor_layer[1] = SYMB_LAYER(NULL);
   /* Don't destroy goal: node_ptr are shared. */
   self->curr_goal = Nil;
   self->curr_unique_number = -1;
   /* Don't destroy player1_monitor_sexp: node_ptr are shared. */
-  self->curr_player1_monitor_sexp = Nil;
+  self->curr_players_monitor_sexp[0] = Nil;
   /* Don't destroy player2_monitor_sexp: node_ptr are shared. */
-  self->curr_player2_monitor_sexp = Nil;
+  self->curr_players_monitor_sexp[1] = Nil;
   {
     node_ptr n = self->curr_player2_monitor_sexp_copy;
     Game_SF07_StructCheckLTLGameSF07_free_node(nodemgr,n);
@@ -831,7 +822,7 @@ static void Game_SF07_StructCheckLTLGameSF07_destroy_iteration
 static void Game_SF07_StructCheckLTLGameSF07_run_iteration
 (NuSMVEnv_ptr env,Game_SF07_StructCheckLTLGameSF07_ptr self,
  unsigned int curr_k,
- GamePlayer curr_player)
+ int curr_player)
 {
   static int ltlgame_sf07_unique_number = -1;
 
@@ -857,7 +848,7 @@ static void Game_SF07_StructCheckLTLGameSF07_run_iteration
             "\nGame_CheckLtlGameSpecSF07: performing iteration with curr_k = "
             "%d, curr_player = %d.\n\n",
             curr_k,
-            (curr_player == PLAYER_1) ? 1 : 2);
+            (curr_player == 1) ? 1 : 2);
   }
 
   CATCH(errmgr) {
@@ -934,10 +925,10 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_ba
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
   /* Has the ba already been constructed? */
-  if (((self->curr_player == PLAYER_1) &&
-       (self->player1_ba != GAME_SF07_GBA(NULL))) ||
-      ((self->curr_player == PLAYER_2) &&
-       (self->player2_ba != GAME_SF07_GBA(NULL)))) {
+  if (((self->curr_player == 1) &&
+       (self->players_ba[0] != GAME_SF07_GBA(NULL))) ||
+      ((self->curr_player == 2) &&
+       (self->players_ba[1] != GAME_SF07_GBA(NULL)))) {
     return;
   }
 
@@ -1039,10 +1030,10 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_ba
   }
 
   /* Store ba. */
-  if (self->curr_player == PLAYER_1) {
-    self->player1_ba = ba;
+  if (self->curr_player == 1) {
+    self->players_ba[0] = ba;
   } else {
-    self->player2_ba = ba;
+    self->players_ba[1] = ba;
   }
 }
 
@@ -1070,17 +1061,17 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_goal
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  if (self->curr_player == PLAYER_1) {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player1_ba);
+  if (self->curr_player == 1) {
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[0]);
   } else {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player2_ba);
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[1]);
   }
   nusmv_assert(self->curr_goal == Nil);
 
-  if (self->curr_player == PLAYER_1) {
-    ba = self->player1_ba;
+  if (self->curr_player == 1) {
+    ba = self->players_ba[0];
   } else {
-    ba = self->player2_ba;
+    ba = self->players_ba[1];
   }
   states = Game_SF07_gba_get_states(ba);
   avoidtarget_statement = find_node(nodemgr,FALSEEXP, Nil, Nil);
@@ -1105,7 +1096,7 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_goal
   }
 
   self->curr_goal = find_node(nodemgr,AVOIDTARGET,
-                              NODE_FROM_INT((self->curr_player == PLAYER_1) ?
+                              NODE_FROM_INT((self->curr_player == 1) ?
                                             1 :
                                             2),
                               avoidtarget_statement);
@@ -1148,15 +1139,15 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_sexp
     FILE* errstream = StreamMgr_get_error_stream(streams);
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  if (self->curr_player == PLAYER_1) {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player1_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player1_ba));
+  if (self->curr_player == 1) {
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[0]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[0]));
   } else {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player2_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player2_ba));
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[1]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[1]));
   }
-  nusmv_assert(self->curr_player1_monitor_sexp == Nil);
-  nusmv_assert(self->curr_player2_monitor_sexp == Nil);
+  nusmv_assert(self->curr_players_monitor_sexp[0] == Nil);
+  nusmv_assert(self->curr_players_monitor_sexp[1] == Nil);
 
   /* player 2 */
   {
@@ -1209,7 +1200,7 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_sexp
     FREE(module_name);
 
     /* Store and copy (for later use in strategy printing). */
-    self->curr_player2_monitor_sexp = monitor;
+    self->curr_players_monitor_sexp[1] = monitor;
     self->curr_player2_monitor_sexp_copy =
       Game_SF07_StructCheckLTLGameSF07_copy_node(nodemgr,monitor);
   }
@@ -1250,7 +1241,7 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_sexp
     /* Clean up. */
     FREE(module_name);
 
-    self->curr_player1_monitor_sexp = monitor;
+    self->curr_players_monitor_sexp[0] = monitor;
   }
 }
 
@@ -1284,16 +1275,16 @@ static node_ptr Game_SF07_StructCheckLTLGameSF07_construct_monitor_var_decls
     const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  if (self->curr_player == PLAYER_1) {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player1_ba);
+  if (self->curr_player == 1) {
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[0]);
   } else {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player2_ba);
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[1]);
   }
 
-  if (self->curr_player == PLAYER_1) {
-    ba = self->player1_ba;
+  if (self->curr_player == 1) {
+    ba = self->players_ba[0];
   } else {
-    ba = self->player2_ba;
+    ba = self->players_ba[1];
   }
   states = Game_SF07_gba_get_states(ba);
   var_decls = Nil;
@@ -1372,18 +1363,18 @@ Game_SF07_StructCheckLTLGameSF07_construct_monitor_init_statements
     const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  if (self->curr_player == PLAYER_1) {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player1_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player1_ba));
+  if (self->curr_player == 1) {
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[0]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[0]));
   } else {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player2_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player2_ba));
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[1]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[1]));
   }
 
-  if (self->curr_player == PLAYER_1) {
-    ba = self->player1_ba;
+  if (self->curr_player == 1) {
+    ba = self->players_ba[0];
   } else {
-    ba = self->player2_ba;
+    ba = self->players_ba[1];
   }
   states = Game_SF07_gba_get_states(ba);
   init_statements = Nil;
@@ -1544,18 +1535,18 @@ Game_SF07_StructCheckLTLGameSF07_construct_monitor_trans_statements
     const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  if (self->curr_player == PLAYER_1) {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player1_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player1_ba));
+  if (self->curr_player == 1) {
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[0]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[0]));
   } else {
-    GAME_SF07_GBA_CHECK_INSTANCE(self->player2_ba);
-    nusmv_assert(Game_SF07_gba_is_simple(self->player2_ba));
+    GAME_SF07_GBA_CHECK_INSTANCE(self->players_ba[1]);
+    nusmv_assert(Game_SF07_gba_is_simple(self->players_ba[1]));
   }
 
-  if (self->curr_player == PLAYER_1) {
-    ba = self->player1_ba;
+  if (self->curr_player == 1) {
+    ba = self->players_ba[0];
   } else {
-    ba = self->player2_ba;
+    ba = self->players_ba[1];
   }
   states = Game_SF07_gba_get_states(ba);
   trans_statements = Nil;
@@ -1761,50 +1752,45 @@ Game_SF07_StructCheckLTLGameSF07_construct_monitor_trans_statements
 static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
 (NuSMVEnv_ptr env, Game_SF07_StructCheckLTLGameSF07_ptr self)
 {
-  FlatHierarchy_ptr player1_monitor_flat_hierarchy;
-  FlatHierarchy_ptr player2_monitor_flat_hierarchy;
+  FlatHierarchy_ptr players_monitor_flat_hierarchy[2];
   GameBddFsm_ptr prop_game_bdd_fsm;
   GameSexpFsm_ptr prop_game_sexp_fsm;
-  SexpFsm_ptr player1_monitor_sexp_fsm;
-  SexpFsm_ptr player2_monitor_sexp_fsm;
-  bdd_ptr player1_monitor_cur_vars_cube;
-  bdd_ptr player1_monitor_next_vars_cube;
-  bdd_ptr player1_monitor_cur_froz_vars_cube;
-  bdd_ptr player2_monitor_cur_vars_cube;
-  bdd_ptr player2_monitor_next_vars_cube;
-  bdd_ptr player2_monitor_cur_froz_vars_cube;
+  SexpFsm_ptr players_monitor_sexp_fsm[2];
+  bdd_ptr players_monitor_cur_vars_cube[2];
+  bdd_ptr players_monitor_next_vars_cube[2];
+  bdd_ptr players_monitor_cur_froz_vars_cube[2];
   TransType trans_type;
   bdd_ptr one;
   Set_t vars;
-  BddFsm_ptr player1_monitor_bdd_fsm;
-  BddFsm_ptr player2_monitor_bdd_fsm;
+  BddFsm_ptr players_monitor_bdd_fsm[2];
+    int i;
 
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
-  nusmv_assert(self->curr_player2_monitor_sexp != Nil);
-  nusmv_assert(self->curr_player1_monitor_sexp != Nil);
+  nusmv_assert(self->curr_players_monitor_sexp[1] != Nil);
+  nusmv_assert(self->curr_players_monitor_sexp[0] != Nil);
   nusmv_assert(self->curr_monitor_game_bdd_fsm == GAME_BDD_FSM(NULL));
 
   /* Construct hierarchies. */
-  CompileFlatten_hash_module(env,self->curr_player2_monitor_sexp);
-  player2_monitor_flat_hierarchy =
+  CompileFlatten_hash_module(env,self->curr_players_monitor_sexp[1]);
+  players_monitor_flat_hierarchy[1] =
     Compile_FlattenHierarchy(env,
                              self->symb_table,
-                             self->curr_player2_monitor_layer,
-                             car(car(self->curr_player2_monitor_sexp)),
+                             self->curr_players_monitor_layer[1],
+                             car(car(self->curr_players_monitor_sexp[1])),
                              Nil,
                              Nil,
                              false,
                              true,
                              false,
                              HRC_NODE(NULL));
-  CompileFlatten_hash_module(env,self->curr_player1_monitor_sexp);
-  player1_monitor_flat_hierarchy =
+  CompileFlatten_hash_module(env,self->curr_players_monitor_sexp[0]);
+  players_monitor_flat_hierarchy[0] =
     Compile_FlattenHierarchy(env,
                              self->symb_table,
-                             self->curr_player1_monitor_layer,
-                             car(car(self->curr_player1_monitor_sexp)),
+                             self->curr_players_monitor_layer[0],
+                             car(car(self->curr_players_monitor_sexp[0])),
                              Nil,
                              Nil,
                              false,
@@ -1814,13 +1800,13 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
 
   /* Commit layers. */
   BaseEnc_commit_layer(BASE_ENC(self->bool_enc),
-                       SymbLayer_get_name(self->curr_player2_monitor_layer));
+                       SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   BaseEnc_commit_layer(BASE_ENC(self->bdd_enc),
-                       SymbLayer_get_name(self->curr_player2_monitor_layer));
+                       SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   BaseEnc_commit_layer(BASE_ENC(self->bool_enc),
-                       SymbLayer_get_name(self->curr_player1_monitor_layer));
+                       SymbLayer_get_name(self->curr_players_monitor_layer[0]));
   BaseEnc_commit_layer(BASE_ENC(self->bdd_enc),
-                       SymbLayer_get_name(self->curr_player1_monitor_layer));
+                       SymbLayer_get_name(self->curr_players_monitor_layer[0]));
 
   /* Retrieve self->prop's fsms. */
   prop_game_bdd_fsm = PropGame_get_game_bdd_fsm(self->prop);
@@ -1837,7 +1823,7 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
     BddTrans_ptr trans;
     SymbTableIter titer;
 
-    trans = GameBddFsm_get_trans_1(prop_game_bdd_fsm);
+    trans = GameBddFsm_get_trans(prop_game_bdd_fsm,0);
     trans_type = GenericTrans_get_type(GENERIC_TRANS(trans));
     one = bdd_true(self->dd_manager);
     //vars = Set_Make(NodeList_to_node_ptr(SymbTable_get_vars(self->symb_table)));
@@ -1845,187 +1831,114 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
      vars = SymbTable_iter_to_set(self->symb_table, titer);
   }
 
-  /* Add player 2 model variables to player2_monitor_flat_hierarchy. */
-  {
-    SexpFsm_ptr player2_model_sexp_fsm;
-    FlatHierarchy_ptr player2_model_flat_hierarchy;
-    Set_t player2_model_vars;
+    //1 block
+    SexpFsm_ptr players_model_sexp_fsm[2];
+    FlatHierarchy_ptr players_model_flat_hierarchy[2];
+    Set_t players_model_vars[2];
     Set_Iterator_t iter;
 
-    player2_model_sexp_fsm =
-      GameSexpFsm_get_player_2(prop_game_sexp_fsm);
-    player2_model_flat_hierarchy =
-      SexpFsm_get_hierarchy(player2_model_sexp_fsm);
-    player2_model_vars =
-      FlatHierarchy_get_vars(player2_model_flat_hierarchy);
-    SET_FOREACH(player2_model_vars, iter) {
-      FlatHierarchy_add_var(player2_monitor_flat_hierarchy,
-                            Set_GetMember(player2_model_vars, iter));
+    //2 block
+    SymbLayer_ptr players_model_layer[2];
+    bdd_ptr players_model_tmp[2];
+    bdd_ptr players_monitor_tmp[2];
+
+    for(i=0;i<2;i++) {
+
+        /* Add player i model variables to players_monitor_flat_hierarchy[1]. */
+  {
+
+    players_model_sexp_fsm[i] =
+      GameSexpFsm_get_player(prop_game_sexp_fsm,i);
+    players_model_flat_hierarchy[i] =
+      SexpFsm_get_hierarchy(players_model_sexp_fsm[i]);
+    players_model_vars[i] =
+      FlatHierarchy_get_vars(players_model_flat_hierarchy[i]);
+    SET_FOREACH(players_model_vars[i], iter) {
+      FlatHierarchy_add_var(players_monitor_flat_hierarchy[i],
+                            Set_GetMember(players_model_vars[i], iter));
     }
   }
 
   /* Construct (non-game) SexpFsm for player 2 monitor. */
-  player2_monitor_sexp_fsm =
-    SexpFsm_create(player2_monitor_flat_hierarchy, vars);
+  players_monitor_sexp_fsm[i] =
+    SexpFsm_create(players_monitor_flat_hierarchy[i], vars);
 
   /* Construct (non-game) BddFsm for player 2 monitor. */
   {
-    SymbLayer_ptr player2_model_layer;
-    bdd_ptr player2_model_tmp;
-    bdd_ptr player2_monitor_tmp;
+    
 
     /* Get layer. */
-    player2_model_layer =
-      SymbTable_get_layer(self->symb_table, MODEL_LAYER_2);
+    players_model_layer[i] =
+      SymbTable_get_layer(self->symb_table, MODEL_LAYER(2));
 
     /* Get current state vars cube. */
-    player2_model_tmp =
+    players_model_tmp[i] =
       (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           player2_model_layer,
+                                           players_model_layer[i],
                                            VFT_CURRENT);
-    player2_monitor_tmp =
+    players_monitor_tmp[i] =
       (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           self->curr_player2_monitor_layer,
+                                           self->curr_players_monitor_layer[i],
                                            VFT_CURRENT);
-    player2_monitor_cur_vars_cube = bdd_cube_union(self->dd_manager,
-                                                   player2_model_tmp,
-                                                   player2_monitor_tmp);
-    bdd_free(self->dd_manager, player2_model_tmp);
-    bdd_free(self->dd_manager, player2_monitor_tmp);
+    players_monitor_cur_vars_cube[i] = bdd_cube_union(self->dd_manager,
+                                                   players_model_tmp[i],
+                                                   players_monitor_tmp[i]);
+    bdd_free(self->dd_manager, players_model_tmp[i]);
+    bdd_free(self->dd_manager, players_monitor_tmp[i]);
 
     /* Get next state vars cube. */
-    player2_monitor_next_vars_cube =
+    players_monitor_next_vars_cube[i] =
       BddEnc_state_var_to_next_state_var(self->bdd_enc,
-                                         player2_monitor_cur_vars_cube);
+                                         players_monitor_cur_vars_cube[i]);
 
     /* Get current state and frozen vars cube. */
-    player2_model_tmp =
+    players_model_tmp[i] =
       (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           player2_model_layer,
+                                           players_model_layer[i],
                                            VFT_CURR_FROZEN);
-    player2_monitor_tmp =
+    players_monitor_tmp[i] =
       (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           self->curr_player2_monitor_layer,
+                                           self->curr_players_monitor_layer[i],
                                            VFT_CURR_FROZEN);
-    player2_monitor_cur_froz_vars_cube = bdd_cube_union(self->dd_manager,
-                                                        player2_model_tmp,
-                                                        player2_monitor_tmp);
-    bdd_free(self->dd_manager, player2_model_tmp);
-    bdd_free(self->dd_manager, player2_monitor_tmp);
+    players_monitor_cur_froz_vars_cube[i] = bdd_cube_union(self->dd_manager,
+                                                        players_model_tmp[i],
+                                                        players_monitor_tmp[i]);
+    bdd_free(self->dd_manager, players_model_tmp[i]);
+    bdd_free(self->dd_manager, players_monitor_tmp[i]);
 
     /* Construct fsm. */
-    player2_monitor_bdd_fsm =
+    players_monitor_bdd_fsm[i] =
       FsmBuilder_create_bdd_fsm_of_vars(builder,
-                                        player2_monitor_sexp_fsm,
+                                        players_monitor_sexp_fsm[i],
                                         trans_type,
                                         self->bdd_enc,
-                                        player2_monitor_cur_vars_cube,
+                                        players_monitor_cur_vars_cube[i],
                                         one,
-                                        player2_monitor_next_vars_cube);
+                                        players_monitor_next_vars_cube[i]);
   }
 
-  /* Add player 1 model variables to player1_monitor_flat_hierarchy. */
-  {
-    SexpFsm_ptr player1_model_sexp_fsm;
-    FlatHierarchy_ptr player1_model_flat_hierarchy;
-    Set_t player1_model_vars;
-    Set_Iterator_t iter;
-
-    player1_model_sexp_fsm =
-      GameSexpFsm_get_player_1(prop_game_sexp_fsm);
-    player1_model_flat_hierarchy =
-      SexpFsm_get_hierarchy(player1_model_sexp_fsm);
-    player1_model_vars =
-      FlatHierarchy_get_vars(player1_model_flat_hierarchy);
-    SET_FOREACH(player1_model_vars, iter) {
-      FlatHierarchy_add_var(player1_monitor_flat_hierarchy,
-                            Set_GetMember(player1_model_vars, iter));
     }
-  }
-
-  /* Construct (non-game) SexpFsm for player 1. */
-  player1_monitor_sexp_fsm =
-    SexpFsm_create(player1_monitor_flat_hierarchy, vars);
-
-  /* Construct (non-game) BddFsm for player 1 monitor. */
-  {
-    SymbLayer_ptr player1_model_layer;
-    bdd_ptr player1_model_tmp;
-    bdd_ptr player1_monitor_tmp;
-
-    /* Get layer. */
-    player1_model_layer =
-      SymbTable_get_layer(self->symb_table, MODEL_LAYER_1);
-
-    /* Get current state vars cube. */
-    player1_model_tmp =
-      (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           player1_model_layer,
-                                           VFT_CURRENT);
-    player1_monitor_tmp =
-      (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           self->curr_player1_monitor_layer,
-                                           VFT_CURRENT);
-    player1_monitor_cur_vars_cube = bdd_cube_union(self->dd_manager,
-                                                   player1_model_tmp,
-                                                   player1_monitor_tmp);
-    bdd_free(self->dd_manager, player1_model_tmp);
-    bdd_free(self->dd_manager, player1_monitor_tmp);
-
-    /* Get next state vars cube. */
-    player1_monitor_next_vars_cube =
-      BddEnc_state_var_to_next_state_var(self->bdd_enc,
-                                         player1_monitor_cur_vars_cube);
-
-    /* Get current state and frozen vars cube. */
-    player1_model_tmp =
-      (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           player1_model_layer,
-                                           VFT_CURR_FROZEN);
-    player1_monitor_tmp =
-      (bdd_ptr) BddEnc_get_layer_vars_cube(self->bdd_enc,
-                                           self->curr_player1_monitor_layer,
-                                           VFT_CURR_FROZEN);
-    player1_monitor_cur_froz_vars_cube = bdd_cube_union(self->dd_manager,
-                                                        player1_model_tmp,
-                                                        player1_monitor_tmp);
-    bdd_free(self->dd_manager, player1_model_tmp);
-    bdd_free(self->dd_manager, player1_monitor_tmp);
-
-    /* Construct fsm. */
-    player1_monitor_bdd_fsm =
-      FsmBuilder_create_bdd_fsm_of_vars(builder,
-                                        player1_monitor_sexp_fsm,
-                                        trans_type,
-                                        self->bdd_enc,
-                                        player1_monitor_cur_vars_cube,
-                                        one,
-                                        player1_monitor_next_vars_cube);
-  }
-
+    
   /* Construct GameBddFsm for monitor. */
   self->curr_monitor_game_bdd_fsm =
     GameBddFsm_create(self->bdd_enc,
-                      player1_monitor_bdd_fsm,
-                      player1_monitor_cur_vars_cube,
-                      player1_monitor_cur_froz_vars_cube,
-                      player2_monitor_bdd_fsm,
-                      player2_monitor_cur_vars_cube,
-                      player2_monitor_cur_froz_vars_cube);
+                      players_monitor_bdd_fsm,
+                      players_monitor_cur_vars_cube,
+                      players_monitor_cur_froz_vars_cube);
 
   /* Clean up. */
-  bdd_free(self->dd_manager, player1_monitor_cur_vars_cube);
-  bdd_free(self->dd_manager, player1_monitor_next_vars_cube);
-  bdd_free(self->dd_manager, player1_monitor_cur_froz_vars_cube);
-  bdd_free(self->dd_manager, player2_monitor_cur_vars_cube);
-  bdd_free(self->dd_manager, player2_monitor_next_vars_cube);
-  bdd_free(self->dd_manager, player2_monitor_cur_froz_vars_cube);
-  SexpFsm_destroy(player1_monitor_sexp_fsm);
-  SexpFsm_destroy(player2_monitor_sexp_fsm);
+  bdd_free(self->dd_manager, players_monitor_cur_vars_cube[0]);
+  bdd_free(self->dd_manager, players_monitor_next_vars_cube[0]);
+  bdd_free(self->dd_manager, players_monitor_cur_froz_vars_cube[0]);
+  bdd_free(self->dd_manager, players_monitor_cur_vars_cube[1]);
+  bdd_free(self->dd_manager, players_monitor_next_vars_cube[1]);
+  bdd_free(self->dd_manager, players_monitor_cur_froz_vars_cube[1]);
+  SexpFsm_destroy(players_monitor_sexp_fsm[0]);
+  SexpFsm_destroy(players_monitor_sexp_fsm[1]);
   bdd_free(self->dd_manager, one);
   Set_ReleaseSet(vars);
-  FlatHierarchy_destroy(player1_monitor_flat_hierarchy);
-  FlatHierarchy_destroy(player2_monitor_flat_hierarchy);
+  FlatHierarchy_destroy(players_monitor_flat_hierarchy[0]);
+  FlatHierarchy_destroy(players_monitor_flat_hierarchy[1]);
 }
 
 /**Function********************************************************************
@@ -2103,8 +2016,8 @@ static void Game_SF07_StructCheckLTLGameSF07_check
   /* Construct property. */
   expr = find_node(nodemgr,GAME_SPEC_WRAPPER,
                    sym_intern(env,PTR_TO_INT(car(self->curr_goal)) == 1 ?
-                              PLAYER_NAME_1 :
-                              PLAYER_NAME_2),
+                              PLAYER_NAME(1) :
+                              PLAYER_NAME(2)),
                    cdr(self->curr_goal));
   prop = PropGame_create_partial(env,expr, PropGame_AvoidTarget);
   PropGame_set_game_bdd_fsm(prop, self->curr_product_game_bdd_fsm);
@@ -2336,12 +2249,12 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_sexp
   }
 
   /* Extract variables from game layers. */
-  array_insert_last(char*, layers, MODEL_LAYER_1);
-  array_insert_last(char*, layers, MODEL_LAYER_2);
+  array_insert_last(char*, layers, MODEL_LAYER(1));
+  array_insert_last(char*, layers, MODEL_LAYER(2));
   /* There shouldnt be any variables in the determinization layers. */
   {
-    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER_1);
-    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER_2);
+    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(1));
+    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(2));
 
     /**NEW_CODE_START**/
     SymbLayerIter iter1;
@@ -2368,10 +2281,10 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_sexp
   }
   array_insert_last(char*,
                     layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_player1_monitor_layer));
+                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[0]));
   array_insert_last(char*,
                     layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_player2_monitor_layer));
+                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   /* There is no determinization layer for the monitors. */
   vars = SymbTable_get_layers_sf_i_vars(self->symb_table, layers);
   vars_to_decl = SymbTable_get_layers_sf_i_vars(self->symb_table,
@@ -2470,12 +2383,12 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
   layers_to_decl = array_alloc(char*, 2);
 
   /* Extract variables from game layers. */
-  array_insert_last(char*, layers, MODEL_LAYER_1);
-  array_insert_last(char*, layers, MODEL_LAYER_2);
+  array_insert_last(char*, layers, MODEL_LAYER(1));
+  array_insert_last(char*, layers, MODEL_LAYER(2));
   /* There shouldnt be any variables in the determinization layers. */
   {
-    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER_1);
-    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER_2);
+    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(1));
+    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(2));
      /**NEW_CODE_START**/
      SymbLayerIter iter1;
      NodeList_ptr syms1;
@@ -2501,10 +2414,10 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
   }
   array_insert_last(char*,
                     layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_player1_monitor_layer));
+                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[0]));
   array_insert_last(char*,
                     layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_player2_monitor_layer));
+                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[1]));
   /* There is no determinization layer for the monitors. */
   vars = SymbTable_get_layers_sf_i_vars(self->symb_table, layers);
   vars_to_decl = SymbTable_get_layers_sf_i_vars(self->symb_table,
@@ -2519,9 +2432,9 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
     bdd_ptr player2_monitor_trans_bdd;
 
     player2_monitor_init_bdd =
-      GameBddFsm_get_init_2(self->curr_monitor_game_bdd_fsm);
+      GameBddFsm_get_init(self->curr_monitor_game_bdd_fsm,1);
     player2_monitor_trans_bdd =
-      GameBddFsm_get_monolitic_trans_2(self->curr_monitor_game_bdd_fsm);
+      GameBddFsm_get_monolitic_trans(self->curr_monitor_game_bdd_fsm,1);
 
     fprintf(out, "MODULE STRATEGY_MODULE%d\n\n", module_incr_number);
 

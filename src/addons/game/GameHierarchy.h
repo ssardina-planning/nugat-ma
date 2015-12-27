@@ -105,8 +105,7 @@ typedef struct GameHierarchy_TAG* GameHierarchy_ptr;
 /* Function prototypes                                                       */
 /*---------------------------------------------------------------------------*/
 
-EXTERN GameHierarchy_ptr GameHierarchy_create ARGS((FlatHierarchy_ptr player1,
-                                                    FlatHierarchy_ptr player2,
+EXTERN GameHierarchy_ptr GameHierarchy_create ARGS((FlatHierarchy_ptr *players,
                                                     node_ptr spec,
                                                     node_ptr ltlspec,
                                                     node_ptr invarspec,
@@ -125,10 +124,7 @@ EXTERN void  GameHierarchy_destroy ARGS((GameHierarchy_ptr self));
 /* -- Access function to the class's fields : constrains and specifications --*/
 
 EXTERN FlatHierarchy_ptr
-GameHierarchy_get_player_1 ARGS((GameHierarchy_ptr self));
-
-EXTERN FlatHierarchy_ptr
-GameHierarchy_get_player_2 ARGS((GameHierarchy_ptr self));
+        GameHierarchy_get_player ARGS((GameHierarchy_ptr self, int index));
 
 EXTERN node_ptr GameHierarchy_get_ctlspec ARGS((GameHierarchy_ptr self));
 

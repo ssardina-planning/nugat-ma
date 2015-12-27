@@ -283,7 +283,7 @@ struct GameStrategy_TAG {
     DDMgr_ptr dd_manager;
 
   /* Which player this strategy belongs to (1 or 2). */
-  GamePlayer player;
+  int player;
 
   /* A flag that initial quantifiers must be reversed during
      printing. This is used when a strategy is created for an
@@ -322,7 +322,7 @@ typedef struct GameStrategy_TAG GameStrategy;
 
 static void game_strategy_init ARGS((GameStrategy_ptr self,
                                      BddEnc_ptr bdd_enc,
-                                     GamePlayer player,
+                                     int player,
                                      boolean reverseInitialQuantifiers,
                                      bdd_ptr init_goal,
                                      bdd_ptr init_opponent_deadlock,
@@ -350,7 +350,7 @@ static void game_strategy_init ARGS((GameStrategy_ptr self,
 
 ******************************************************************************/
 GameStrategy_ptr GameStrategy_create(BddEnc_ptr bdd_enc,
-                                     GamePlayer player,
+                                     int player,
                                      boolean reverseInitialQuantifiers,
                                      bdd_ptr init_goal,
                                      bdd_ptr init_opponent_deadlock,
@@ -440,7 +440,7 @@ void GameStrategy_destroy(GameStrategy_ptr self)
 ******************************************************************************/
 GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
                                         GameBddFsm_ptr fsm,
-                                        GamePlayer player,
+                                        int player,
                                         boolean reverseInitialQuantifiers,
                                         bdd_ptr goal,
                                         bdd_ptr winningStates,
@@ -456,8 +456,7 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
     */
 
   GameStrategy_ptr self;
-  bdd_ptr init_1;
-  bdd_ptr init_2;
+  bdd_ptr inits[2];
   bdd_ptr opponentDeadlock;
   bdd_ptr reachable;
 
@@ -475,31 +474,30 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
 
   /* prepare the initial states (obtain them and add the invariants) */
   {
-    bdd_ptr invar_1;
-    bdd_ptr invar_2;
+    bdd_ptr invars[2];
 
-    init_1 = GameBddFsm_get_init_1(fsm);
-    init_2 = GameBddFsm_get_init_2(fsm);
-    invar_1 = GameBddFsm_get_invars_1(fsm);
-    invar_2 = GameBddFsm_get_invars_2(fsm);
+    inits[0] = GameBddFsm_get_init(fsm,0);
+    inits[1] = GameBddFsm_get_init(fsm,1);
+    invars[0] = GameBddFsm_get_invars(fsm,0);
+    invars[1] = GameBddFsm_get_invars(fsm,1);
 
-    bdd_and_accumulate(self->dd_manager, &init_1, invar_1);
-    bdd_and_accumulate(self->dd_manager, &init_2, invar_2);
+    bdd_and_accumulate(self->dd_manager, &inits[0], invars[0]);
+    bdd_and_accumulate(self->dd_manager, &inits[1], invars[1]);
 
-    bdd_free(self->dd_manager, invar_1);
-    bdd_free(self->dd_manager, invar_2);
+    bdd_free(self->dd_manager, invars[0]);
+    bdd_free(self->dd_manager, invars[1]);
   }
 
   opponentDeadlock = GameBddFsm_without_successor_states(fsm,
-                                                         (player == PLAYER_1 ?
-                                                          PLAYER_2 :
-                                                          PLAYER_1));
+                                                         (player == 1 ?
+                                                          2 :
+                                                          1));
 
   /* reachable states. Currectly, the computation of reachable states
      is not perfect because it does not take into account that the
      action value can be limited to one value for a particular state
   */
-  reachable = bdd_and(self->dd_manager, init_1, init_2);
+  reachable = bdd_and(self->dd_manager, inits[0], inits[1]);
 
   /* INIT-GOAL, INIT-MOVE, INIT-OPPONENT-DEADLOCK */
   /* Here a hack is used: reverseInitialQuantifiers is added
@@ -516,7 +514,7 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
          automatically changes quantifiers as required, i.e. Normal
          for player 1 is Exist-Any, and for player 2 is Any-Exist.
       */
-      if (PLAYER_1 == player) {
+      if (1 == player) {
         bdd_ptr tmp, state;
 
         /* INIT-GOAL */
@@ -527,11 +525,11 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
 
            p2 consists of state and frozen variables */
         tmp = bdd_forsome(self->dd_manager,
-                          init_2,
-                          GameBddFsm_get_state_frozen_var_cube_2(fsm));
+                          inits[1],
+                          GameBddFsm_get_state_frozen_var_cube(fsm,1));
         state = bdd_not(self->dd_manager, tmp);
         bdd_free(self->dd_manager, tmp);
-        bdd_and_accumulate(self->dd_manager, &state, init_1);
+        bdd_and_accumulate(self->dd_manager, &state, inits[0]);
         self->init_opponent_deadlock = state;
 
         /* INIT-MOVES:
@@ -540,15 +538,15 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
 
            p2 consists of state and frozen variables.
         */
-        tmp = bdd_imply(self->dd_manager, init_2, winningStates);
+        tmp = bdd_imply(self->dd_manager, inits[1], winningStates);
         state = bdd_forall(self->dd_manager,
                            tmp,
-                           GameBddFsm_get_state_frozen_var_cube_2(fsm));
+                           GameBddFsm_get_state_frozen_var_cube(fsm,1));
         bdd_free(self->dd_manager, tmp);
         tmp = bdd_not(self->dd_manager, self->init_opponent_deadlock);
         bdd_and_accumulate(self->dd_manager, &state, tmp);
         bdd_free(self->dd_manager, tmp);
-        bdd_and_accumulate(self->dd_manager, &state, init_1);
+        bdd_and_accumulate(self->dd_manager, &state, inits[0]);
         /* constrain init-move to 1 arbitrary value, since one
            path only is required for stratergy
         */
@@ -614,7 +612,7 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
          WinStates is required because not all the deadlock states may
          be good (for example, for avoid-target spec).
       */
-      if (PLAYER_1 == player) {
+      if (1 == player) {
         /* deadlock of player 2 are dealt by usual state-actions */
         self->init_opponent_deadlock = bdd_false(self->dd_manager);
       }
@@ -655,7 +653,7 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
          WinStates is required because not all the deadlock states may
          be good (for example, for avoid-target spec).
       */
-      if (PLAYER_1 == player) {
+      if (1 == player) {
         /* deadlock of player 2 are dealt by usual state-actions */
         self->init_opponent_deadlock = bdd_false(self->dd_manager);
       }
@@ -724,7 +722,7 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
   }
 
   /* GOAL, MOVES, OPPONENT-DEADLOCK */
-  if (PLAYER_1 == player) {
+  if (1 == player) {
     /* ------------      FIRST PLAYER     --------------------*/
     bdd_ptr state;
 
@@ -781,8 +779,8 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
     bdd_free(self->dd_manager, nextGoal);
   }/* end of SECOND PLAYER */
 
-  bdd_free(self->dd_manager, init_1);
-  bdd_free(self->dd_manager, init_2);
+  bdd_free(self->dd_manager, inits[0]);
+  bdd_free(self->dd_manager, inits[1]);
 
   return self;
 }
@@ -816,7 +814,7 @@ BddEnc_ptr GameStrategy_get_bdd_enc(GameStrategy_ptr self)
   SeeAlso     [ ]
 
 ******************************************************************************/
-GamePlayer GameStrategy_get_player(GameStrategy_ptr self)
+int GameStrategy_get_player(GameStrategy_ptr self)
 {
   GAME_STRATEGY_CHECK_INSTANCE(self);
 
@@ -1083,7 +1081,7 @@ void GameStrategy_print_module(GameStrategy_ptr self,
 ******************************************************************************/
 static void game_strategy_init(GameStrategy_ptr self,
                                BddEnc_ptr bdd_enc,
-                               GamePlayer player,
+                               int player,
                                boolean reverseInitialQuantifiers,
                                bdd_ptr init_goal,
                                bdd_ptr init_opponent_deadlock,

@@ -65,11 +65,6 @@
   SeeAlso     [ ]
 
 ******************************************************************************/
-enum GamePlayer_TAG {
-  PLAYER_1,
-  PLAYER_2
-};
-typedef enum GamePlayer_TAG GamePlayer;
 
 /*---------------------------------------------------------------------------*/
 /* Macro declarations                                                        */
@@ -91,8 +86,8 @@ typedef enum GamePlayer_TAG GamePlayer;
   SeeAlso     [ ]
 
 ******************************************************************************/
-#define PLAYER_NAME_1 "PLAYER_1"
-#define PLAYER_NAME_2 "PLAYER_2"
+
+#define PLAYER_NAME(index) "PLAYER_" # index
 
 /**AutomaticStart*************************************************************/
 
@@ -100,8 +95,8 @@ typedef enum GamePlayer_TAG GamePlayer;
 /* Function prototypes                                                       */
 /*---------------------------------------------------------------------------*/
 
-EXTERN string_ptr Game_PlayerToStr ARGS((NuSMVEnv_ptr env,GamePlayer player));
-EXTERN GamePlayer Game_StrToPlayer ARGS((NuSMVEnv_ptr env,string_ptr str));
+EXTERN string_ptr Game_PlayerToStr ARGS((NuSMVEnv_ptr env,int player));
+EXTERN int Game_StrToPlayer ARGS((NuSMVEnv_ptr env,string_ptr str));
 
 /**AutomaticEnd***************************************************************/
 

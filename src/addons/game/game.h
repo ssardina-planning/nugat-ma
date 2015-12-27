@@ -173,6 +173,17 @@ Game_CheckReachDeadlockSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
 EXTERN void
 Game_CheckAvoidDeadlockSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
 
+    EXTERN void
+            AtlGame_CheckReachTargetSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
+
+    EXTERN void AtlGame_CheckAvoidTargetSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
+
+    EXTERN void
+            AtlGame_CheckReachDeadlockSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
+
+    EXTERN void
+            AtlGame_CheckAvoidDeadlockSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
+
 EXTERN void
 Game_CheckBuchiGameSpec ARGS((PropGame_ptr prop, gameParams_ptr params));
 

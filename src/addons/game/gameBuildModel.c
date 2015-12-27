@@ -108,53 +108,54 @@ void Game_CommandBuildFlatModel(NuSMVEnv_ptr env)
   if (!NuSMVEnv_has_value(env, ENV_SEXP_FSM)) {
 
     SymbTable_ptr st;
-    SymbLayer_ptr model_layer_1;
-    SymbLayer_ptr model_layer_2;
+    SymbLayer_ptr model_layers[2];
     GameSexpFsm_ptr scalar_fsm;
-    Set_t set, set1, set2;
-    SymbLayerIter iter1, iter2;
+    Set_t set, sets[2];
+    SymbLayerIter iters[2];
     SymbTableIter titer;
+    int i;
+    FlatHierarchy_ptr hierarchies[2];
 
     st = SYMB_TABLE(NuSMVEnv_get_value(env, ENV_SYMB_TABLE));
-    model_layer_1 = SymbTable_get_layer(st, MODEL_LAYER_1);
-    model_layer_2 = SymbTable_get_layer(st, MODEL_LAYER_2);
 
-
+    model_layers[0] = SymbTable_get_layer(st, MODEL_LAYER(1));
+    model_layers[1] = SymbTable_get_layer(st, MODEL_LAYER(2));
 
 
      /*NEW_CODE_START*/
      SymbTable_gen_iter(st,&titer,STT_VAR);
      set = SymbTable_iter_to_set(st, titer);
 
-     SymbLayer_gen_iter(model_layer_1, &iter1, STT_VAR);
-     set1 = SymbLayer_iter_to_set(model_layer_1, iter1);
+     for(i=0;i<2;i++) {
 
-     SymbLayer_gen_iter(model_layer_2, &iter2, STT_VAR);
-     set2 = SymbLayer_iter_to_set(model_layer_2, iter2);
+         SymbLayer_gen_iter(model_layers[i], &iters[i], STT_VAR);
+         sets[i] = SymbLayer_iter_to_set(model_layers[i], iters[i]);
+
+         hierarchies[i] = GameHierarchy_get_player(mainGameHierarchy,i);
+     }
 
      /*NEW_CODE_END*/
 
      /*OLD_CODE_START
     set = Set_Make(NodeList_to_node_ptr(SymbTable_get_vars(st)));
     set1 =
-      Set_Make(NodeList_to_node_ptr(SymbLayer_get_all_vars(model_layer_1)));
+      Set_Make(NodeList_to_node_ptr(SymbLayer_get_all_vars(model_layers[0])));
     set2 =
-      Set_Make(NodeList_to_node_ptr(SymbLayer_get_all_vars(model_layer_2)));
+      Set_Make(NodeList_to_node_ptr(SymbLayer_get_all_vars(model_layers[1])));
       *OLD_CODE_END*/
     scalar_fsm =
       GameSexpFsm_create(/* we assume that symbol table contains only variables
                             from the game */
                         env,
                          set,
-                         GameHierarchy_get_player_1(mainGameHierarchy),
-                         GameHierarchy_get_player_2(mainGameHierarchy),
-                         set1,
-                         set2);
+                        hierarchies,
+                         sets);
 
     NuSMVEnv_set_value(env, ENV_SEXP_FSM, scalar_fsm);
 
-    Set_ReleaseSet(set2);
-    Set_ReleaseSet(set1);
+    for(i=1;i>=0;i--)
+          Set_ReleaseSet(sets[i]);
+
     Set_ReleaseSet(set);
   }
 }
@@ -185,14 +186,13 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
     GameSexpFsm_ptr scalar_fsm;
     GameSexpFsm_ptr bool_fsm;
     SymbTable_ptr st;
-    SymbLayer_ptr determ_layer_1;
-    SymbLayer_ptr determ_layer_2;
+    SymbLayer_ptr determ_layers[2];
 
     const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
     BddEnc_ptr  bdd_enc = BDD_ENC(NuSMVEnv_get_value(env, ENV_BDD_ENCODER));
     BoolEnc_ptr bool_enc = BOOL_ENC(NuSMVEnv_get_value(env, ENV_BOOL_ENCODER));
 
-    int reord_status;
+    int reord_status,i;
     dd_reorderingtype rt;
     DDMgr_ptr dd;
 
@@ -204,11 +204,11 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
     /* create determinization layers */
     st = SYMB_TABLE(NuSMVEnv_get_value(env, ENV_SYMB_TABLE));
 
-    determ_layer_1 = SymbTable_create_layer(st,
-                                            DETERM_LAYER_1,
+    determ_layers[0] = SymbTable_create_layer(st,
+                                              DETERM_LAYER(1),
                                             SYMB_LAYER_POS_BOTTOM);
-    determ_layer_2 = SymbTable_create_layer(st,
-                                            DETERM_LAYER_2,
+    determ_layers[1] = SymbTable_create_layer(st,
+                                            DETERM_LAYER(2),
                                             SYMB_LAYER_POS_BOTTOM);
 
     /* convert existing scalar FSM to the boolean FSM */
@@ -216,32 +216,31 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
 
     bool_fsm = GameSexpFsm_scalar_to_boolean(scalar_fsm,
                                              bdd_enc,
-                                             determ_layer_1,
-                                             determ_layer_2);
+                                             determ_layers);
 
       NuSMVEnv_set_value(env, ENV_BOOL_FSM, bool_fsm);
 
     /* commits layers to the encodings */
     BaseEnc_commit_layer(BASE_ENC(bool_enc),
-                         DETERM_LAYER_1);
+                         DETERM_LAYER(1));
     BaseEnc_commit_layer(BASE_ENC(bool_enc),
-                         DETERM_LAYER_2);
+                         DETERM_LAYER(2));
 
     BaseEnc_commit_layer(BASE_ENC(bdd_enc),
-                         DETERM_LAYER_1);
+                         DETERM_LAYER(1));
     BaseEnc_commit_layer(BASE_ENC(bdd_enc),
-                         DETERM_LAYER_2);
+                         DETERM_LAYER(2));
 
      /*NEW_CODE_START*/
      SymbLayerIter iter1;
      NodeList_ptr syms1;
-     SymbLayer_gen_iter(determ_layer_1, &iter1, STT_ALL);
-     syms1 = SymbLayer_iter_to_list(determ_layer_1, iter1);
+     SymbLayer_gen_iter(determ_layers[0], &iter1, STT_ALL);
+     syms1 = SymbLayer_iter_to_list(determ_layers[0], iter1);
 
      SymbLayerIter iter2;
      NodeList_ptr syms2;
-     SymbLayer_gen_iter(determ_layer_2, &iter2, STT_ALL);
-     syms2 = SymbLayer_iter_to_list(determ_layer_2, iter2);
+     SymbLayer_gen_iter(determ_layers[1], &iter2, STT_ALL);
+     syms2 = SymbLayer_iter_to_list(determ_layers[1], iter2);
 
      /* determinization variables are not supported in Game */
      if (NodeList_get_length(syms1) != 0 ||
@@ -256,8 +255,8 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
 
      /*OLD_CODE_START
     /*
-    if (NodeList_get_length(SymbLayer_get_all_symbols(determ_layer_1)) != 0 ||
-        NodeList_get_length(SymbLayer_get_all_symbols(determ_layer_2)) != 0) {
+    if (NodeList_get_length(SymbLayer_get_all_symbols(determ_layers[0])) != 0 ||
+        NodeList_get_length(SymbLayer_get_all_symbols(determ_layers[1])) != 0) {
       nusmv_yylineno = 0;
       ErrorMgr_rpterr(errmgr,"determinization variables are not supported by realizability "
              "algorithms, \nbut were created during booleanisation\n"
@@ -289,13 +288,17 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
   BddEnc_ptr bdd_enc = BDD_ENC(NuSMVEnv_get_value(env, ENV_BDD_ENCODER));
+  SymbLayer_ptr model_layers[2];
+  int i;
+
+      model_layers[0] = SymbTable_get_layer(st, MODEL_LAYER(1));
+      model_layers[1] = SymbTable_get_layer(st, MODEL_LAYER(2));
 
   GameBddFsm_ptr bdd_fsm =
     Game_CreateGameBddFsm(builder,
                           bdd_enc,
                           scalar_fsm,
-                          SymbTable_get_layer(st, MODEL_LAYER_1),
-                          SymbTable_get_layer(st, MODEL_LAYER_2),
+                          model_layers,
                           get_partition_method(opts));
 
     NuSMVEnv_set_value(env, ENV_BDD_FSM, bdd_fsm);
@@ -314,7 +317,7 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
                 3. Variables are divided into two sets (one for every
                    player) and their cubes are also kept separately.
 
-                Parameters layer_1 and layer_2 are model layers, which
+                Parameters layers[0] and layers[1] are model layers, which
                 contain all the (state) variables of the first and
                 second player, respectively. It is presumed that the
                 system does not have any other variables. ]
@@ -327,33 +330,31 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
 GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
                                      BddEnc_ptr enc,
                                      const GameSexpFsm_ptr sexp_fsm,
-                                     const SymbLayer_ptr layer_1,
-                                     const SymbLayer_ptr layer_2,
+                                     const SymbLayer_ptr layers[2],
                                      const TransType trans_type)
 {
   DDMgr_ptr dd;
   bdd_ptr one;
-  SexpFsm_ptr player_1;
-  SexpFsm_ptr player_2;
+  SexpFsm_ptr players[2];
   GameBddFsm_ptr gameFsm;
-  BddFsm_ptr bddfsm_1, bddfsm_2;
-  BddVarSet_ptr curVarsCube_1,
-    curVarsCube_2,
-    nextVarsCube_1,
-    nextVarsCube_2,
-    curFrozVarsCube_1,
-    curFrozVarsCube_2;
+  BddFsm_ptr bddfsms[2];
+  BddVarSet_ptr curVarsCubes[2],
+    nextVarsCubes[2],
+    curFrozVarsCubes[2];
+
+    int i;
 
   FSM_BUILDER_CHECK_INSTANCE(self);
   BDD_ENC_CHECK_INSTANCE(enc);
   GAME_SEXP_FSM_CHECK_INSTANCE(sexp_fsm);
-  SYMB_LAYER_CHECK_INSTANCE(layer_1);
-  SYMB_LAYER_CHECK_INSTANCE(layer_2);
+  SYMB_LAYER_CHECK_INSTANCE(layers[0]);
+  SYMB_LAYER_CHECK_INSTANCE(layers[1]);
 
   dd = BddEnc_get_dd_manager(enc);
   one = bdd_true(dd);
-  player_1 = GameSexpFsm_get_player_1(sexp_fsm);
-  player_2 = GameSexpFsm_get_player_2(sexp_fsm);
+
+    for(i=0;i<2;i++)
+  players[i] = GameSexpFsm_get_player(sexp_fsm,i);
 
   /* ---------------------------------------------------------------------- */
   /* Players variables cubes constraction                                   */
@@ -362,53 +363,46 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
   /* Game cannot have input variables */
 
 
-   nusmv_assert(0 == SymbLayer_get_input_vars_num(layer_1) &&
-                        0 == SymbLayer_get_input_vars_num(layer_2));
+   nusmv_assert(0 == SymbLayer_get_input_vars_num(layers[0]) &&
+                        0 == SymbLayer_get_input_vars_num(layers[1]));
 
    /*OLD_CODE_START
-  nusmv_assert(0 == NodeList_get_length(SymbLayer_get_input_vars(layer_1)) &&
-               0 == NodeList_get_length(SymbLayer_get_input_vars(layer_2)));
+  nusmv_assert(0 == NodeList_get_length(SymbLayer_get_input_vars(layers[0])) &&
+               0 == NodeList_get_length(SymbLayer_get_input_vars(layers[1])));
   OLD_CODE_END*/
 
   /* create a cube of current state, next state and
      both state and frozen variables for player 1 */
-  curVarsCube_1 = BddEnc_get_layer_vars_cube(enc, layer_1, VFT_CURRENT);
-  curVarsCube_2 = BddEnc_get_layer_vars_cube(enc, layer_2, VFT_CURRENT);
+    for(i=0;i<2;i++)
+  curVarsCubes[i] = BddEnc_get_layer_vars_cube(enc, layers[i], VFT_CURRENT);
 
-  nextVarsCube_1 = BddEnc_state_var_to_next_state_var(enc, curVarsCube_1);
-  nextVarsCube_2 = BddEnc_state_var_to_next_state_var(enc, curVarsCube_2);
+    for(i=0;i<2;i++)
+  nextVarsCubes[i] = BddEnc_state_var_to_next_state_var(enc, curVarsCubes[i]);
 
-  curFrozVarsCube_1 = BddEnc_get_layer_vars_cube(enc, layer_1, VFT_CURR_FROZEN);
-  curFrozVarsCube_2 = BddEnc_get_layer_vars_cube(enc, layer_2, VFT_CURR_FROZEN);
+    for(i=0;i<2;i++)
+  curFrozVarsCubes[i] = BddEnc_get_layer_vars_cube(enc, layers[i], VFT_CURR_FROZEN);
 
   /* ---------------------------------------------------------------------- */
   /* Construct BDD FSM for players and then Game BDD FSM                    */
   /* ---------------------------------------------------------------------- */
 
-  bddfsm_1 = FsmBuilder_create_bdd_fsm_of_vars(self,
-                                               player_1,
+    for(i=0;i<2;i++)
+  bddfsms[i] = FsmBuilder_create_bdd_fsm_of_vars(self,
+                                               players[i],
                                                trans_type,
                                                enc,
-                                               curVarsCube_1,
+                                               curVarsCubes[i],
                                                one,
-                                               nextVarsCube_1);
-  bddfsm_2 = FsmBuilder_create_bdd_fsm_of_vars(self,
-                                               player_2,
-                                               trans_type,
-                                               enc,
-                                               curVarsCube_2,
-                                               one,
-                                               nextVarsCube_2);
-  gameFsm = GameBddFsm_create(enc,
-                              bddfsm_1, curVarsCube_1, curFrozVarsCube_1,
-                              bddfsm_2, curVarsCube_2, curFrozVarsCube_2);
+                                               nextVarsCubes[i]);
 
-  bdd_free(dd, curVarsCube_1);
-  bdd_free(dd, curVarsCube_2);
-  bdd_free(dd, nextVarsCube_1);
-  bdd_free(dd, nextVarsCube_2);
-  bdd_free(dd, curFrozVarsCube_1);
-  bdd_free(dd, curFrozVarsCube_2);
+  gameFsm = GameBddFsm_create(enc,
+                              bddfsms, curVarsCubes, curFrozVarsCubes);
+    for(i=0;i<2;i++) {
+      bdd_free(dd, curVarsCubes[i]);
+      bdd_free(dd, nextVarsCubes[i]);
+      bdd_free(dd, curFrozVarsCubes[i]);
+    }
+
   bdd_free(dd, one);
 
   return gameFsm;

@@ -71,10 +71,8 @@
                 in an input file because they are keywords. ]
 
 ******************************************************************************/
-#define MODEL_LAYER_1 "layer_of_" PLAYER_NAME_1
-#define MODEL_LAYER_2 "layer_of_" PLAYER_NAME_2
-#define DETERM_LAYER_1 "determ_layer_of_" PLAYER_NAME_1
-#define DETERM_LAYER_2 "determ_layer_of_" PLAYER_NAME_2
+#define MODEL_LAYER(index) "layer_of_" PLAYER_NAME(index)
+#define DETERM_LAYER(index) "determ_layer_of_" PLAYER_NAME(index)
 
 /**Macro************************************************************************
 
@@ -424,8 +422,7 @@ EXTERN GameHierarchy_ptr mainGameHierarchy;
 EXTERN GameBddFsm_ptr Game_CreateGameBddFsm ARGS((const FsmBuilder_ptr self,
                                                   BddEnc_ptr enc,
                                                   const GameSexpFsm_ptr sexp_fsm,
-                                                  const SymbLayer_ptr layer_1,
-                                                  const SymbLayer_ptr layer_2,
+                                                  const SymbLayer_ptr layers[2],
                                                   const TransType trans_type));
 
 EXTERN void
@@ -439,7 +436,7 @@ EXTERN void Game_AfterCheckingSpec ARGS((PropGame_ptr prop,
                                          gameParams_ptr params));
 
 EXTERN boolean Game_ComputeGenReactivity ARGS((NuSMVEnv_ptr env,node_ptr specExp,
-                                 GamePlayer player,
+                                 int player,
                                  GameBddFsm_ptr fsm,
                                  Game_InitTermination earlierTermination,
                                  bdd_ptr overapproxWinStates,
@@ -449,6 +446,10 @@ EXTERN boolean Game_ComputeGenReactivity ARGS((NuSMVEnv_ptr env,node_ptr specExp
 EXTERN Game_RealizabilityStatus
 Game_UseStrongReachabilityAlgorithm ARGS((PropGame_ptr prop,
                                           GameStrategy_ptr* strategy));
+
+EXTERN Game_RealizabilityStatus
+        AtlGame_UseStrongReachabilityAlgorithm ARGS((PropGame_ptr prop,
+        GameStrategy_ptr* strategy));
 
 EXTERN boolean Game_PropertyToGame
  ARGS((NuSMVEnv_ptr env,node_ptr* inputVars, node_ptr* outputVars,

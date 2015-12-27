@@ -109,8 +109,7 @@ typedef struct GameBeFsm_TAG* GameBeFsm_ptr;
 /* Function prototypes                                                       */
 /*---------------------------------------------------------------------------*/
 
-EXTERN GameBeFsm_ptr GameBeFsm_create ARGS((BeFsm_ptr player_1,
-                                            BeFsm_ptr player_2));
+EXTERN GameBeFsm_ptr GameBeFsm_create ARGS((BeFsm_ptr *players));
 
 EXTERN GameBeFsm_ptr GameBeFsm_copy ARGS((GameBeFsm_ptr self));
 
@@ -119,9 +118,7 @@ EXTERN GameBeFsm_ptr GameBeFsm_create_from_sexp_fsm ARGS((BeEnc_ptr be_enc,
 
 EXTERN void GameBeFsm_destroy ARGS((GameBeFsm_ptr self));
 
-EXTERN BeFsm_ptr GameBeFsm_get_player_1 ARGS((const GameBeFsm_ptr self));
-
-EXTERN BeFsm_ptr GameBeFsm_get_player_2 ARGS((const GameBeFsm_ptr self));
+EXTERN BeFsm_ptr GameBeFsm_get_player ARGS((const GameBeFsm_ptr self, int index));
 
 /**AutomaticEnd***************************************************************/
 

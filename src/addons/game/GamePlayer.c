@@ -85,10 +85,9 @@ static char rcsid[] UTIL_UNUSED = "$Id: GamePlayer.c,v 1.1.2.1 2010-02-05 17:19:
   SeeAlso     [ Game_StrToPlayer ]
 
 ******************************************************************************/
-string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,GamePlayer player)
+string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
 {
-  if (PLAYER_1 == player) return UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME_1);
-  else if (PLAYER_2 == player) return UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME_2);
+  if(player==1||player==2) return UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(player));
   else nusmv_assert(false); /* illegal value */
 }
 
@@ -97,17 +96,17 @@ string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,GamePlayer player)
   Synopsis    [ Takes a player name as a string and returns it as GamePlayer. ]
 
   Description [ Player names can be constructed only from
-                PLAYER_NAME_1 or PLAYER_NAME_2. ]
+                PLAYER_NAME(1) or PLAYER_NAME(2). ]
 
   SideEffects [ ]
 
   SeeAlso     [ Game_PlayerToStr ]
 
 ******************************************************************************/
-GamePlayer Game_StrToPlayer(NuSMVEnv_ptr env,string_ptr str)
+int Game_StrToPlayer(NuSMVEnv_ptr env,string_ptr str)
 {
-  if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME_1) == str) return PLAYER_1;
-  else if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME_2) == str) return PLAYER_2;
+  if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(1)) == str) return 1;
+  else if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(2)) == str) return 2;
   else nusmv_assert(false); /* illegal value */
 }
 
