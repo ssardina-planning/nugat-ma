@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
 project(NuGaT)
-set(PROJECT_VERSION "0.6.0")
+set(PROJECT_VERSION "0.6.5")
 
 
 set(NUGAT_SOURCE_DIR .)

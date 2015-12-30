@@ -10,8 +10,9 @@ game_begin    : {
     Game_Mode_Exit(__nusmv_parser_env__);
   }
   game_parser_spec_list = Nil;
-  game_parser_player_1 = Nil;
-  game_parser_player_2 = Nil;
+
+  for(i=0;i<n_players;i++)
+    game_parser_player[i] = Nil;
 #endif
 }
                game_module_list
@@ -25,15 +26,21 @@ game_begin    : {
                     /* this is a game (realizability problem) .
                        Return a Game with spec list on the left and a
                        module list on the right. This module list
-                       contains two special modules (with names
-                       PLAYER_1 and PLAYER_2) created from player
+                       contains n_players special modules (with names
+                       PLAYER_index) created from player
                        declarations.
                     */
+                    node_ptr tmp;
+                    for(i=n_players-1;i>=0;i--) {
+
+                        if(i==n_players-1)
+                            tmp = cons(NODEMGR,game_parser_player[i],$2) ;
+                        else
+                            tmp = cons(NODEMGR,game_parser_player[i],tmp) ;
+                    }
+
                     parsed_tree = new_node(NODEMGR,GAME,
-                                           game_parser_spec_list,
-                                           cons(NODEMGR,game_parser_player_1,
-                                                cons(NODEMGR,game_parser_player_2,
-                                                     $2)));
+                                           game_parser_spec_list,tmp);
                   }
 #else /* no GAME */
                   parsed_tree = $2;
@@ -72,7 +79,7 @@ simple_list_expression
  An NuGaT program is a repetition of modules. Also there can be one
  game definition. Each module has a signature and a body. Game
  definition constructs are passed through variables
- game_parser_spec_list, game_parser_player_1 and game_parser_player_2
+ game_parser_spec_list, game_parser_player[all]
  and not returned by this rule.
 */
 game_module_list
@@ -86,7 +93,7 @@ game_module_list
    players and a list of usual and game specifications.
    NOTE: this rule returns value not by usual way
    but through variables game_parser_spec_list,
-   game_parser_player_1 and game_parser_player_2.
+   game_parser_player[all].
 */
 game_definition
              : TOK_GAME game_body
@@ -121,38 +128,7 @@ game_body
    usual specifications and game specifications.
 */
 game_body_element
-             : TOK_PLAYER_1 player_body
-                     {
-                       /* a player definition is converted to a module
-                          definitino with a special name. This is done
-                          to simplify the further flattening
-                       */
-                       if (game_parser_player_1 != Nil) {
-                         nusmv_yyerror_lined("redefinition of a PLAYER_1", $1);
-                         YYABORT;
-                       }
-                       game_parser_player_1 = new_lined_node(NODEMGR,MODULE,
-                           new_node(NODEMGR,MODTYPE,
-                             new_node(NODEMGR,ATOM,(node_ptr)UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(__nusmv_parser_env__, ENV_STRING_MGR)),"PLAYER_1"),
-                                      Nil), Nil),  $2, $1);
-                       $$=Nil;
-                     }
-             | TOK_PLAYER_2 player_body
-                     {
-                       /* a player definition is converted to a module
-                          definitino with a special name. This is done
-                          to simplify the further flattening
-                       */
-                       if (game_parser_player_2 != Nil) {
-                         nusmv_yyerror_lined("redefinition of a PLAYER_2", $1);
-                         YYABORT;
-                       }
-                       game_parser_player_2 = new_lined_node(NODEMGR,MODULE,
-                           new_node(NODEMGR,MODTYPE,
-                             new_node(NODEMGR,ATOM,(node_ptr)UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(__nusmv_parser_env__, ENV_STRING_MGR)),"PLAYER_2"),
-                                      Nil), Nil), $2, $1);
-                       $$=Nil;
-                     }
+             : players
 // not implemented    | invarspec
 // not implemented    | ctlspec
 // not implemented    | ltlspec
@@ -188,8 +164,48 @@ player_body_element
 // not implemented :    | compassion
              ;
 
-player_num    : TOK_PLAYER_1 {$$=1;}
-              | TOK_PLAYER_2 {$$=2;}
+players :   {$$=Nil;}
+            |  TOK_NUMBER player_body players
+            {
+                /* a player definition is converted to a module
+                   definitino with a special name. This is done
+                   to simplify the further flattening
+                */
+
+
+                //printf("\n %d %d %d, ",$1->type,$1->lineno,node_get_int($1)); // DEBUG
+
+                int index=node_get_int($1)-1;
+                char* str;
+
+                //printf("\n%d",n_players); // DEBUG
+
+                if(n_players==-1) {
+                    n_players = node_get_int($1);
+                    //printf("\n %d",n_players); // DEBUG
+                    game_parser_player = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+
+                    for(i=0;i<n_players;i++) game_parser_player[i] = Nil;
+
+                }
+
+                if (game_parser_player[index] != Nil) {
+                    sprintf(str,"redefinition of a PLAYER %d",node_get_int($1));
+                    nusmv_yyerror_lined(str, index);
+                    YYABORT;
+                }
+
+                sprintf(str,"PLAYER_%d",index+1);
+                //printf("\n%s",str); // DEBUG
+
+                game_parser_player[index] = new_lined_node(NODEMGR,MODULE,
+                                                           new_node(NODEMGR,MODTYPE,
+                                                                    new_node(NODEMGR,ATOM,(node_ptr)UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(__nusmv_parser_env__, ENV_STRING_MGR)),str),
+                                                                             Nil), Nil),  $2, node_get_int($1));
+                $$=Nil;
+            }
+            ;
+player_num    : TOK_NUMBER {$$=node_get_int($1);}
               ;
 reachtarget   : TOK_REACHTARGET player_num simple_expression optsemi
                        {
