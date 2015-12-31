@@ -2,6 +2,7 @@
 
 "GAME"                  {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_GAME);}
 "REACHTARGET"           {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_REACHTARGET);}
+"ATLREACHTARGET"        {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_ATLREACHTARGET);}
 "AVOIDTARGET"           {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_AVOIDTARGET);}
 "REACHDEADLOCK"         {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_REACHDEADLOCK);}
 "AVOIDDEADLOCK"         {nusmv_yylval.lineno = nusmv_yylineno; return(TOK_AVOIDDEADLOCK);}

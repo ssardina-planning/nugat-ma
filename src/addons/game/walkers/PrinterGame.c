@@ -207,6 +207,7 @@ int printer_game_print_node(PrinterBase_ptr self, node_ptr n, int priority)
     ErrorMgr_rpterr(errmgr,"Unexpected printing of high-level GAME constructs");
 
   case REACHTARGET:
+  case ATLREACHTARGET:
   case AVOIDTARGET:
   case REACHDEADLOCK:
   case AVOIDDEADLOCK:

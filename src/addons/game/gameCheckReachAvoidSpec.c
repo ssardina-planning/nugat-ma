@@ -136,7 +136,7 @@ void Game_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
 
 /**Function********************************************************************
 
-  Synopsis    [ Checks a reach-target Atl-game specification. ]
+  Synopsis    [ Checks a reach-target game specification. ]
 
   Description [ 'prop' is a given property to be checked. It must be a
                 REACHTARGET game specification.
@@ -149,7 +149,7 @@ void Game_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
   SeeAlso     [ ]
 
 ******************************************************************************/
-void AtlGame_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
+void Game_CheckAtlReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
 {
     boolean construct_strategy;
     Game_RealizabilityStatus status;
@@ -159,7 +159,7 @@ void AtlGame_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
     OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
 
     nusmv_assert(PROP_GAME(NULL) != prop &&
-                 PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)));
+                 PropGame_AtlReachTarget == Prop_get_type(PROP(prop)));
 
     /* initialization and initial printing */
     strategy = GAME_STRATEGY(NULL);
@@ -169,7 +169,7 @@ void AtlGame_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
     Game_BeforeCheckingSpec(prop);
 
     /* the checking itself */
-    status = AtlGame_UseStrongReachabilityAlgorithm(prop,
+    status = Game_UseStrongAtlReachabilityAlgorithm(prop,
                                                  (construct_strategy ?
                                                   (&strategy) :
                                                   (GameStrategy_ptr*) NULL));
@@ -257,7 +257,7 @@ void AtlGame_CheckAvoidTargetSpec(PropGame_ptr prop, gameParams_ptr params)
     Game_BeforeCheckingSpec(prop);
 
     /* the checking itself */
-    status = AtlGame_UseStrongReachabilityAlgorithm(prop,
+    status = Game_UseStrongAtlReachabilityAlgorithm(prop,
                                                  (construct_strategy ?
                                                   (&strategy) :
                                                   (GameStrategy_ptr*) NULL));
@@ -738,7 +738,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
 }
 
 /******************************************************************************/
-Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
+Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr prop,
                                                              GameStrategy_ptr* strategy)
 {
 
@@ -759,10 +759,10 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     int i,ntotp,np,no;
 
     PROP_GAME_CHECK_INSTANCE(prop);
-    nusmv_assert(PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)) ||
-                 PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
-                 PropAtlGame_ReachDeadlock == Prop_get_type(PROP(prop)) ||
-                 PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop)));
+    nusmv_assert(PropGame_AtlReachTarget == Prop_get_type(PROP(prop)) ||
+                 PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop)) ||
+                 PropGame_AtlReachDeadlock == Prop_get_type(PROP(prop)) ||
+                 PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop)));
 
     /* flag which player this game is for */
     int players[n_players];
@@ -794,8 +794,8 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     }
 
     /* initialize the original target states (reachability or avoidance target) */
-    if (PropAtlGame_ReachTarget == Prop_get_type(PROP(prop)) ||
-        PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop))) {
+    if (PropGame_AtlReachTarget == Prop_get_type(PROP(prop)) ||
+        PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop))) {
         originalTarget =
                 BddEnc_expr_to_bdd(enc, Prop_get_expr_core(PROP(prop)), Nil);
     }
@@ -811,8 +811,8 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
        result, initial quantifiers (because now we play for the
        opponent).
     */
-    if (PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
-        PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop))) {
+    if (PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop)) ||
+        PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop))) {
 
         for(i=0;i<n_players;i++) players[i] = !players[i];
 //        players = 1 == players ? 2 : 1;
@@ -829,9 +829,8 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     /* check whether the target can be reached at the initial state */
     isTargetReached = false;
 
-    for(i=0;i<n_players;i++) // 0000000000000000000000
-    isTargetReached |= GameBddFsm_can_player_satisfy(env,fsm, inits,
-                                                    allReachStates, players[i],
+    isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
+                                                    allReachStates, player,
                                                     quantifiers);
 
     /* Makes a few checks and prints a few warning in the case of
@@ -848,8 +847,8 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
             isFixedpointReached = true;
         }
         /* target is zero (check only reach-target and avoid-target specs) */
-        if ((PropAtlGame_ReachTarget == Prop_get_type(PROP(prop))
-             || PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)))
+        if ((PropGame_AtlReachTarget == Prop_get_type(PROP(prop))
+             || PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop)))
             && bdd_is_false(dd_manager, originalTarget)) {
             fprintf(errstream, "\n********   WARNING   ********\n"
                     "The target states set is empty.\n"
@@ -1083,8 +1082,8 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
 
 
     return
-            ( PropAtlGame_ReachTarget == Prop_get_type(PROP(prop))
-              || PropAtlGame_ReachDeadlock == Prop_get_type(PROP(prop))
+            ( PropGame_AtlReachTarget == Prop_get_type(PROP(prop))
+              || PropGame_AtlReachDeadlock == Prop_get_type(PROP(prop))
             )
             ? (isTargetReached ? GAME_REALIZABLE : GAME_UNREALIZABLE)
             : (isTargetReached ? GAME_UNREALIZABLE : GAME_REALIZABLE);

@@ -123,6 +123,7 @@ boolean TypeCheckerGame_check_property(TypeChecker_ptr self,
   switch (Prop_get_type(property)) {
   case Prop_NoType: nusmv_assert(false); /* incorrect property */
   case PropGame_ReachTarget: kind = REACHTARGET; break;
+  case PropGame_AtlReachTarget: kind = ATLREACHTARGET; break;
   case PropGame_AvoidTarget: kind = AVOIDTARGET; break;
   case PropGame_BuchiGame: kind = BUCHIGAME; break;
   case PropGame_LtlGame: kind = LTLGAME; break;

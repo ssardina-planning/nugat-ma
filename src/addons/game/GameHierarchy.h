@@ -112,6 +112,7 @@ EXTERN GameHierarchy_ptr GameHierarchy_create ARGS((FlatHierarchy_ptr *players,
                                                     node_ptr pslspec,
                                                     node_ptr compute,
                                                     node_ptr reachtarget,
+                                                    node_ptr atlreachtarget,
                                                     node_ptr avoidtarget,
                                                     node_ptr reachdeadlock,
                                                     node_ptr avoiddeadlock,
@@ -149,5 +150,7 @@ EXTERN node_ptr GameHierarchy_get_buchigame ARGS((GameHierarchy_ptr self));
 EXTERN node_ptr GameHierarchy_get_ltlgame ARGS((GameHierarchy_ptr self));
 
 EXTERN node_ptr GameHierarchy_get_genreactivity ARGS((GameHierarchy_ptr self));
+
+EXTERN node_ptr GameHierarchy_get_atlreachtarget ARGS((GameHierarchy_ptr self));
 
 #endif /* __GAME_HIERARCHY_H__ */

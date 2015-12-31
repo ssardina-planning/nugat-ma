@@ -99,6 +99,7 @@ static int CommandGameBuildBooleanModel ARGS((NuSMVEnv_ptr env,int argc, char **
 /* Commands specific to game. */
                                         static int CommandReadRatFile ARGS((NuSMVEnv_ptr env,int argc, char **argv));
                                         static int CommandCheckReachTargetSpec ARGS((NuSMVEnv_ptr env,int argc, char **argv));
+                                        static int CommandCheckAtlReachTargetSpec ARGS((NuSMVEnv_ptr env,int argc, char **argv));
                                         static int CommandCheckReachDeadlockSpec ARGS((NuSMVEnv_ptr env,int argc, char **argv));
                                         static int CommandCheckAvoidTargetSpec ARGS((NuSMVEnv_ptr env,int argc, char **argv));
                                         static int CommandCheckAvoidDeadlockSpec ARGS((NuSMVEnv_ptr env,int argc, char **argv));
@@ -124,6 +125,7 @@ static int CommandGameBuildBooleanModel ARGS((NuSMVEnv_ptr env,int argc, char **
 /* Commands specific to game. */
                                         static int UsageReadRatFile ARGS((FILE* errstream));
                                         static int UsageCheckReachTargetSpec ARGS((FILE* errstream));
+                                        static int UsageCheckAtlReachTargetSpec ARGS((FILE* errstream));
                                         static int UsageCheckReachDeadlockSpec ARGS((FILE* errstream));
                                         static int UsageCheckAvoidTargetSpec ARGS((FILE* errstream));
                                         static int UsageCheckAvoidDeadlockSpec ARGS((FILE* errstream));
@@ -234,6 +236,7 @@ static CommandDescr_t dependent_commands[] = {
 ******************************************************************************/
 static CommandDescr_t specific_commands[] = {
         {"check_reach_target",        CommandCheckReachTargetSpec,    0, true},
+        {"check_atl_reach_target",    CommandCheckAtlReachTargetSpec, 0, true},
         {"check_reach_deadlock",      CommandCheckReachDeadlockSpec,  0, true},
         {"check_avoid_target",        CommandCheckAvoidTargetSpec,    0, true},
         {"check_avoid_deadlock",      CommandCheckAvoidDeadlockSpec,  0, true},
@@ -1492,6 +1495,7 @@ static int UsageGameCheckProperty(FILE* errstream)
     fprintf(errstream, "  -n number \t Checks property number.\n");
     fprintf(errstream, "  -r 1|2 \t Checks properties of player 1|2.\n");
     fprintf(errstream, "  -a \t\t Checks REACHTARGET properties.\n");
+    fprintf(errstream, "  -b \t\t Checks ATLREACHTARGET properties.\n");
     fprintf(errstream, "  -A \t\t Checks AVOIDTARGET properties.\n");
     fprintf(errstream, "  -d \t\t Checks REACHDEADLOCK properties.\n");
     fprintf(errstream, "  -D \t\t Checks AVOIDDEADLOCK properties.\n");
@@ -1885,6 +1889,7 @@ static int UsageGameShowProperty(FILE* errstream)
     fprintf(errstream,
             "  -f \t\tPrints only those properties found to be false.\n");
     fprintf(errstream, "  -a \t\tPrints only REACHTARGET properties.\n");
+    fprintf(errstream, "  -b \t\tPrints only ATLREACHTARGET properties.\n");
     fprintf(errstream, "  -A \t\tPrints only AVOIDTARGET properties.\n");
     fprintf(errstream, "  -d \t\tPrints only REACHDEADLOCK properties.\n");
     fprintf(errstream, "  -D \t\tPrints only AVOIDDEADLOCK properties.\n");
@@ -2037,6 +2042,94 @@ static int CommandCheckReachTargetSpec(NuSMVEnv_ptr env,int argc, char **argv)
 }
 
 static int UsageCheckReachTargetSpec(FILE* errstream)
+{
+    fprintf(errstream,
+            "usage: check_reach_target [-h] [-m | -o output-file] "
+                    "[-n number]\n"
+                    "       [-s] [-d] [-e] [-f strategy-file]\n");
+    fprintf(errstream, "   -h \t\t\tPrints the command usage.\n");
+    fprintf(errstream, "   -m \t\t\tPipes output through the program "
+            "specified\n");
+    fprintf(errstream, "      \t\t\tby the \"PAGER\" environment variable "
+            "if defined,\n");
+    fprintf(errstream, "      \t\t\telse through the UNIX command \"more\".\n");
+    fprintf(errstream, "   -o output-file\tWrites the generated output to "
+            "\"output-file\".\n");
+    fprintf(errstream, "   -n number\t\tChecks the REACHTARGET specification "
+            "with index\n"
+            "      \t\t\t\"number\".\n");
+    fprintf(errstream, "   -s \t\t\tRequests strategy printing (default to "
+            "stdout).\n");
+    fprintf(errstream, "   -d \t\t\tRequests strategy printing, generate a DAG "
+            "(implies -s).\n");
+    fprintf(errstream, "   -e \t\t\tRequests strategy printing, generate an "
+            "easily readable\n"
+            "      \t\t\toutput (implies -s).\n");
+    fprintf(errstream, "   -f strategy-file\tWrites strategy to \"file\" "\
+          "(implies -s).\n");
+    return 1;
+}
+
+/**Function********************************************************************
+
+  Synopsis           [ Checks a REACHTARGET game specification. ]
+
+  CommandName        [ check_reach_target ]
+
+  CommandSynopsis    [ ]
+
+  CommandArguments   [ \[-h\] \[-m | -o output-file\] \[-n number\] \[-s\]
+                       \[-d\] \[-e\] \[-f strategy-file\] ]
+
+  CommandDescription [ Determines whether a REACHTARGET specification
+                       is realizable. If yes, then a strategy for the
+                       protagonist may be computed, a counterstrategy
+                       for the opponent otherwise. <p>
+
+                       Option <tt>-n</tt> can be used for checking a
+                       particular formula in the property
+                       database. Otherwise all REACHTARGET
+                       specifications in the database are checked. <p>
+
+  Command options:<p>
+  <dl>
+    <dt> <tt>-h</tt>
+       <dd> Prints the command usage.
+    <dt> <tt>-m</tt>
+       <dd> Pipes the output generated by the command to the program
+           specified by the <tt>PAGER</tt> shell variable if defined, else
+           through the <tt>UNIX</tt> command "more".
+    <dt> <tt>-o output-file</tt>
+       <dd> Writes the output generated by the command to the file
+           <tt>output-file</tt>.
+    <dt> <tt>-n number</tt>
+       <dd> Checks the REACHTARGET specification with index <tt>number</tt>
+           in the property database.
+    <dt> <tt>-s</tt>
+       <dd> Requests strategy printing (default to stdout).
+    <dt> <tt>-d</tt>
+       <dd> Requests strategy printing, generate a DAG (implies -s).
+    <dt> <tt>-e</tt>
+       <dd> Requests strategy printing, generate an easily readable output
+           (implies -s).
+    <dt> <tt>-f strategy-file</tt>
+       <dd> Writes strategy to "strategy-file" (implies -s).
+  </dl><p>
+
+  Strategy printing can also be requested by setting the environment
+  variable <tt>game_print_strategy</tt>. ]
+
+  SideEffects        [ ]
+
+  SeeAlso            [ CommandCheck* ]
+
+******************************************************************************/
+static int CommandCheckAtlReachTargetSpec(NuSMVEnv_ptr env,int argc, char **argv)
+{
+    return game_invoke_game_command(env,argc, argv, PropGame_AtlReachTarget);
+}
+
+static int UsageCheckAtlReachTargetSpec(FILE* errstream)
 {
     fprintf(errstream,
             "usage: check_reach_target [-h] [-m | -o output-file] "
@@ -2562,6 +2655,11 @@ static int game_invoke_game_command(NuSMVEnv_ptr env,int argc, char **argv, Prop
             command_usage = UsageCheckReachTargetSpec;
             command_options = "hmo:n:sf:de";
             break;
+        case PropGame_AtlReachTarget:
+            command_function = Game_CheckAtlReachTargetSpec;
+            command_usage = UsageCheckAtlReachTargetSpec;
+            command_options = "hmo:n:sf:de";
+            break;
         case PropGame_ReachDeadlock:
             command_function = Game_CheckReachDeadlockSpec;
             command_usage = UsageCheckReachDeadlockSpec;
@@ -2577,22 +2675,17 @@ static int game_invoke_game_command(NuSMVEnv_ptr env,int argc, char **argv, Prop
             command_usage = UsageCheckAvoidDeadlockSpec;
             command_options = "hmo:n:sf:de";
             break;
-        case PropAtlGame_ReachTarget:
-            command_function = AtlGame_CheckReachTargetSpec;
-            command_usage = UsageCheckReachTargetSpec;
-            command_options = "hmo:n:sf:de";
-            break;
-        case PropAtlGame_ReachDeadlock:
+        case PropGame_AtlReachDeadlock:
             command_function = Game_CheckReachDeadlockSpec;
             command_usage = UsageCheckReachDeadlockSpec;
             command_options = "hmo:n:sf:de";
             break;
-        case PropAtlGame_AvoidTarget:
+        case PropGame_AtlAvoidTarget:
             command_function = Game_CheckAvoidTargetSpec;
             command_usage = UsageCheckAvoidTargetSpec;
             command_options = "ha:mo:n:sf:de";
             break;
-        case PropAtlGame_AvoidDeadlock:
+        case PropGame_AtlAvoidDeadlock:
             command_function = Game_CheckAvoidDeadlockSpec;
             command_usage = UsageCheckAvoidDeadlockSpec;
             command_options = "hmo:n:sf:de";

@@ -448,7 +448,7 @@ Game_UseStrongReachabilityAlgorithm ARGS((PropGame_ptr prop,
                                           GameStrategy_ptr* strategy));
 
 EXTERN Game_RealizabilityStatus
-        AtlGame_UseStrongReachabilityAlgorithm ARGS((PropGame_ptr prop,
+        Game_UseStrongAtlReachabilityAlgorithm ARGS((PropGame_ptr prop,
         GameStrategy_ptr* strategy));
 
 EXTERN boolean Game_PropertyToGame

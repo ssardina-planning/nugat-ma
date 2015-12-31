@@ -219,6 +219,16 @@ int printer_sexp_game_print_node(PrinterBase_ptr self, node_ptr n, int priority)
         _PRINT(")");
       break;
     }
+  case ATLREACHTARGET:
+    {
+      char buf[20];
+      sprintf(buf, "%d ", NODE_TO_INT(car(n)));
+      result = _PRINT("\n(ATLREACHTARGET of ") &&
+               _PRINT(buf) &&
+               _THROW(cdr(n), 0) &&
+               _PRINT(")");
+      break;
+    }
   case AVOIDTARGET:
     {
       char buf[20];

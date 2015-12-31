@@ -135,6 +135,7 @@ game_body_element
 // not implemented    | pslspec
 // not implemented    | compute
              | reachtarget
+             | atlreachtarget
              | avoidtarget
              | reachdeadlock
              | avoiddeadlock
@@ -213,6 +214,13 @@ reachtarget   : TOK_REACHTARGET player_num simple_expression optsemi
                          $$ = new_lined_node(NODEMGR,REACHTARGET, NODE_FROM_INT($2), $3, $1);
 #endif
                        }
+              ;
+atlreachtarget   : TOK_ATLREACHTARGET player_num simple_expression optsemi
+                        {
+#if HAVE_GAME
+                        $$ = new_lined_node(NODEMGR,ATLREACHTARGET, NODE_FROM_INT($2), $3, $1);
+#endif
+                        }
               ;
 avoidtarget   : TOK_AVOIDTARGET player_num simple_expression optsemi
                        {

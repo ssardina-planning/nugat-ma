@@ -71,6 +71,7 @@
 
 ******************************************************************************/
 #define PROP_GAME_REACH_TARGET_STRING   "ReachTarget"
+#define PROP_GAME_ATL_REACH_TARGET_STRING   "AtlReachTarget"
 #define PROP_GAME_AVOID_TARGET_STRING   "AvoidTarget"
 #define PROP_GAME_REACH_DEADLOCK_STRING "ReachDeadlock"
 #define PROP_GAME_AVOID_DEADLOCK_STRING "AvoidDeadlock"
@@ -98,13 +99,13 @@ enum PropGame_Type_TAG {
   /* Game specifications: ReachTarget should be the first and
      GenReactivity should be the last in game specs. */
   PropGame_ReachTarget,
+  PropGame_AtlReachTarget,
   PropGame_AvoidTarget,
+  PropGame_AtlAvoidTarget,
   PropGame_ReachDeadlock,
+  PropGame_AtlReachDeadlock,
   PropGame_AvoidDeadlock,
-    PropAtlGame_ReachTarget,
-    PropAtlGame_AvoidTarget,
-    PropAtlGame_ReachDeadlock,
-    PropAtlGame_AvoidDeadlock,
+  PropGame_AtlAvoidDeadlock,
   PropGame_BuchiGame,
   PropGame_LtlGame,
   PropGame_GenReactivity,

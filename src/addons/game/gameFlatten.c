@@ -203,6 +203,7 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
   propErr = PropDbGame_fill(PROP_DB_GAME(NuSMVEnv_get_value(env, ENV_PROP_DB)),
                             st,
                             GameHierarchy_get_reachtarget(mainGameHierarchy),
+                            GameHierarchy_get_atlreachtarget(mainGameHierarchy),
                             GameHierarchy_get_avoidtarget(mainGameHierarchy),
                             GameHierarchy_get_reachdeadlock(mainGameHierarchy),
                             GameHierarchy_get_avoiddeadlock(mainGameHierarchy),
@@ -293,6 +294,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
   node_ptr buchigame = Nil;
   node_ptr ltlgame = Nil;
   node_ptr genreactivity = Nil;
+  node_ptr atlreachtarget = Nil;
 
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
@@ -397,6 +399,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
 
     /* The true game spec is dealt below, outside of switch statement. */
     case REACHTARGET:   list = &reachtarget; break;
+    case ATLREACHTARGET:list = &atlreachtarget; break;
     case AVOIDTARGET:   list = &avoidtarget; break;
     case REACHDEADLOCK: list = &reachdeadlock; break;
     case AVOIDDEADLOCK: list = &avoiddeadlock; break;
@@ -440,6 +443,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
                               pslspec,
                               compute,
                               reachtarget,
+                              atlreachtarget,
                               avoidtarget,
                               reachdeadlock,
                               avoiddeadlock,

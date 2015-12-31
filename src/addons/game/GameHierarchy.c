@@ -83,6 +83,7 @@ struct GameHierarchy_TAG {
   node_ptr buchigame_expr;
   node_ptr ltlgame_expr;
   node_ptr genreactivity_expr;
+  node_ptr atlreachtarget_expr;
 };
 typedef struct GameHierarchy_TAG GameHierarchy;
 
@@ -98,6 +99,7 @@ static void game_hierarchy_init ARGS((GameHierarchy_ptr self,
                                       node_ptr pslspec,
                                       node_ptr compute,
                                       node_ptr reachtarget,
+                                      node_ptr atlreachtarget,
                                       node_ptr avoidtarget,
                                       node_ptr reachdeadlock,
                                       node_ptr avoiddeadlock,
@@ -153,6 +155,7 @@ GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr *players,
                                        node_ptr pslspec,
                                        node_ptr compute,
                                        node_ptr reachtarget,
+                                       node_ptr atlreachtarget,
                                        node_ptr avoidtarget,
                                        node_ptr reachdeadlock,
                                        node_ptr avoiddeadlock,
@@ -171,6 +174,7 @@ GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr *players,
                       pslspec,
                       compute,
                       reachtarget,
+                      atlreachtarget,
                       avoidtarget,
                       reachdeadlock,
                       avoiddeadlock,
@@ -436,6 +440,24 @@ node_ptr GameHierarchy_get_genreactivity(GameHierarchy_ptr self)
   return(self->genreactivity_expr);
 }
 
+/**Function********************************************************************
+
+  Synopsis    [ Getter for atlreachtarget. ]
+
+  Description [ ]
+
+  SideEffects [ ]
+
+  SeeAlso     [ ]
+
+******************************************************************************/
+node_ptr GameHierarchy_get_atlreachtarget(GameHierarchy_ptr self)
+{
+  GAME_HIERARCHY_CHECK_INSTANCE(self);
+
+  return(self->atlreachtarget_expr);
+}
+
 /*---------------------------------------------------------------------------*/
 /* Static function definitions                                               */
 /*---------------------------------------------------------------------------*/
@@ -459,6 +481,7 @@ void game_hierarchy_init(GameHierarchy_ptr self,
                          node_ptr pslspec,
                          node_ptr compute,
                          node_ptr reachtarget,
+                         node_ptr atlreachtarget,
                          node_ptr avoidtarget,
                          node_ptr reachdeadlock,
                          node_ptr avoiddeadlock,
@@ -479,6 +502,7 @@ void game_hierarchy_init(GameHierarchy_ptr self,
   self->invarspec_expr = invarspec;
   self->compute_expr   = compute;
   self->reachtarget_expr   = reachtarget;
+  self->atlreachtarget_expr   = atlreachtarget;
   self->avoidtarget_expr   = avoidtarget;
   self->reachdeadlock_expr = reachdeadlock;
   self->avoiddeadlock_expr = avoiddeadlock;

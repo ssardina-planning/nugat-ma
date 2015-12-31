@@ -1142,6 +1142,7 @@ static node_ptr game_create_new_param(Game_UnrealizableCore_Struct_ptr self,
       (kind == INVAR && !self->min_invar) ||
       (kind == TRANS && !self->min_trans) ||
       (((kind == REACHTARGET) ||
+        (kind == ATLREACHTARGET) ||
         (kind == AVOIDTARGET) ||
         (kind == REACHDEADLOCK) ||
         (kind == AVOIDDEADLOCK) ||
@@ -1304,6 +1305,12 @@ static void game_guard_gamespecs_by_parameters(
        implicant. */
     kind = REACHTARGET;
     /* fall through */
+
+  case PropGame_AtlReachTarget:
+    /* For reachability the parameter is added to the expression as
+       implicant. */
+    kind = ATLREACHTARGET;
+        /* fall through */
 
   case PropGame_LtlGame:
     /* Very crude for now: just guard the whole LTL formula with a
@@ -1559,6 +1566,7 @@ static void game_unguard_exprs_by_parameters(NodeMgr_ptr nodemgr,
                (kind == INVAR && self->min_invar) ||
                (kind == TRANS && self->min_trans) ||
                (((kind == REACHTARGET) ||
+                 (kind == ATLREACHTARGET) ||
                  (kind == AVOIDTARGET) ||
                  (kind == REACHDEADLOCK) ||
                  (kind == AVOIDDEADLOCK) ||
@@ -1962,6 +1970,9 @@ void game_process_unrealizable_core_with_params(
             break;
           case REACHTARGET:
             fprintf(outstream, " REACHTARGET\t");
+            break;
+          case ATLREACHTARGET:
+            fprintf(outstream, " ATLREACHTARGET\t");
             break;
           case AVOIDTARGET:
             fprintf(outstream, " AVOIDTARGET\t");

@@ -379,6 +379,7 @@ const char* PropGame_Type_to_string(const PropGame_Type type)
 
   switch (type) {
   case PropGame_ReachTarget:   res = PROP_GAME_REACH_TARGET_STRING; break;
+  case PropGame_AtlReachTarget:   res = PROP_GAME_ATL_REACH_TARGET_STRING; break;
   case PropGame_AvoidTarget:   res = PROP_GAME_AVOID_TARGET_STRING; break;
   case PropGame_ReachDeadlock: res = PROP_GAME_REACH_DEADLOCK_STRING; break;
   case PropGame_AvoidDeadlock: res = PROP_GAME_AVOID_DEADLOCK_STRING; break;
@@ -652,6 +653,9 @@ void prop_game_verify(PropGame_ptr self)
     switch (Prop_get_type(PROP(self))) {
     case PropGame_ReachTarget:
       Game_CheckReachTargetSpec(self, &gameParams);
+      break;
+    case PropGame_AtlReachTarget:
+      Game_CheckAtlReachTargetSpec(self, &gameParams);
       break;
     case PropGame_AvoidTarget:
       Game_CheckAvoidTargetSpec(self, &gameParams);

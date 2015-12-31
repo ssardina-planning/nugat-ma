@@ -36,6 +36,9 @@ TRANS
 -- realizable
 REACHTARGET 1 o0.v
 
+-- atl realizable
+ATLREACHTARGET 1 o0.v
+
 -- unrealizable
 AVOIDTARGET 2 o0.v
 

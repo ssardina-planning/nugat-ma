@@ -174,6 +174,7 @@ void PropDbGame_clean(const NuSMVEnv_ptr env,PropDbGame_ptr self)
 int PropDbGame_fill(PropDbGame_ptr self,
                     SymbTable_ptr symb_table,
                     node_ptr reachtarget,
+                    node_ptr atlreachtarget,
                     node_ptr avoidtarget,
                     node_ptr reachdeadlock,
                     node_ptr avoiddeadlock,
@@ -192,6 +193,13 @@ int PropDbGame_fill(PropDbGame_ptr self,
                                      symb_table,
                                      car(l),
                                      PropGame_ReachTarget);
+    if (res == -1) return 1;
+  }
+  for (l = atlreachtarget; l != Nil; l = cdr(l)) {
+    res = PropDb_prop_create_and_add(PROP_DB(self),
+                                     symb_table,
+                                     car(l),
+                                     PropGame_AtlReachTarget);
     if (res == -1) return 1;
   }
   for (l = avoidtarget; l != Nil; l = cdr(l)) {

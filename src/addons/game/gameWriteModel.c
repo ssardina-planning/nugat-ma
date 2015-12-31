@@ -153,6 +153,11 @@ void Game_CommandWriteFlatModel(NuSMVEnv_ptr env,FILE* ofileid)
                             NULL,
                             NULL);
   game_split_and_print_spec(ofileid,
+                            GameHierarchy_get_atlreachtarget(mainGameHierarchy),
+                            "ATLREACHTARGET",
+                            NULL,
+                            NULL);
+  game_split_and_print_spec(ofileid,
                             GameHierarchy_get_avoidtarget(mainGameHierarchy),
                             "AVOIDTARGET",
                             NULL,
@@ -263,6 +268,11 @@ void Game_CommandWriteBooleanModel(NuSMVEnv_ptr env,FILE* ofileid)
   game_split_and_print_spec(ofileid,
                             GameHierarchy_get_reachtarget(mainGameHierarchy),
                             "REACHTARGET",
+                            enc,
+                            det_layer);
+  game_split_and_print_spec(ofileid,
+                            GameHierarchy_get_atlreachtarget(mainGameHierarchy),
+                            "ATLREACHTARGET",
                             enc,
                             det_layer);
   game_split_and_print_spec(ofileid,

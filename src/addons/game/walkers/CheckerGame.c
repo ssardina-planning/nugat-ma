@@ -235,6 +235,7 @@ static SymbType_ptr checker_game_check_expr(CheckerBase_ptr self,
        in CheckerStatements.c for specification is used.
     */
   case REACHTARGET:
+  case ATLREACHTARGET:
   case AVOIDTARGET:
   case REACHDEADLOCK:
   case AVOIDDEADLOCK:
@@ -375,6 +376,7 @@ static boolean checker_game_viol_handler(CheckerBase_ptr self,
     nusmv_assert(false); /* this is impossible */
 
   case REACHTARGET:
+  case ATLREACHTARGET:
   case AVOIDTARGET:
   case REACHDEADLOCK:
   case AVOIDDEADLOCK:
@@ -436,6 +438,7 @@ static void print_operator(CheckerBase_ptr self, FILE* output_stream, node_ptr e
   case GAME:               fprintf(output_stream, "\n(GAME "); return;
 
   case REACHTARGET:        fprintf(output_stream, "REACHTARGET"); return;
+  case ATLREACHTARGET:     fprintf(output_stream, "ATLREACHTARGET"); return;
   case AVOIDTARGET:        fprintf(output_stream, "AVOIDTARGET"); return;
   case REACHDEADLOCK:      fprintf(output_stream, "REACHDEADLOCK"); return;
   case AVOIDDEADLOCK:      fprintf(output_stream, "AVOIDDEADLOCK"); return;

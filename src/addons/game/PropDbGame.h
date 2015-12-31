@@ -118,6 +118,7 @@ EXTERN void PropDbGame_clean ARGS((const NuSMVEnv_ptr env,PropDbGame_ptr self));
 EXTERN int PropDbGame_fill ARGS((PropDbGame_ptr self,
                                  SymbTable_ptr symb_table,
                                  node_ptr reachtarget,
+                                 node_ptr atlreachtarget,
                                  node_ptr avoidtarget,
                                  node_ptr reachdeadlock,
                                  node_ptr avoiddeadlock,
