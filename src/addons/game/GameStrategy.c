@@ -456,9 +456,10 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
     */
 
   GameStrategy_ptr self;
-  bdd_ptr inits[2];
+  bdd_ptr inits[n_players];
   bdd_ptr opponentDeadlock;
   bdd_ptr reachable;
+  int i;
 
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
 
@@ -474,18 +475,18 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
 
   /* prepare the initial states (obtain them and add the invariants) */
   {
-    bdd_ptr invars[2];
+    bdd_ptr invars[n_players];
 
-    inits[0] = GameBddFsm_get_init(fsm,0);
-    inits[1] = GameBddFsm_get_init(fsm,1);
-    invars[0] = GameBddFsm_get_invars(fsm,0);
-    invars[1] = GameBddFsm_get_invars(fsm,1);
+    for(i=0;i<n_players;i++) {
 
-    bdd_and_accumulate(self->dd_manager, &inits[0], invars[0]);
-    bdd_and_accumulate(self->dd_manager, &inits[1], invars[1]);
+      inits[i] = GameBddFsm_get_init(fsm,i);
 
-    bdd_free(self->dd_manager, invars[0]);
-    bdd_free(self->dd_manager, invars[1]);
+      invars[i] = GameBddFsm_get_invars(fsm,i);
+
+      bdd_and_accumulate(self->dd_manager, &inits[i], invars[i]);
+
+      bdd_free(self->dd_manager, invars[i]);
+    }
   }
 
   opponentDeadlock = GameBddFsm_without_successor_states(fsm,

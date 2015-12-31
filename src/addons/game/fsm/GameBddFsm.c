@@ -54,6 +54,8 @@
 
 #include <stdio.h>
 
+EXTERN int n_players;
+
 static char rcsid[] UTIL_UNUSED = "$Id: GameBddFsm.c,v 1.1.2.4 2010-02-08 14:07:32 nusmv Exp $";
 
 /*---------------------------------------------------------------------------*/
@@ -77,14 +79,14 @@ typedef struct GameBddFsm_TAG
   BddEnc_ptr enc;
   DDMgr_ptr dd;
 
-  BddFsm_ptr players[2];
+  BddFsm_ptr *players;
 
-  bdd_ptr stateVarCubes[2];
-  bdd_ptr nextStateVarCubes[2];   /* created for efficiency only */
-  bdd_ptr stateFrozenVarCubes[2];
+  bdd_ptr *stateVarCubes;
+  bdd_ptr *nextStateVarCubes;   /* created for efficiency only */
+  bdd_ptr *stateFrozenVarCubes;
 
-  BddStates withSuccessorss[2];   /* states with successor for player 1 */
-  BddStates woSuccessorss[2];     /* states without successor for player 1 */
+  BddStates *withSuccessorss;   /* states with successor for player 1 */
+  BddStates *woSuccessorss;     /* states without successor for player 1 */
 } GameBddFsm;
 
 /*---------------------------------------------------------------------------*/
@@ -111,8 +113,8 @@ long gameBddFsm_totalMoveTotalTime;
 static void game_bdd_fsm_init ARGS((GameBddFsm_ptr self,
                                     BddEnc_ptr enc,
                                     BddFsm_ptr *players,
-                                    bdd_ptr stateVarCubes[2],
-                                    bdd_ptr stateFrozenVarCubes[2]));
+                                    bdd_ptr *stateVarCubes,
+                                    bdd_ptr *stateFrozenVarCubes));
 
 static void game_bdd_fsm_copy ARGS((const GameBddFsm_ptr self,
                                     GameBddFsm_ptr copy));
@@ -143,15 +145,15 @@ static void game_bdd_fsm_deinit ARGS((GameBddFsm_ptr self));
 ******************************************************************************/
 GameBddFsm_ptr GameBddFsm_create(BddEnc_ptr enc,
                                  BddFsm_ptr *players,
-                                 bdd_ptr stateVarCubes[2],
-                                 bdd_ptr stateFrozenVarCubes[2])
+                                 bdd_ptr *stateVarCubes,
+                                 bdd_ptr *stateFrozenVarCubes)
 {
   GameBddFsm_ptr self;
     boolean expr = false;
     int i;
 
   BDD_ENC_CHECK_INSTANCE(enc);
-  for(i=0;i<2;i++) BDD_FSM_CHECK_INSTANCE(players[i]);
+  for(i=0;i<n_players;i++) BDD_FSM_CHECK_INSTANCE(players[i]);
 
   self = ALLOC(GameBddFsm, 1);
   GAME_BDD_FSM_CHECK_INSTANCE(self);
@@ -424,7 +426,7 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
 
   /* check the cache. Compute if result has not been computed before */
   if (BDD_STATES(NULL) == *withSuccessors) {
-    bdd_ptr constrs[2], with, without;
+    bdd_ptr constrs[n_players], with, without;
 
     /* with and without successor states are computed here only */
     nusmv_assert((bdd_ptr) NULL == *withoutSuccessors);
@@ -574,7 +576,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
      S_2 = Inv1 & Inv2 & not E p1'.Tr1 & Inv1' & not E p2'.Tr2 & Inv2' & goal
   */
 
-  bdd_ptr tmp, constrs[2], result;
+  bdd_ptr tmp, constrs[n_players], result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
@@ -689,7 +691,7 @@ BddStates GameBddFsm_get_weak_forward_image(const GameBddFsm_ptr self,
      transtion) which just have been abstracted.
   */
 
-  bdd_ptr constrs[2], transs[2], tmp, result;
+  bdd_ptr constrs[n_players], transs[n_players], tmp, result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
@@ -770,7 +772,7 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
                               BddStates toState,
                               int player)
 {
-  bdd_ptr tmp, constrs[2], result;
+  bdd_ptr tmp, constrs[n_players], result;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
@@ -998,7 +1000,7 @@ EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
 
 ******************************************************************************/
 EXTERN BddStates GameBddFsm_player_satisfies_from(const GameBddFsm_ptr self,
-                                                  BddStates constrs[2],
+                                                  BddStates constrs[n_players],
                                                   BddStates goalStates,
                                                   int player,
                                                   char quantifiers)
@@ -1116,7 +1118,7 @@ void GameBddFsm_print_info(const GameBddFsm_ptr self, OStream_ptr file)
 
   OStream_printf(file, "Statistics on Game BDD FSM.\n");
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
         OStream_printf(file, "Statistics on player %d :\n", i);
         BddFsm_print_info(self->players[i], file);
     }
@@ -1211,7 +1213,7 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
     bdd_ptr one;
 
     one = bdd_true(self->dd);
-      for(i=0;i<2;i++)
+      for(i=0;i<n_players;i++)
     BddFsm_apply_synchronous_product_custom_varsets(self->players[i],
                                                     other->players[i],
                                                     self->stateVarCubes[i],
@@ -1239,15 +1241,22 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
 static void game_bdd_fsm_init(GameBddFsm_ptr self,
                               BddEnc_ptr enc,
                               BddFsm_ptr *players,
-                              bdd_ptr stateVarCubes[2],
-                              bdd_ptr stateFrozenVarCubes[2])
+                              bdd_ptr *stateVarCubes,
+                              bdd_ptr *stateFrozenVarCubes)
 {
     int i;
 
     self->enc = enc;
   self->dd = BddEnc_get_dd_manager(enc);
 
-    for(i=0;i<2;i++) {
+  self->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
+  self->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+  self->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+
+    for(i=0;i<n_players;i++) {
 
         self->players[i] = players[i];
 
@@ -1283,7 +1292,14 @@ static void game_bdd_fsm_copy(const GameBddFsm_ptr self, GameBddFsm_ptr copy)
   copy->enc = self->enc;
   copy->dd = self->dd;
 
-    for(i=0;i<2;i++) {
+  copy->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
+  copy->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+  copy->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+
+    for(i=0;i<n_players;i++) {
 
         copy->players[i] = BddFsm_copy(self->players[i]);
 
@@ -1318,7 +1334,7 @@ static void game_bdd_fsm_deinit(GameBddFsm_ptr self)
 {
     int i;
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
         BddFsm_destroy(self->players[i]);
 
         bdd_free(self->dd, self->stateVarCubes[i]);

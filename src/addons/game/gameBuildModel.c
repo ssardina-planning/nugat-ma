@@ -108,13 +108,13 @@ void Game_CommandBuildFlatModel(NuSMVEnv_ptr env)
   if (!NuSMVEnv_has_value(env, ENV_SEXP_FSM)) {
 
     SymbTable_ptr st;
-    SymbLayer_ptr model_layers[2];
+    SymbLayer_ptr model_layers[n_players];
     GameSexpFsm_ptr scalar_fsm;
-    Set_t set, sets[2];
-    SymbLayerIter iters[2];
+    Set_t set, sets[n_players];
+    SymbLayerIter iters[n_players];
     SymbTableIter titer;
     int i;
-    FlatHierarchy_ptr hierarchies[2];
+    FlatHierarchy_ptr hierarchies[n_players];
 
     st = SYMB_TABLE(NuSMVEnv_get_value(env, ENV_SYMB_TABLE));
 
@@ -126,7 +126,7 @@ void Game_CommandBuildFlatModel(NuSMVEnv_ptr env)
      SymbTable_gen_iter(st,&titer,STT_VAR);
      set = SymbTable_iter_to_set(st, titer);
 
-     for(i=0;i<2;i++) {
+     for(i=0;i<n_players;i++) {
 
          SymbLayer_gen_iter(model_layers[i], &iters[i], STT_VAR);
          sets[i] = SymbLayer_iter_to_set(model_layers[i], iters[i]);
@@ -186,7 +186,7 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
     GameSexpFsm_ptr scalar_fsm;
     GameSexpFsm_ptr bool_fsm;
     SymbTable_ptr st;
-    SymbLayer_ptr determ_layers[2];
+    SymbLayer_ptr determ_layers[n_players];
 
     const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
     BddEnc_ptr  bdd_enc = BDD_ENC(NuSMVEnv_get_value(env, ENV_BDD_ENCODER));
@@ -232,19 +232,20 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
                          DETERM_LAYER(2));
 
      /*NEW_CODE_START*/
-     SymbLayerIter iter1;
-     NodeList_ptr syms1;
-     SymbLayer_gen_iter(determ_layers[0], &iter1, STT_ALL);
-     syms1 = SymbLayer_iter_to_list(determ_layers[0], iter1);
+     SymbLayerIter iters[n_players];
+     NodeList_ptr symss[n_players];
+     bool expr = false;
 
-     SymbLayerIter iter2;
-     NodeList_ptr syms2;
-     SymbLayer_gen_iter(determ_layers[1], &iter2, STT_ALL);
-     syms2 = SymbLayer_iter_to_list(determ_layers[1], iter2);
+    for(i=0;i<n_players;i++) {
+         SymbLayer_gen_iter(determ_layers[i], &iters[i], STT_ALL);
+         symss[i] = SymbLayer_iter_to_list(determ_layers[i], iters[i]);
+        expr |= NodeList_get_length(symss[i])!= 0;
+    }
+
 
      /* determinization variables are not supported in Game */
-     if (NodeList_get_length(syms1) != 0 ||
-         NodeList_get_length(syms2) != 0) {
+     if (expr)
+     {
         nusmv_yylineno = 0; /* for error messages */
         ErrorMgr_rpterr(errmgr,"determinization variables are not supported by realizability "
                        "algorithms, \nbut were created during booleanisation\n"
@@ -288,7 +289,7 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
   BddEnc_ptr bdd_enc = BDD_ENC(NuSMVEnv_get_value(env, ENV_BDD_ENCODER));
-  SymbLayer_ptr model_layers[2];
+  SymbLayer_ptr model_layers[n_players];
   int i;
 
       model_layers[0] = SymbTable_get_layer(st, MODEL_LAYER(1));
@@ -330,19 +331,20 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
 GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
                                      BddEnc_ptr enc,
                                      const GameSexpFsm_ptr sexp_fsm,
-                                     const SymbLayer_ptr layers[2],
+                                     const SymbLayer_ptr *layers,
                                      const TransType trans_type)
 {
   DDMgr_ptr dd;
   bdd_ptr one;
-  SexpFsm_ptr players[2];
+  SexpFsm_ptr players[n_players];
   GameBddFsm_ptr gameFsm;
-  BddFsm_ptr bddfsms[2];
-  BddVarSet_ptr curVarsCubes[2],
-    nextVarsCubes[2],
-    curFrozVarsCubes[2];
+  BddFsm_ptr bddfsms[n_players];
+  BddVarSet_ptr curVarsCubes[n_players],
+    nextVarsCubes[n_players],
+    curFrozVarsCubes[n_players];
 
     int i;
+    bool expr = true;
 
   FSM_BUILDER_CHECK_INSTANCE(self);
   BDD_ENC_CHECK_INSTANCE(enc);
@@ -353,7 +355,7 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
   dd = BddEnc_get_dd_manager(enc);
   one = bdd_true(dd);
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   players[i] = GameSexpFsm_get_player(sexp_fsm,i);
 
   /* ---------------------------------------------------------------------- */
@@ -362,9 +364,10 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
 
   /* Game cannot have input variables */
 
+    for(i=0;i<n_players;i++)
+        expr &= (0 == SymbLayer_get_input_vars_num(layers[i])) ;
 
-   nusmv_assert(0 == SymbLayer_get_input_vars_num(layers[0]) &&
-                        0 == SymbLayer_get_input_vars_num(layers[1]));
+   nusmv_assert(expr);
 
    /*OLD_CODE_START
   nusmv_assert(0 == NodeList_get_length(SymbLayer_get_input_vars(layers[0])) &&
@@ -373,20 +376,20 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
 
   /* create a cube of current state, next state and
      both state and frozen variables for player 1 */
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   curVarsCubes[i] = BddEnc_get_layer_vars_cube(enc, layers[i], VFT_CURRENT);
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   nextVarsCubes[i] = BddEnc_state_var_to_next_state_var(enc, curVarsCubes[i]);
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   curFrozVarsCubes[i] = BddEnc_get_layer_vars_cube(enc, layers[i], VFT_CURR_FROZEN);
 
   /* ---------------------------------------------------------------------- */
   /* Construct BDD FSM for players and then Game BDD FSM                    */
   /* ---------------------------------------------------------------------- */
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   bddfsms[i] = FsmBuilder_create_bdd_fsm_of_vars(self,
                                                players[i],
                                                trans_type,
@@ -397,7 +400,7 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
 
   gameFsm = GameBddFsm_create(enc,
                               bddfsms, curVarsCubes, curFrozVarsCubes);
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
       bdd_free(dd, curVarsCubes[i]);
       bdd_free(dd, nextVarsCubes[i]);
       bdd_free(dd, curFrozVarsCubes[i]);

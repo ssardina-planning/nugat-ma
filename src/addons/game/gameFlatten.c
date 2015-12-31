@@ -106,8 +106,8 @@ EXTERN node_ptr parsed_tree;
 /* flatten hierarchy functions */
 static GameHierarchy_ptr
   game_flatten_game_hierarchy ARGS((NuSMVEnv_ptr env,SymbTable_ptr symbol_table,
-                                    SymbLayer_ptr model_layers[2],
-                                    node_ptr modules[2],
+                                    SymbLayer_ptr model_layers[n_players],
+                                    node_ptr modules[n_players],
                                     boolean expand_bounded_arrays));
 
 static void game_check_first_player ARGS((NuSMVEnv_ptr env,
@@ -148,7 +148,7 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
   const StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    SymbLayer_ptr model_layers[2];
+    SymbLayer_ptr model_layers[n_players];
 
   int propErr;
 
@@ -182,7 +182,7 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
      Note that two special modules PLAYER_NAME(1) and PLAYER_NAME(2) are
      actually the players\' declarations.
   */
-    node_ptr players[2];
+    node_ptr players[n_players];
 
     players[0] = sym_intern(env,PLAYER_NAME(1));
     players[1] = sym_intern(env,PLAYER_NAME(2));
@@ -276,8 +276,8 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
 static GameHierarchy_ptr
 game_flatten_game_hierarchy(NuSMVEnv_ptr env,
                             SymbTable_ptr symbol_table,
-                            SymbLayer_ptr model_layers[2],
-                            node_ptr modules[2],
+                            SymbLayer_ptr model_layers[n_players],
+                            node_ptr modules[n_players],
                             boolean expand_bounded_arrays)
 {
   node_ptr tmp, iter;
@@ -299,16 +299,16 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* outstream = StreamMgr_get_output_stream(streams);
 
-    FlatHierarchy_ptr players[2];
+    FlatHierarchy_ptr players[n_players];
     int i;
 
-    for(i=0;i<2;i++) players[i] = FlatHierarchy_create(symbol_table);
+    for(i=0;i<n_players;i++) players[i] = FlatHierarchy_create(symbol_table);
 
   hash_ptr instances = new_assoc();
 
   /* Collect all the constructs of a hierarchy (instance name is
      Nil). */
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   Compile_ConstructHierarchy(env,
                              symbol_table,
                              model_layers[i],
@@ -342,7 +342,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
      dependencies of assignments).
   */
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   Compile_ProcessHierarchy(env,
                            symbol_table,
                            model_layers[i],

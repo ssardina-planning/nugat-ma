@@ -46,6 +46,8 @@
 #include "fsm/sexp/SexpFsm.h"
 #include "utils/utils.h"
 
+EXTERN int n_players;
+
 static char rcsid[] UTIL_UNUSED = "$Id: GameBeFsm.c,v 1.1.2.6 2010-02-10 14:57:17 nusmv Exp $";
 
 /*---------------------------------------------------------------------------*/
@@ -72,7 +74,7 @@ static char rcsid[] UTIL_UNUSED = "$Id: GameBeFsm.c,v 1.1.2.6 2010-02-10 14:57:1
 
 ******************************************************************************/
 typedef struct GameBeFsm_TAG {
-  BeFsm_ptr players[2];
+  BeFsm_ptr *players;
 } GameBeFsm;
 
 /*---------------------------------------------------------------------------*/
@@ -152,12 +154,12 @@ GameBeFsm_ptr GameBeFsm_create(BeFsm_ptr *players)
 GameBeFsm_ptr GameBeFsm_copy(GameBeFsm_ptr self)
 {
   GameBeFsm_ptr copy;
-    BeFsm_ptr players[2];
+    BeFsm_ptr players[n_players];
     int i;
 
   GAME_BE_FSM_CHECK_INSTANCE(self);
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
     players[i] = BeFsm_copy(self->players[i]);
 
   game_be_fsm_init(copy,
@@ -187,14 +189,14 @@ GameBeFsm_ptr GameBeFsm_create_from_sexp_fsm(BeEnc_ptr be_enc,
                                              const GameSexpFsm_ptr bfsm)
 {
   GameBeFsm_ptr self;
-  BoolSexpFsm_ptr bsexpfsms[2];
-  BeFsm_ptr befsms[2];
+  BoolSexpFsm_ptr bsexpfsms[n_players];
+  BeFsm_ptr befsms[n_players];
   int i;
 
   BE_ENC_CHECK_INSTANCE(be_enc);
   GAME_SEXP_FSM_CHECK_INSTANCE(bfsm);
 
-  for(i=0;i<2;i++) {
+  for(i=0;i<n_players;i++) {
     bsexpfsms[i] = BOOL_SEXP_FSM(GameSexpFsm_get_player(bfsm,i));
     befsms[i] = BeFsm_create_from_sexp_fsm(be_enc, bsexpfsms[i]);
   }
@@ -262,7 +264,9 @@ static void game_be_fsm_init(GameBeFsm_ptr self,
 {
     int i;
 
-    for(i=0;i<2;i++)
+  self->players = (BeFsm_ptr*)malloc(sizeof(BeFsm_ptr)*n_players);
+
+    for(i=0;i<n_players;i++)
   self->players[i] = players[i];
 }
 
@@ -281,6 +285,6 @@ static void game_be_fsm_deinit(GameBeFsm_ptr self)
 {
     int i;
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   BeFsm_destroy(self->players[i]);
 }

@@ -44,6 +44,8 @@
 #include "parser/symbols.h"
 #include "utils/utils.h"
 
+EXTERN int n_players;
+
 static char rcsid[] UTIL_UNUSED = "$Id: GameHierarchy.c,v 1.1.2.3 2010-02-08 16:05:50 nusmv Exp $";
 
 /*---------------------------------------------------------------------------*/
@@ -68,7 +70,7 @@ static char rcsid[] UTIL_UNUSED = "$Id: GameHierarchy.c,v 1.1.2.3 2010-02-08 16:
 
 ******************************************************************************/
 struct GameHierarchy_TAG {
-  FlatHierarchy_ptr players[2];
+  FlatHierarchy_ptr *players;
   node_ptr spec_expr;
   node_ptr ltlspec_expr;
   node_ptr invarspec_expr;
@@ -464,8 +466,13 @@ void game_hierarchy_init(GameHierarchy_ptr self,
                          node_ptr ltlgame,
                          node_ptr genreactivity)
 {
-  self->players[0] = players[0];
-  self->players[1] = players[1];
+  int i;
+
+  self->players = (FlatHierarchy_ptr*)malloc(sizeof(FlatHierarchy_ptr)*n_players);
+
+  for(i=0;i<n_players;i++)
+    self->players[i] = players[i];
+
   self->spec_expr      = spec;
   self->ltlspec_expr   = ltlspec;
   self->pslspec_expr   = pslspec;
@@ -495,9 +502,9 @@ void game_hierarchy_deinit(GameHierarchy_ptr self)
 {
   int i;
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   FlatHierarchy_destroy(self->players[i]);
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   self->players[i] = FLAT_HIERARCHY(NULL);
 }

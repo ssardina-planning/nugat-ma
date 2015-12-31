@@ -1016,13 +1016,13 @@ static GameGameFsms_ptr game_construct_game_fsms(NuSMVEnv_ptr env,
   /* FSMs are not created yet */
   GameGameFsms_ptr fsms = ALLOC(GameGameFsms, 1);
   nusmv_assert(fsms != NULL);
-  SymbLayerIter iters[2];
+  SymbLayerIter iters[n_players];
   SymbTableIter titer;
-  SymbLayer_ptr model_layers[2];
+  SymbLayer_ptr model_layers[n_players];
   int i;
-    FlatHierarchy_ptr hierarchies[2];
+    FlatHierarchy_ptr hierarchies[n_players];
 
-    for(i=0;i<2;i++)
+    for(i=0;i<n_players;i++)
   model_layers[i] = SymbTable_get_layer(self->st, MODEL_LAYER(i+1));
 
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
@@ -1031,8 +1031,8 @@ static GameGameFsms_ptr game_construct_game_fsms(NuSMVEnv_ptr env,
    /*NEW_CODE_START*/
    SymbTable_gen_iter(self->st,&titer,STT_VAR);
    Set_t set = SymbTable_iter_to_set(self->st, titer);
-   Set_t sets[2];
-   for(i=0;i<2;i++){
+   Set_t sets[n_players];
+   for(i=0;i<n_players;i++){
        SymbLayer_gen_iter(model_layers[i], &iters[i], STT_VAR);
        sets[i] = SymbLayer_iter_to_set(model_layers[i], iters[i]);
    }
@@ -1048,10 +1048,10 @@ static GameGameFsms_ptr game_construct_game_fsms(NuSMVEnv_ptr env,
     Set_Make(NodeList_to_node_ptr(SymbLayer_get_all_vars(model_layer_2)));
     OLD_CODE_END*/
   Set_Freeze(set);
-  for(i=0;i<2;i++)
+  for(i=0;i<n_players;i++)
     Set_Freeze(sets[i]);
 
-  for(i=0;i<2;i++)
+  for(i=0;i<n_players;i++)
     hierarchies[i] = GameHierarchy_get_player(self->gh,i);
 
   /* We assume that symbol table contains only variables from the
@@ -1441,10 +1441,10 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
   nusmv_assert(self->parameterList_all == /*Nil*/NODE_LIST(NULL));
   nusmv_assert(self->parameter2expression == (hash_ptr) NULL);
 
-  FlatHierarchy_ptr players[2];
+  FlatHierarchy_ptr players[n_players];
     int i;
 
-  for(i=0;i<2;i++)
+  for(i=0;i<n_players;i++)
       players[i]  = GameHierarchy_get_player((self->gh),i);
 
   /* Save assign_hashes. */
@@ -1460,7 +1460,7 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
 
   self->layer = SymbTable_create_layer(self->st, NULL, SYMB_LAYER_POS_TOP);
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
         game_guard_exprs_by_parameters(self,
                                        FlatHierarchy_get_init(players[i]),
                                        INIT,
@@ -1731,7 +1731,7 @@ static void game_unguard_game_hierarchy_with_parameters(NodeMgr_ptr nodemgr,
   NODE_LIST_CHECK_INSTANCE(self->parameterList_1);
   NODE_LIST_CHECK_INSTANCE(self->parameterList_2);
   nusmv_assert(self->parameter2expression != (hash_ptr) NULL);
-  FlatHierarchy_ptr players[2];
+  FlatHierarchy_ptr players[n_players];
 
   players[0] = GameHierarchy_get_player((self->gh),0);
   players[1] = GameHierarchy_get_player((self->gh),1);
@@ -2198,15 +2198,15 @@ static void game_compute_core_using_parameters(NuSMVEnv_ptr env,
                             &winningStates);
   /* calculate winning core */
   {
-      bdd_ptr inits[2];
-      bdd_ptr invar[2];
-      
-    inits[0] = GameBddFsm_get_init(fsm->bdd,0);
-    inits[1] = GameBddFsm_get_init(fsm->bdd,1);
-    invar[0] = GameBddFsm_get_invars(fsm->bdd,0);
-    invar[1] = GameBddFsm_get_invars(fsm->bdd,1);
-    bdd_and_accumulate(self->dd_manager, &inits[0], invar[0]);
-    bdd_and_accumulate(self->dd_manager, &inits[1], invar[1]);
+      bdd_ptr inits[n_players];
+      bdd_ptr invar[n_players];
+      int i;
+
+    for(i=0;i<n_players;i++) {
+      inits[i] = GameBddFsm_get_init(fsm->bdd,i);
+      invar[i] = GameBddFsm_get_invars(fsm->bdd,i);
+      bdd_and_accumulate(self->dd_manager, &inits[i], invar[i]);
+    }
 
     bdd_ptr winningCore = GameBddFsm_player_satisfies_from(fsm->bdd,
                                                            inits,
@@ -2480,6 +2480,7 @@ static boolean game_minimize_players_constraints(
   MasterPrinter_ptr wffprint = MASTER_PRINTER(NuSMVEnv_get_value(env, ENV_WFF_PRINTER));
   const StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* errstream = StreamMgr_get_error_stream(streams);
+  int i;
 
   node_ptr trueConst = find_node(nodemgr,TRUEEXP, Nil, Nil);
 
@@ -2498,16 +2499,16 @@ static boolean game_minimize_players_constraints(
   /* This is done because removing initial state constraints doesnt
      require a full realizability check but can use
      GameBddFsm_can_player_satisfy. */
-    bdd_ptr inits[2];
-    bdd_ptr invars[2];
+    bdd_ptr inits[n_players];
+    bdd_ptr invars[n_players];
 
   if (self->min_init && FlatHierarchy_get_init(playerModified) != Nil) {
-    inits[0] = GameBddFsm_get_init(fsm,0);
-    inits[1] = GameBddFsm_get_init(fsm,1);
-    invars[0] = GameBddFsm_get_invars(fsm,0);
-    invars[1] = GameBddFsm_get_invars(fsm,1);
-    bdd_and_accumulate(self->dd_manager, &inits[0], invars[0]);
-    bdd_and_accumulate(self->dd_manager, &inits[1], invars[1]);
+
+    for(i=0;i<n_players;i++) {
+      inits[i] = GameBddFsm_get_init(fsm,i);
+      invars[i] = GameBddFsm_get_invars(fsm,i);
+      bdd_and_accumulate(self->dd_manager, &inits[i], invars[i]);
+    }
 
     bdd_ptr* init = playerToModify == 1 ? &inits[0] : &inits[1];
     bdd_ptr invar = playerToModify == 1 ? invars[0] : invars[1];
@@ -2698,7 +2699,6 @@ static boolean game_minimize_players_constraints(
      .doMinimize = self->min_prop},
   };
 
-  int i;
   /* traverse all the constraints and disable them one by one */
   for (i = 0; i < 3; ++i) {
     node_ptr iter;
@@ -2890,7 +2890,7 @@ static void game_output_game_after_minimization(
 
   /* a list consisting of the player in explanation and the other
      player */
-    FlatHierarchy_ptr players[2];
+    FlatHierarchy_ptr players[n_players];
 
   players[0] = 1 == explanation ? GameHierarchy_get_player((self->gh),0) :
                               GameHierarchy_get_player((self->gh),1);

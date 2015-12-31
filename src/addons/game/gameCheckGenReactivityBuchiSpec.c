@@ -611,7 +611,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   FILE* outstream = StreamMgr_get_output_stream(streams);
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
-  bdd_ptr inits[2], invars[2];
+  bdd_ptr inits[n_players], invars[n_players];
   bdd_ptr Z;
   boolean isSomeInitFalse = false;
   boolean isZFixpointReached = false;
@@ -1289,7 +1289,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
   /* flag which player this game is for */
   int player = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 1 : 2;
     
-  bdd_ptr inits[2], invars[2];
+  bdd_ptr inits[n_players], invars[n_players];
   bdd_ptr Z;
   boolean isZFixpointReached = false;
   boolean isRealizable;

@@ -213,7 +213,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   Game_Who w;
 
   /* The B\"uchi automaton when curr_player == PLAYER_i. */
-  Game_SF07_gba_ptr players_ba[2];
+  Game_SF07_gba_ptr *players_ba;
     
   /* The BDD encoder. */
   BddEnc_ptr bdd_enc;
@@ -239,7 +239,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   int curr_player;
 
   /* The current layer where player1 monitor variables will be added. */
-  SymbLayer_ptr curr_players_monitor_layer[2];
+  SymbLayer_ptr *curr_players_monitor_layer;
 
   /* The current goal. */
   node_ptr curr_goal;
@@ -248,7 +248,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG {
   int curr_unique_number;
 
   /* The current player1 monitor as a node_ptr module. */
-  node_ptr curr_players_monitor_sexp[2];
+  node_ptr *curr_players_monitor_sexp;
 
   /* A deep (not find_noded) copy of the body of the current player2
      monitor. For strategy printing. */
@@ -583,12 +583,14 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
                                         Game_Who w)
 {
   Game_SF07_StructCheckLTLGameSF07_ptr res;
+  int i;
 
   PROP_GAME_CHECK_INSTANCE(prop);
 
   res = ALLOC(Game_SF07_StructCheckLTLGameSF07, 1);
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(res);
 
+  res->players_ba = (Game_SF07_gba_ptr *)malloc(sizeof(Game_SF07_gba_ptr)*n_players);
   /* The iteration-invariant parts. */
 
   res->prop = prop;
@@ -597,8 +599,9 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
   res->kmin = kmin;
   res->kmax = kmax;
   res->w = w;
-  res->players_ba[0] = GAME_SF07_GBA(NULL);
-  res->players_ba[1] = GAME_SF07_GBA(NULL);
+
+  for(i=0;i<n_players;i++)
+    res->players_ba[i] = GAME_SF07_GBA(NULL);
 
   res->bdd_enc = NuSMVEnv_get_value(env, ENV_BDD_ENCODER);
   res->bool_enc =
@@ -612,11 +615,11 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
 
   /* The iteration-variant parts. */
 
-  res->curr_players_monitor_layer[0] = SYMB_LAYER(NULL);
-  res->curr_players_monitor_layer[1] = SYMB_LAYER(NULL);
+  for(i=0;i<n_players;i++) {
+    res->curr_players_monitor_layer[i] = SYMB_LAYER(NULL);
+    res->curr_players_monitor_sexp[i] = Nil;
+  }
   res->curr_goal = Nil;
-  res->curr_players_monitor_sexp[0] = Nil;
-  res->curr_players_monitor_sexp[1] = Nil;
   res->curr_player2_monitor_sexp_copy = Nil;
   res->curr_monitor_game_bdd_fsm = GAME_BDD_FSM(NULL);
   res->curr_product_game_bdd_fsm = GAME_BDD_FSM(NULL);
@@ -1752,17 +1755,17 @@ Game_SF07_StructCheckLTLGameSF07_construct_monitor_trans_statements
 static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
 (NuSMVEnv_ptr env, Game_SF07_StructCheckLTLGameSF07_ptr self)
 {
-  FlatHierarchy_ptr players_monitor_flat_hierarchy[2];
+  FlatHierarchy_ptr players_monitor_flat_hierarchy[n_players];
   GameBddFsm_ptr prop_game_bdd_fsm;
   GameSexpFsm_ptr prop_game_sexp_fsm;
-  SexpFsm_ptr players_monitor_sexp_fsm[2];
-  bdd_ptr players_monitor_cur_vars_cube[2];
-  bdd_ptr players_monitor_next_vars_cube[2];
-  bdd_ptr players_monitor_cur_froz_vars_cube[2];
+  SexpFsm_ptr players_monitor_sexp_fsm[n_players];
+  bdd_ptr players_monitor_cur_vars_cube[n_players];
+  bdd_ptr players_monitor_next_vars_cube[n_players];
+  bdd_ptr players_monitor_cur_froz_vars_cube[n_players];
   TransType trans_type;
   bdd_ptr one;
   Set_t vars;
-  BddFsm_ptr players_monitor_bdd_fsm[2];
+  BddFsm_ptr players_monitor_bdd_fsm[n_players];
     int i;
 
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
@@ -1832,17 +1835,17 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
   }
 
     //1 block
-    SexpFsm_ptr players_model_sexp_fsm[2];
-    FlatHierarchy_ptr players_model_flat_hierarchy[2];
-    Set_t players_model_vars[2];
+    SexpFsm_ptr players_model_sexp_fsm[n_players];
+    FlatHierarchy_ptr players_model_flat_hierarchy[n_players];
+    Set_t players_model_vars[n_players];
     Set_Iterator_t iter;
 
     //2 block
-    SymbLayer_ptr players_model_layer[2];
-    bdd_ptr players_model_tmp[2];
-    bdd_ptr players_monitor_tmp[2];
+    SymbLayer_ptr players_model_layer[n_players];
+    bdd_ptr players_model_tmp[n_players];
+    bdd_ptr players_monitor_tmp[n_players];
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
 
         /* Add player i model variables to players_monitor_flat_hierarchy[1]. */
   {

@@ -427,7 +427,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   int opponent = 1 == player ? 2 : 1;
   char quantifiers = opt_game_game_initial_condition(oh);
 
-  bdd_ptr inits[2], invars[2];
+  bdd_ptr inits[n_players], invars[n_players];
   bdd_ptr originalTarget;  /* A target to be reached. */
   bdd_ptr allReachStates;  /* All the states from which the target can
                               be reached. */
@@ -439,7 +439,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   boolean isFixedpointReached = false;
   int pathLength = 0;
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
       /* prepare the initial states (obtain them and add the invariants) */
       inits[i] = GameBddFsm_get_init(fsm,i);
       invars[i] = GameBddFsm_get_invars(fsm,i);
@@ -763,15 +763,15 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
                  PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop)));
 
     /* flag which player this game is for */
-    int players[2];
+    int players[n_players];
 
-   // for(i=0;i<2;i++) players[i] = (UStringMgr_find_string(strings,PLAYER_NAME(i)) == PropGame_get_player(prop)) ? 1 : 0; // players in << , >> , opponents are players with 0 value
+   // for(i=0;i<n_players;i++) players[i] = (UStringMgr_find_string(strings,PLAYER_NAME(i)) == PropGame_get_player(prop)) ? 1 : 0; // players in << , >> , opponents are players with 0 value
     int player = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 1 : 2;
     int opponent = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 2 : 1;
 
     char quantifiers = opt_game_game_initial_condition(oh);
 
-    bdd_ptr inits[2], invars[2];
+    bdd_ptr inits[n_players], invars[n_players];
     bdd_ptr originalTarget;  /* A target to be reached. */
     bdd_ptr allReachStates;  /* All the states from which the target can
                               be reached. */
@@ -783,7 +783,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     boolean isFixedpointReached = false;
     int pathLength = 0;
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
         /* prepare the initial states (obtain them and add the invariants) */
         inits[i] = GameBddFsm_get_init(fsm,i);
         invars[i] = GameBddFsm_get_invars(fsm,i);
@@ -812,7 +812,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     if (PropAtlGame_AvoidTarget == Prop_get_type(PROP(prop)) ||
         PropAtlGame_AvoidDeadlock == Prop_get_type(PROP(prop))) {
 
-        for(i=0;i<2;i++) players[i] = !players[i];
+        for(i=0;i<n_players;i++) players[i] = !players[i];
 //        players = 1 == players ? 2 : 1;
 //        opponents = 1 == opponents ? 2 : 1;
         quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
@@ -827,7 +827,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     /* check whether the target can be reached at the initial state */
     isTargetReached = false;
 
-    for(i=0;i<2;i++) // 0000000000000000000000
+    for(i=0;i<n_players;i++) // 0000000000000000000000
     isTargetReached |= GameBddFsm_can_player_satisfy(fsm, inits,
                                                     allReachStates, players[i],
                                                     quantifiers);
@@ -1074,7 +1074,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     bdd_free(dd_manager, allReachStates);
     bdd_free(dd_manager, originalTarget);
 
-    for(i=0;i<2;i++) {
+    for(i=0;i<n_players;i++) {
         bdd_free(dd_manager, inits[i]);
         bdd_free(dd_manager, invars[i]);
     }
