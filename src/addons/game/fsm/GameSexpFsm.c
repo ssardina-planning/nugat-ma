@@ -264,6 +264,9 @@ GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
   result = ALLOC(GameSexpFsm, 1);
   GAME_SEXP_FSM_CHECK_INSTANCE(result);
 
+  result->players = (SexpFsm_ptr *)malloc(sizeof(SexpFsm_ptr)*n_players);
+  result->vars_sets = (Set_t *)malloc(sizeof(Set_t)*n_players);
+
     for(i=0;i<n_players;i++)
   result->players[i] = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->players[i],
                                                                  enc,

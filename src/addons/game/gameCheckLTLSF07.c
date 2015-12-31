@@ -591,6 +591,8 @@ Game_SF07_StructCheckLTLGameSF07_create(NuSMVEnv_ptr env,
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(res);
 
   res->players_ba = (Game_SF07_gba_ptr *)malloc(sizeof(Game_SF07_gba_ptr)*n_players);
+  res->curr_players_monitor_layer = (SymbLayer_ptr *)malloc(sizeof(SymbLayer_ptr)*n_players);
+  res->curr_players_monitor_sexp = (node_ptr *)malloc(sizeof(node_ptr)*n_players);
   /* The iteration-invariant parts. */
 
   res->prop = prop;

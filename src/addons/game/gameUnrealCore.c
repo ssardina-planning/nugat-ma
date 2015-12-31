@@ -1022,8 +1022,8 @@ static GameGameFsms_ptr game_construct_game_fsms(NuSMVEnv_ptr env,
   int i;
     FlatHierarchy_ptr hierarchies[n_players];
 
-    for(i=0;i<n_players;i++)
-  model_layers[i] = SymbTable_get_layer(self->st, MODEL_LAYER(i+1));
+  model_layers[0] = SymbTable_get_layer(self->st, MODEL_LAYER(1));
+  model_layers[1] = SymbTable_get_layer(self->st, MODEL_LAYER(2));
 
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
 
