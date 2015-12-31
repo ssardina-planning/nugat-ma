@@ -880,7 +880,8 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
   SeeAlso     [ GameBddFsm_player_satisfies_from ]
 
 ******************************************************************************/
-EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
+EXTERN boolean GameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
+                                             const GameBddFsm_ptr self,
                                              BddStates *constrs,
                                              BddStates goalStates,
                                              int player,
@@ -896,7 +897,6 @@ EXTERN boolean GameBddFsm_can_player_satisfy(const GameBddFsm_ptr self,
   boolean isOne;
   boolean goalNegation, p2Negation, p1Negation;
 
-  const NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(self));
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);

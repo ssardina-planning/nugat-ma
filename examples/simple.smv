@@ -49,7 +49,7 @@ AVOIDDEADLOCK 2
 BUCHIGAME 2 (i1, o1)
 
 -- unrealizable
--- LTLGAME 1 F G i1
+LTLGAME 1 F G i1
 
 -- realizable
 GENREACTIVITY 2 (i0.v)->(o0.v, i1)

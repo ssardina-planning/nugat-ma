@@ -2580,7 +2580,7 @@ static boolean game_minimize_players_constraints(
         bdd_ptr old_init = *init;
         /* conjunct without a given init condition */
         *init = bdd_and(self->dd_manager, *init, (bdd_ptr) cdr(iter_conj));
-        boolean newReal = GameBddFsm_can_player_satisfy(fsm,
+        boolean newReal = GameBddFsm_can_player_satisfy(env,fsm,
                                                         inits,
                                                         winningStates,
                                                         self->player,

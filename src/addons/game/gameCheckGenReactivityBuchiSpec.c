@@ -763,7 +763,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   case GAME_INIT_TERM_NONE: break;
   case GAME_INIT_TERM_NORMAL:
     isRealizable =
-      GameBddFsm_can_player_satisfy(fsm,
+      GameBddFsm_can_player_satisfy(env,fsm,
                                     inits,
                                     Z,
                                     player,
@@ -955,7 +955,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
     case GAME_INIT_TERM_NONE: break;
     case GAME_INIT_TERM_NORMAL:
       isRealizable =
-        GameBddFsm_can_player_satisfy(fsm,
+        GameBddFsm_can_player_satisfy(env,fsm,
                                       inits,
                                       Z,
                                       player,
@@ -1004,7 +1004,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
   //time_init_check = util_cpu_time() - time_init_check;
    if (GAME_INIT_TERM_NONE == earlierTermination) {
      isRealizable =
-       GameBddFsm_can_player_satisfy(fsm,
+       GameBddFsm_can_player_satisfy(env,fsm,
                                      inits,
                                      Z,
                                      player,
@@ -1386,7 +1386,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
 
   /* Is it realizable or not? Used for earlier (fault) termination. */
   isRealizable =
-    GameBddFsm_can_player_satisfy(fsm,
+    GameBddFsm_can_player_satisfy(env,fsm,
                                   inits,
                                   Z,
                                   player,
@@ -1469,7 +1469,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
     /* Check for earlier termination: if Z is unaccessible, then there
        is no need to go further as the game is unrealizable. */
     isRealizable =
-      GameBddFsm_can_player_satisfy(fsm,
+      GameBddFsm_can_player_satisfy(env,fsm,
                                     inits,
                                     Z,
                                     player,

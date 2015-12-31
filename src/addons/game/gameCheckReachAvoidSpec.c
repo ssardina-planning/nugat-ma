@@ -439,13 +439,15 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   boolean isFixedpointReached = false;
   int pathLength = 0;
 
-    for(i=0;i<n_players;i++) {
+    for(i=0;i<n_players;i++)
       /* prepare the initial states (obtain them and add the invariants) */
       inits[i] = GameBddFsm_get_init(fsm,i);
+
+    for(i=0;i<n_players;i++)
       invars[i] = GameBddFsm_get_invars(fsm,i);
 
+    for(i=0;i<n_players;i++)
       bdd_and_accumulate(dd_manager, &inits[i], invars[i]);
-    }
 
   /* initialize the original target states (reachability or avoidance target) */
   if (PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
@@ -458,8 +460,8 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     originalTarget = bdd_false(dd_manager);
   }
 
-  bdd_and_accumulate(dd_manager, &originalTarget, invars[0]);
-  bdd_and_accumulate(dd_manager, &originalTarget, invars[1]);
+  for(i=0;i<n_players;i++)
+    bdd_and_accumulate(dd_manager, &originalTarget, invars[i]);
 
   /* For avoidance games it is necessary to reverse the player and, as
      result, initial quantifiers (because now we play for the
@@ -479,7 +481,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   reachStateList = cons(nodemgr,(node_ptr)bdd_dup(originalTarget), Nil);
 
   /* check whether the target can be reached at the initial state */
-  isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
+  isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
                                                   allReachStates, player,
                                                   quantifiers);
 
@@ -540,7 +542,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
 
     /* check reachability only if fixpoint has not been reached */
     if (!isFixedpointReached) {
-      isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
+      isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
                                                       allReachStates, player,
                                                       quantifiers);
     }
@@ -828,7 +830,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
     isTargetReached = false;
 
     for(i=0;i<n_players;i++) // 0000000000000000000000
-    isTargetReached |= GameBddFsm_can_player_satisfy(fsm, inits,
+    isTargetReached |= GameBddFsm_can_player_satisfy(env,fsm, inits,
                                                     allReachStates, players[i],
                                                     quantifiers);
 
@@ -891,7 +893,7 @@ Game_RealizabilityStatus AtlGame_UseStrongReachabilityAlgorithm(PropGame_ptr pro
 
             /* check reachability only if fixpoint has not been reached */
             if (!isFixedpointReached) {
-                isTargetReached = GameBddFsm_can_player_satisfy(fsm, inits,
+                isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
                                                                 allReachStates, players[i],
                                                                 quantifiers);
             }

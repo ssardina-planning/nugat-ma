@@ -166,7 +166,8 @@ EXTERN BddStates GameBddFsm_get_move ARGS((const GameBddFsm_ptr self,
                                            BddStates states,
                                            int player));
 
-EXTERN boolean GameBddFsm_can_player_satisfy ARGS((const GameBddFsm_ptr self,
+EXTERN boolean GameBddFsm_can_player_satisfy ARGS((NuSMVEnv_ptr env,
+                                                          const GameBddFsm_ptr self,
                                                    BddStates *constrs,
                                                    BddStates goalStates,
                                                    int player,
