@@ -161,7 +161,7 @@ GameSexpFsm_ptr GameSexpFsm_create(NuSMVEnv_ptr env,
                      players,
                      vars_sets);
 
-    for(i=0;i<2-1;i++)
+    for(i=0;i<n_players-1;i++)
     expr = Nil != FlatHierarchy_get_invar(hierarchies[i]) || Nil != FlatHierarchy_get_invar(hierarchies[i+1]);
 
   if (expr) {
@@ -295,7 +295,7 @@ boolean GameSexpFsm_is_boolean(const GameSexpFsm_ptr self)
     boolean expr = false;
     int i;
 
-    for(i=0;i<2-1;i++)
+    for(i=0;i<n_players-1;i++)
         expr += SexpFsm_is_boolean(self->players[i]) == SexpFsm_is_boolean(self->players[i+1]);
 
   nusmv_assert(expr);

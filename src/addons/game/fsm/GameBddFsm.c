@@ -161,7 +161,7 @@ GameBddFsm_ptr GameBddFsm_create(BddEnc_ptr enc,
   game_bdd_fsm_init(self, enc,
                     players, stateVarCubes, stateFrozenVarCubes);
 
-    for(i=0;i<2-1;i++)
+    for(i=0;i<n_players-1;i++)
     expr = bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i])) &&
            bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i+1]));
 

@@ -422,7 +422,7 @@ EXTERN GameHierarchy_ptr mainGameHierarchy;
 EXTERN GameBddFsm_ptr Game_CreateGameBddFsm ARGS((const FsmBuilder_ptr self,
                                                   BddEnc_ptr enc,
                                                   const GameSexpFsm_ptr sexp_fsm,
-                                                  const SymbLayer_ptr layers[2],
+                                                  const SymbLayer_ptr *layers,
                                                   const TransType trans_type));
 
 EXTERN void

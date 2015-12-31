@@ -15,9 +15,10 @@
 %}
 
 %nonassoc <lineno> TOK_GAME TOK_PLAYER
-%nonassoc <lineno> TOK_REACHTARGET TOK_AVOIDTARGET
+%nonassoc <lineno> TOK_REACHTARGET TOK_ATLREACHTARGET TOK_AVOIDTARGET
 %nonassoc <lineno> TOK_REACHDEADLOCK TOK_AVOIDDEADLOCK
-%nonassoc <lineno> TOK_BUCHIGAME TOK_LTLGAME TOK_GENREACTIVITY TOK_ATLREACHTARGET
+%nonassoc <lineno> TOK_BUCHIGAME TOK_LTLGAME TOK_GENREACTIVITY
+
 
 %type <node> simple_list_expression
 
@@ -26,5 +27,5 @@
 %type <node> game_definition
 %type <node> game_body game_body_element players player_body player_body_element
 %type <lineno> player_num
-%type <node> reachtarget avoidtarget reachdeadlock avoiddeadlock
-%type <node> buchigame ltlgame genreactivity atlreachtarget
+%type <node> reachtarget atlreachtarget avoidtarget reachdeadlock avoiddeadlock
+%type <node> buchigame ltlgame genreactivity

@@ -882,7 +882,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
         /* compute the strong pre-image for reach states and given player. */
         isFixedpointReached = false;
-        for(i=0;i<2 && !isFixedpointReached && !isTargetReached;i++) { // 0000000000000000000000
+        for(i=0;i<n_players && !isFixedpointReached && !isTargetReached;i++) { // 0000000000000000000000
             preImage = GameBddFsm_get_strong_backward_image(fsm, allReachStates,
                                                             players[i]);
 

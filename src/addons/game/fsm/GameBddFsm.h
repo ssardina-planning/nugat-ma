@@ -117,8 +117,8 @@ typedef struct GameBddFsm_TAG*  GameBddFsm_ptr;
 
 EXTERN GameBddFsm_ptr GameBddFsm_create ARGS((BddEnc_ptr enc,
                                               BddFsm_ptr *players,
-                                              bdd_ptr stateVarCubes[2],
-                                              bdd_ptr stateFrozenVarCubes[2]));
+                                              bdd_ptr *stateVarCubes,
+                                              bdd_ptr *stateFrozenVarCubes));
 
 EXTERN GameBddFsm_ptr GameBddFsm_copy ARGS((const GameBddFsm_ptr self));
 
@@ -175,7 +175,7 @@ EXTERN boolean GameBddFsm_can_player_satisfy ARGS((NuSMVEnv_ptr env,
 
 EXTERN BddStates
 GameBddFsm_player_satisfies_from ARGS((const GameBddFsm_ptr self,
-                                       BddStates constrs[2],
+                                       BddStates *constrs,
                                        BddStates goalStates,
                                        int player,
                                        char quantifiers));
