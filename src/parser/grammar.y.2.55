@@ -174,7 +174,7 @@ players :   {$$=Nil;}
                 */
 
 
-                printf("\n %d %d %d, ",$1->type,$1->lineno,node_get_int($1)); // DEBUG
+//                printf("\n %d %d %d, ",$1->type,$1->lineno,node_get_int($1)); // DEBUG
 
                 int index=node_get_int($1)-1;
                 char* str;
