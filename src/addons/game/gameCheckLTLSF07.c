@@ -122,8 +122,7 @@ typedef struct Game_SF07_StructCheckLTLGameSF07_TAG*
                      - GAME_WHO_BOTH,
                      - GAME_WHO_PROTAGONIST,
                      - GAME_WHO_ANTAGONIST,
-                     - GAME_WHO_PLAYER_1,
-                     - GAME_WHO_PLAYER_2.
+                     - GAME_WHO_PLAYER_ i+1 .
                      This implementation is complete only for
                      GAME_WHO_BOTH, as no check is performed whether
                      the reached bound is large enough to conclude
@@ -412,16 +411,21 @@ void Game_CheckLtlGameSpecSF07(PropGame_ptr prop,
   FILE* errstream = StreamMgr_get_error_stream(streams);
   OStream_ptr outostream = StreamMgr_get_output_ostream(streams);
   OStream_ptr errostream = StreamMgr_get_error_ostream(streams);
+  bool expr = false;
+  int i;
 
   PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(Prop_get_status(PROP(prop)) == Prop_Unchecked);
   nusmv_assert(0 <= kmin);
   nusmv_assert(kmin <= kmax);
+
+  for(i=0;i<n_players;i++)
+      expr |= (w == i+1);
+
   nusmv_assert((w == GAME_WHO_BOTH) ||
                (w == GAME_WHO_PROTAGONIST) ||
                (w == GAME_WHO_ANTAGONIST) ||
-               (w == GAME_WHO_PLAYER_1) ||
-               (w == GAME_WHO_PLAYER_2));
+               expr);
   nusmv_assert(opt_game_game_initial_condition(opts) ==
                'N');
 
@@ -451,7 +455,7 @@ void Game_CheckLtlGameSpecSF07(PropGame_ptr prop,
     if (((w == GAME_WHO_PROTAGONIST) && (cls->player == 1)) ||
         ((w == GAME_WHO_ANTAGONIST) && (cls->player == 2)) ||
         ((w == GAME_WHO_BOTH) && (cls->player == 1)) ||
-        (w == GAME_WHO_PLAYER_1)) {
+        (w == 1)) {
       curr_player = 1;
     } else {
       curr_player = 2;
@@ -706,13 +710,19 @@ Game_SF07_StructCheckLTLGameSF07_create_iteration
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
   nusmv_assert(self->kmin <= curr_k);
   nusmv_assert(curr_k <= self->kmax);
+
+    bool expr = false;
+    int i;
+
+    for(i=0;i<n_players;i++)
+        expr |= ( self->w == i+1  && (curr_player == i+1) );
+
   nusmv_assert(((self->w == GAME_WHO_PROTAGONIST) &&
                 (self->player == curr_player)) ||
                ((self->w == GAME_WHO_ANTAGONIST) &&
                 (self->player != curr_player)) ||
                (self->w == GAME_WHO_BOTH) ||
-               ((self->w == GAME_WHO_PLAYER_1) && (curr_player == 1)) ||
-               ((self->w == GAME_WHO_PLAYER_2) && (curr_player == 2)));
+                       expr);
 
   self->curr_k = curr_k;
   self->curr_player = curr_player;
@@ -1873,8 +1883,11 @@ static void Game_SF07_StructCheckLTLGameSF07_construct_monitor_game_bdd_fsm
     
 
     /* Get layer. */
+    char str[50];
+    sprintf(str,"layer_of_PLAYER_2");
+
     players_model_layer[i] =
-      SymbTable_get_layer(self->symb_table, MODEL_LAYER(2));
+      SymbTable_get_layer(self->symb_table, str);
 
     /* Get current state vars cube. */
     players_model_tmp[i] =
@@ -2001,6 +2014,8 @@ static void Game_SF07_StructCheckLTLGameSF07_check
   boolean construct_strategy;
   node_ptr expr;
   PropGame_ptr prop;
+  char str[50];
+  int i;
 
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
@@ -2018,11 +2033,13 @@ static void Game_SF07_StructCheckLTLGameSF07_check
                          (self->params)->strategy_printout) ||
                         opt_game_print_strategy(opts));
 
+  for(i=0;i<n_players;i++)
+      if (PTR_TO_INT(car(self->curr_goal)) == i + 1)
+          sprintf(str, "PLAYER_%d", i + 1);
+
   /* Construct property. */
   expr = find_node(nodemgr,GAME_SPEC_WRAPPER,
-                   sym_intern(env,PTR_TO_INT(car(self->curr_goal)) == 1 ?
-                              PLAYER_NAME(1) :
-                              PLAYER_NAME(2)),
+                   sym_intern(env,str),
                    cdr(self->curr_goal));
   prop = PropGame_create_partial(env,expr, PropGame_AvoidTarget);
   PropGame_set_game_bdd_fsm(prop, self->curr_product_game_bdd_fsm);
@@ -2245,6 +2262,7 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_sexp
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   const StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* outstream = StreamMgr_get_output_stream(streams);
+  int i;
 
   GAME_STRATEGY_CHECK_INSTANCE(self->strategy);
   {
@@ -2254,42 +2272,44 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_sexp
   }
 
   /* Extract variables from game layers. */
-  array_insert_last(char*, layers, MODEL_LAYER(1));
-  array_insert_last(char*, layers, MODEL_LAYER(2));
+  for(i=0;i<n_players;i++) {
+    char str[50];
+    sprintf(str, "layer_of_PLAYER_%d", i + 1);
+    array_insert_last(char*, layers, str);
+  }
   /* There shouldnt be any variables in the determinization layers. */
   {
-    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(1));
-    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(2));
+    SymbLayer_ptr dls[n_players];
+    SymbLayerIter iters[n_players];
+    NodeList_ptr symss[n_players];
 
-    /**NEW_CODE_START**/
-    SymbLayerIter iter1;
-    NodeList_ptr syms1;
-    SymbLayer_gen_iter(dl1, &iter1, STT_ALL);
-    syms1 = SymbLayer_iter_to_list(dl1, iter1);
+    for(i=0;i<n_players;i++) {
+      char str[50];
+      sprintf(str, "determ_layer_of_PLAYER_%d", i + 1);
+      dls[i] = SymbTable_get_layer(self->symb_table, str);
 
-    SymbLayerIter iter2;
-    NodeList_ptr syms2;
-    SymbLayer_gen_iter(dl2, &iter2, STT_ALL);
-    syms2 = SymbLayer_iter_to_list(dl2, iter2);
+      /**NEW_CODE_START**/
+      SymbLayer_gen_iter(dls[i], &iters[i], STT_ALL);
+      symss[i] = SymbLayer_iter_to_list(dls[i], iters[i]);
 
+      nusmv_assert((dls[i] != SYMB_LAYER(NULL)) && (NodeList_get_length(symss[i]) == 0));
+      /**NEW_CODE_END**/
+      /**OLD_CODE_START
       nusmv_assert((dl1 != SYMB_LAYER(NULL)) &&
-                   (NodeList_get_length(syms1) == 0));
+                   (NodeList_get_length(SymbLayer_get_all_symbols(dl1)) == 0));
       nusmv_assert((dl2 != SYMB_LAYER(NULL)) &&
-                   (NodeList_get_length(syms2) == 0));
-    /**NEW_CODE_END**/
-    /**OLD_CODE_START
-    nusmv_assert((dl1 != SYMB_LAYER(NULL)) &&
-                 (NodeList_get_length(SymbLayer_get_all_symbols(dl1)) == 0));
-    nusmv_assert((dl2 != SYMB_LAYER(NULL)) &&
-                 (NodeList_get_length(SymbLayer_get_all_symbols(dl2)) == 0));
-    OLD_CODE_END**/
+                   (NodeList_get_length(SymbLayer_get_all_symbols(dl2)) == 0));
+      OLD_CODE_END**/
+
+      }
   }
-  array_insert_last(char*,
-                    layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[0]));
-  array_insert_last(char*,
-                    layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[1]));
+
+  for(i=0;i<n_players;i++)
+    array_insert_last(char*,
+                      layers_to_decl,
+                    (char*) SymbLayer_get_name(self->curr_players_monitor_layer[i]));
+
+
   /* There is no determinization layer for the monitors. */
   vars = SymbTable_get_layers_sf_i_vars(self->symb_table, layers);
   vars_to_decl = SymbTable_get_layers_sf_i_vars(self->symb_table,
@@ -2363,6 +2383,7 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* outstream = StreamMgr_get_output_stream(streams);
+  int i;
 
   GAME_SF07_STRUCT_CHECK_LTL_GAME_SF07_CHECK_INSTANCE(self);
   GAME_STRATEGY_CHECK_INSTANCE(self->strategy);
@@ -2388,27 +2409,33 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
   layers_to_decl = array_alloc(char*, 2);
 
   /* Extract variables from game layers. */
-  array_insert_last(char*, layers, MODEL_LAYER(1));
-  array_insert_last(char*, layers, MODEL_LAYER(2));
+  for(i=0;i<n_players;i++) {
+    char str[50];
+    sprintf(str, "layer_of_PLAYER_%d", i + 1);
+    array_insert_last(char*, layers, str);
+  }
+
   /* There shouldnt be any variables in the determinization layers. */
   {
-    SymbLayer_ptr dl1 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(1));
-    SymbLayer_ptr dl2 = SymbTable_get_layer(self->symb_table, DETERM_LAYER(2));
-     /**NEW_CODE_START**/
-     SymbLayerIter iter1;
-     NodeList_ptr syms1;
-     SymbLayer_gen_iter(dl1, &iter1, STT_ALL);
-     syms1 = SymbLayer_iter_to_list(dl1, iter1);
 
-     SymbLayerIter iter2;
-     NodeList_ptr syms2;
-     SymbLayer_gen_iter(dl2, &iter2, STT_ALL);
-     syms2 = SymbLayer_iter_to_list(dl2, iter2);
+    SymbLayer_ptr dls[n_players];
+    SymbLayerIter iters[n_players];
+    NodeList_ptr symss[n_players];
 
-     nusmv_assert((dl1 != SYMB_LAYER(NULL)) &&
-                  (NodeList_get_length(syms1) == 0));
-     nusmv_assert((dl2 != SYMB_LAYER(NULL)) &&
-                  (NodeList_get_length(syms2) == 0));
+    for(i=0;i<n_players;i++) {
+      char str[50];
+      sprintf(str, "determ_layer_of_PLAYER_%d", i + 1);
+      dls[i] = SymbTable_get_layer(self->symb_table, str);
+
+      /**NEW_CODE_START**/
+      SymbLayer_gen_iter(dls[i], &iters[i], STT_ALL);
+      symss[i] = SymbLayer_iter_to_list(dls[i], iters[i]);
+
+
+      nusmv_assert((dls[i] != SYMB_LAYER(NULL)) &&
+                   (NodeList_get_length(symss[i]) == 0));
+
+    }
      /**NEW_CODE_END**/
     /**OLD_CODE_START
     nusmv_assert((dl1 != SYMB_LAYER(NULL)) &&
@@ -2417,12 +2444,12 @@ static void Game_SF07_StructCheckLTLGameSF07_print_strategy_monitor_bdd
                  (NodeList_get_length(SymbLayer_get_all_symbols(dl2)) == 0));
     OLD_CODE_END**/
   }
-  array_insert_last(char*,
-                    layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[0]));
-  array_insert_last(char*,
-                    layers_to_decl,
-                  (char*) SymbLayer_get_name(self->curr_players_monitor_layer[1]));
+
+  for(i=0;i<n_players;i++)
+    array_insert_last(char*,
+                      layers_to_decl,
+                    (char*) SymbLayer_get_name(self->curr_players_monitor_layer[i]));
+
   /* There is no determinization layer for the monitors. */
   vars = SymbTable_get_layers_sf_i_vars(self->symb_table, layers);
   vars_to_decl = SymbTable_get_layers_sf_i_vars(self->symb_table,

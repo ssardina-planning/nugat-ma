@@ -46,6 +46,8 @@
 #include "utils/utils.h"
 #include "utils/ustring.h"
 
+EXTERN int n_players;
+
 static char rcsid[] UTIL_UNUSED = "$Id: GamePlayer.c,v 1.1.2.1 2010-02-05 17:19:08 nusmv Exp $";
 
 /*---------------------------------------------------------------------------*/
@@ -87,8 +89,16 @@ static char rcsid[] UTIL_UNUSED = "$Id: GamePlayer.c,v 1.1.2.1 2010-02-05 17:19:
 ******************************************************************************/
 string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
 {
-  if(player==1||player==2) return UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(player));
-  else nusmv_assert(false); /* illegal value */
+  char str[50];
+  int i;
+
+  sprintf(str,"PLAYER_%d",player);
+
+  for(i=0;i<n_players;i++)
+    if(player==i+1)
+      return UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),str);
+
+  nusmv_assert(false); /* illegal value */
 }
 
 /**Function********************************************************************
@@ -96,7 +106,7 @@ string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
   Synopsis    [ Takes a player name as a string and returns it as GamePlayer. ]
 
   Description [ Player names can be constructed only from
-                PLAYER_NAME(1) or PLAYER_NAME(2). ]
+                "PLAYER_ i+1" . ]
 
   SideEffects [ ]
 
@@ -105,9 +115,15 @@ string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
 ******************************************************************************/
 int Game_StrToPlayer(NuSMVEnv_ptr env,string_ptr str)
 {
-  if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(1)) == str) return 1;
-  else if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(2)) == str) return 2;
-  else nusmv_assert(false); /* illegal value */
+  char tmp[50];
+  int i;
+
+  for(i=0;i<n_players;i++) {
+    sprintf(tmp,"PLAYER_%d",i+1);
+    if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),tmp) == str) return (i+1);
+  }
+
+  nusmv_assert(false); /* illegal value */
 }
 
 /**AutomaticEnd***************************************************************/

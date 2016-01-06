@@ -1451,10 +1451,10 @@ static int CommandGameCheckProperty(NuSMVEnv_ptr env,int argc, char** argv)
         PropDbGame_ptr pdb = PROP_DB_GAME(prop_db);
         string_ptr player_str = (string_ptr) NULL;
 
-        if (player_no == 1) {
-            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(1));
-        } else if (player_no == 2) {
-            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(2));
+        if (player_no > 0 ) {
+            char str[50];
+            sprintf(str,"PLAYER_%d",player_no);
+            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),str);
         } else {
             nusmv_assert(player_no == 0);
         }
@@ -1838,10 +1838,10 @@ static int CommandGameShowProperty(NuSMVEnv_ptr env,int argc, char** argv)
         PropDbGame_ptr pdb = PROP_DB_GAME(prop_db);
         string_ptr player_str = (string_ptr) NULL;
 
-        if (player_no == 1) {
-            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(1));
-        } else if (player_no == 2) {
-            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),PLAYER_NAME(2));
+        if (player_no > 0 ) {
+            char str[50];
+            sprintf(str,"PLAYER_%d",player_no);
+            player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),str);
         } else {
             nusmv_assert(player_no == 0);
         }
@@ -3123,11 +3123,17 @@ static int CommandCheckLtlGameSpecSF07(NuSMVEnv_ptr env,int argc, char **argv)
                 }
                 strWhom = util_strsav(util_optarg);
                 w = Game_Who_from_string(strWhom);
+
+                bool expr = true;
+                int i;
+
+                for(i=0;i<n_players;i++)
+                    expr &= (w != i+1);
+
                 if (w != GAME_WHO_PROTAGONIST &&
                     w != GAME_WHO_ANTAGONIST &&
                     w != GAME_WHO_BOTH &&
-                    w != GAME_WHO_PLAYER_1 &&
-                    w != GAME_WHO_PLAYER_2) {
+                    expr) {
                     FREE(strWhom);
                     goto CommandCheckLtlGameSpecSF07_return_usage;
                 }
@@ -3485,6 +3491,8 @@ static int CommandExtractUnrealizableCore(NuSMVEnv_ptr env,int argc, char **argv
     StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
     FILE* outstream = StreamMgr_get_output_stream(streams);
     FILE* errstream = StreamMgr_get_error_stream(streams);
+    bool expr = true;
+    int i;
 
     nusmv_assert(opt_game_game(opts));
 
@@ -3563,10 +3571,16 @@ static int CommandExtractUnrealizableCore(NuSMVEnv_ptr env,int argc, char **argv
                 }
                 strWho = util_strsav(util_optarg);
                 w = Game_Who_from_string(strWho);
+
+                bool expr = true;
+                int i;
+
+                for(i=0;i<n_players;i++)
+                    expr &= (w != i+1);
+
                 if (w != GAME_WHO_LOSER &&
                     w != GAME_WHO_BOTH &&
-                    w != GAME_WHO_PLAYER_1 &&
-                    w != GAME_WHO_PLAYER_2) {
+                    expr) {
                     FREE(strWho);
                     goto CommandExtractUnrealizableCore_return_usage;
                 }
@@ -3607,10 +3621,15 @@ static int CommandExtractUnrealizableCore(NuSMVEnv_ptr env,int argc, char **argv
 
     switch (algo) {
         case GAME_UNREALIZABLE_CORE_ALGORITHM_ACTIVATION_VARIABLES:
+
+            expr = true;
+
+            for(i=0;i<n_players;i++)
+                expr &= (w != i+1);
+
             if (w == GAME_WHO_INVALID) {
                 w = GAME_WHO_BOTH;
-            } else if (w != GAME_WHO_PLAYER_1 &&
-                       w != GAME_WHO_PLAYER_2 &&
+            } else if (expr &&
                        w != GAME_WHO_BOTH) {
                 goto CommandExtractUnrealizableCore_return_usage;
             }

@@ -430,14 +430,15 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
     module1 = new_node(nodemgr,MODULE,
                        new_node(nodemgr,MODTYPE,
                                 new_node(nodemgr,ATOM,
-                                         (node_ptr) UStringMgr_find_string(strings,PLAYER_NAME(1)),
+                                         (node_ptr) UStringMgr_find_string(strings,"PLAYER_1"),
                                          Nil),
                                 Nil),
                        module1);
+
     module2 = new_node(nodemgr,MODULE,
                        new_node(nodemgr,MODTYPE,
                                 new_node(nodemgr,ATOM,
-                                         (node_ptr) UStringMgr_find_string(strings,PLAYER_NAME(2)),
+                                         (node_ptr) UStringMgr_find_string(strings,"PLAYER_2"),
                                          Nil),
                                 Nil),
                        module2);

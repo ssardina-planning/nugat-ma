@@ -71,8 +71,6 @@
                 in an input file because they are keywords. ]
 
 ******************************************************************************/
-#define MODEL_LAYER(index) "layer_of_" PLAYER_NAME(index)
-#define DETERM_LAYER(index) "determ_layer_of_" PLAYER_NAME(index)
 
 /**Macro************************************************************************
 
@@ -149,8 +147,6 @@
 #define GAME_WHO_BOTH_STRING "b"
 #define GAME_WHO_PROTAGONIST_STRING "p"
 #define GAME_WHO_ANTAGONIST_STRING "a"
-#define GAME_WHO_PLAYER_1_STRING "1"
-#define GAME_WHO_PLAYER_2_STRING "2"
 #define GAME_WHO_WINNER_STRING "w"
 #define GAME_WHO_LOSER_STRING "l"
 
@@ -290,9 +286,7 @@ typedef enum Game_InitTermination_TAG Game_InitTermination;
 
                 GAME_WHO_ANTAGONIST: the antagonist.
 
-                GAME_WHO_PLAYER_1: player 1.
-
-                GAME_WHO_PLAYER_2: player 2.
+                GAME_WHO_PLAYER_ i+1: player i+1.
 
                 GAME_WHO_WINNER: winner.
 
@@ -307,8 +301,6 @@ enum Game_Who_TAG {
   GAME_WHO_BOTH,
   GAME_WHO_PROTAGONIST,
   GAME_WHO_ANTAGONIST,
-  GAME_WHO_PLAYER_1,
-  GAME_WHO_PLAYER_2,
   GAME_WHO_WINNER,
   GAME_WHO_LOSER,
 };
@@ -431,8 +423,7 @@ Game_BeforeCheckingSpec ARGS((PropGame_ptr prop));
 EXTERN void Game_AfterCheckingSpec ARGS((PropGame_ptr prop,
                                          Game_RealizabilityStatus status,
                                          GameStrategy_ptr strategy,
-                                         node_ptr varList1,
-                                         node_ptr varList2,
+                                         node_ptr *varLists,
                                          gameParams_ptr params));
 
 EXTERN boolean Game_ComputeGenReactivity ARGS((NuSMVEnv_ptr env,node_ptr specExp,

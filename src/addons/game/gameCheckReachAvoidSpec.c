@@ -131,7 +131,7 @@ void Game_CheckReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
                                                 (GameStrategy_ptr*) NULL));
 
   /* printing the results and cleaning up */
-  Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+  Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -175,7 +175,7 @@ void Game_CheckAtlReachTargetSpec(PropGame_ptr prop, gameParams_ptr params)
                                                   (GameStrategy_ptr*) NULL));
 
     /* printing the results and cleaning up */
-    Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+    Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -219,7 +219,7 @@ void Game_CheckAvoidTargetSpec(PropGame_ptr prop, gameParams_ptr params)
                                                 (GameStrategy_ptr*) NULL));
 
   /* printing the results and cleaning up */
-  Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+  Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -263,7 +263,7 @@ void AtlGame_CheckAvoidTargetSpec(PropGame_ptr prop, gameParams_ptr params)
                                                   (GameStrategy_ptr*) NULL));
 
     /* printing the results and cleaning up */
-    Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+    Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -309,7 +309,7 @@ void Game_CheckReachDeadlockSpec(PropGame_ptr prop, gameParams_ptr params)
                                                 (GameStrategy_ptr*) NULL));
 
   /* printing the results and cleaning up */
-  Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+  Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -355,7 +355,7 @@ void Game_CheckAvoidDeadlockSpec(PropGame_ptr prop, gameParams_ptr params)
                                                   (GameStrategy_ptr*) NULL));
 
   /* printing the results and cleaning up */
-  Game_AfterCheckingSpec(prop, status, strategy, Nil, Nil, params);
+  Game_AfterCheckingSpec(prop, status, strategy, NULL, params);
 }
 
 /**Function********************************************************************
@@ -421,9 +421,16 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
                PropGame_AvoidDeadlock == Prop_get_type(PROP(prop)));
 
   /* flag which player this game is for */
-  int player =
-    (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop))
-    ? 1 : 2;
+
+    int player;
+    char str[50];
+
+    for(i=0;i<n_players;i++) {
+        sprintf(str,"PLAYER_%d",i+1);
+        if(UStringMgr_find_string(strings,str) == PropGame_get_player(prop))
+            player = i+1;
+    }
+
   int opponent = 1 == player ? 2 : 1;
   char quantifiers = opt_game_game_initial_condition(oh);
 
@@ -490,11 +497,24 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   */
   {
     /* init is zero */
-    if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
-      fprintf(errstream, "\n********   WARNING   ********\n"
-              "Initial states set for %s is empty.\n"
-              "******** END WARNING ********\n",
-              bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2));
+
+      int i;
+      bool expr = false, expr_loc;
+      char str[50];
+
+      for(i=0;i<n_players;i++) {
+          expr_loc = bdd_is_false(dd_manager, inits[i]);
+          expr |= expr_loc;
+
+          if(expr_loc)
+              sprintf(str,"PLAYER_%d",i+1);
+      }
+      /* init is zero */
+      if (expr) {
+          fprintf(errstream, "\n********   WARNING   ********\n"
+                          "Initial states set for %s is empty.\n"
+                          "******** END WARNING ********\n",
+                  str);
       /* to skip the loop below */
       isFixedpointReached = true;
     }
@@ -723,11 +743,11 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
 
   bdd_free(dd_manager, allReachStates);
   bdd_free(dd_manager, originalTarget);
-  bdd_free(dd_manager, inits[0]);
-  bdd_free(dd_manager, inits[1]);
-  bdd_free(dd_manager, invars[0]);
-  bdd_free(dd_manager, invars[1]);
 
+  for(i=0;i<n_players;i++) {
+    bdd_free(dd_manager, inits[i]);
+    bdd_free(dd_manager, invars[i]);
+  }
 
   return
     ( PropGame_ReachTarget == Prop_get_type(PROP(prop))
@@ -756,7 +776,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     FILE* outstream = StreamMgr_get_output_stream(streams);
     FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    int i,ntotp,np,no;
+    int i;
 
     PROP_GAME_CHECK_INSTANCE(prop);
     nusmv_assert(PropGame_AtlReachTarget == Prop_get_type(PROP(prop)) ||
@@ -767,9 +787,15 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     /* flag which player this game is for */
     int players[n_players];
 
-   // for(i=0;i<n_players;i++) players[i] = (UStringMgr_find_string(strings,PLAYER_NAME(i)) == PropGame_get_player(prop)) ? 1 : 0; // players in << , >> , opponents are players with 0 value
-    int player = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 1 : 2;
-    int opponent = (UStringMgr_find_string(strings,PLAYER_NAME(1)) == PropGame_get_player(prop)) ? 2 : 1;
+    int player;
+    char str[50];
+
+    for(i=0;i<n_players;i++) {
+        sprintf(str,"PLAYER_%d",i+1);
+        if(UStringMgr_find_string(strings,str) == PropGame_get_player(prop))
+            player = i+1;
+    }
+    int opponent = (UStringMgr_find_string(strings,"PLAYER_1") == PropGame_get_player(prop)) ? 2 : 1;
 
     char quantifiers = opt_game_game_initial_condition(oh);
 
@@ -837,12 +863,23 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
        suspicious input, i.e., if init is zero, target is zero or one.
     */
     {
+        int i;
+        bool expr = false, expr_loc;
+        char str[50];
+
+        for(i=0;i<n_players;i++) {
+            expr_loc = bdd_is_false(dd_manager, inits[i]);
+            expr |= expr_loc;
+
+            if(expr_loc)
+                sprintf(str,"PLAYER_%d",i+1);
+        }
         /* init is zero */
-        if (bdd_is_false(dd_manager, inits[0]) || bdd_is_false(dd_manager, inits[1])) {
+        if (expr) {
             fprintf(errstream, "\n********   WARNING   ********\n"
                             "Initial states set for %s is empty.\n"
                             "******** END WARNING ********\n",
-                    bdd_is_false(dd_manager, inits[0]) ? PLAYER_NAME(1) : PLAYER_NAME(2)); //00000000000000
+                    str);
             /* to skip the loop below */
             isFixedpointReached = true;
         }

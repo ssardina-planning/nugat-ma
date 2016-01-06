@@ -170,8 +170,7 @@ void Game_BeforeCheckingSpec(PropGame_ptr prop)
 void Game_AfterCheckingSpec(PropGame_ptr prop,
                             Game_RealizabilityStatus status,
                             GameStrategy_ptr strategy,
-                            node_ptr varList1,
-                            node_ptr varList2,
+                            node_ptr *varLists,
                             gameParams_ptr params)
 
 {
@@ -223,8 +222,8 @@ void Game_AfterCheckingSpec(PropGame_ptr prop,
       SymbTable_ptr st;
       NodeList_ptr vars;
       NodeList_ptr vars_to_decl;
-      NodeList_ptr vars1;
-      NodeList_ptr vars2;
+      NodeList_ptr varss[n_players];
+      int i;
 
       GAME_STRATEGY_CHECK_INSTANCE(strategy);
 
@@ -234,58 +233,66 @@ void Game_AfterCheckingSpec(PropGame_ptr prop,
 
       /* extract variables from game layers */
       layers = array_alloc(char *, 4);
-      array_insert_last(char *, layers, MODEL_LAYER(1));
-      array_insert_last(char *, layers, MODEL_LAYER(2));
+
+      for(i=0;i<n_players;i++) {
+        char str[50];
+        sprintf(str, "layer_of_PLAYER_%d", i + 1);
+        array_insert_last(char *, layers, str);
+      }
       /* There shouldnt be any variables in the determinization layers. */
       {
-        SymbLayer_ptr dl1 = SymbTable_get_layer(st, DETERM_LAYER(1));
-        SymbLayer_ptr dl2 = SymbTable_get_layer(st, DETERM_LAYER(2));
-        /**OLD_CODE_START
-        nusmv_assert((dl1 == SYMB_LAYER(NULL)) ||
-                     (NodeList_get_length(SymbLayer_get_all_symbols(dl1)) ==
-                      0));
-        nusmv_assert((dl2 == SYMB_LAYER(NULL)) ||
-                     (NodeList_get_length(SymbLayer_get_all_symbols(dl2)) ==
-                      0));
-        OLD_CODE_END**/
 
-        /**NEW_CODE_START**/
-        SymbLayerIter iter1;
-        NodeList_ptr syms1;
-        SymbLayer_gen_iter(dl1, &iter1, STT_ALL);
-        syms1 = SymbLayer_iter_to_list(dl1, iter1);
+        SymbLayer_ptr dls[n_players];
+        SymbLayerIter iters[n_players];
+        NodeList_ptr symss[n_players];
 
-        SymbLayerIter iter2;
-        NodeList_ptr syms2;
-        SymbLayer_gen_iter(dl2, &iter2, STT_ALL);
-        syms2 = SymbLayer_iter_to_list(dl2, iter2);
-        fprintf(outstream,"Hi\n");
-        nusmv_assert((dl1 == SYMB_LAYER(NULL)) ||
-                     (NodeList_get_length(syms1) ==
-                      0));
-        nusmv_assert((dl2 == SYMB_LAYER(NULL)) ||
-                     (NodeList_get_length(syms2) ==
-                      0));
+        for(i=0;i<n_players;i++) {
+          char str[50];
+          sprintf(str, "determ_layer_of_PLAYER_%d", i + 1);
+          dls[i] = SymbTable_get_layer(st, str);
+          /**OLD_CODE_START
+          nusmv_assert((dl1 == SYMB_LAYER(NULL)) ||
+                       (NodeList_get_length(SymbLayer_get_all_symbols(dl1)) ==
+                        0));
+          nusmv_assert((dl2 == SYMB_LAYER(NULL)) ||
+                       (NodeList_get_length(SymbLayer_get_all_symbols(dl2)) ==
+                        0));
+          OLD_CODE_END**/
+
+          /**NEW_CODE_START**/
+
+          SymbLayer_gen_iter(dls[i], &iters[i], STT_ALL);
+          symss[i] = SymbLayer_iter_to_list(dls[i], iters[i]);
+
+          fprintf(outstream, "Hi\n");
+          nusmv_assert((dls[i] == SYMB_LAYER(NULL)) ||
+                       (NodeList_get_length(symss[i]) ==
+                        0));
+        }
         /**NEW_CODE_END**/
       }
 
       /* obtain variables */
       vars = SymbTable_get_layers_sf_i_vars(st, layers);
       vars_to_decl = NodeList_create();
-      vars1 = NodeList_create_from_list(varList1);
-      vars2 = NodeList_create_from_list(varList2);
-      NodeList_concat(vars, vars1);
-      NodeList_concat(vars, vars2);
-      NodeList_concat(vars_to_decl, vars1);
-      NodeList_concat(vars_to_decl, vars2);
+
+      for(i=0;i<n_players;i++) {
+
+        varss[i] = NodeList_create_from_list(varLists[i]);
+
+        NodeList_concat(vars, varss[i]);
+        NodeList_concat(vars_to_decl, varss[i]);
+      }
 
       GameStrategy_print_module(strategy, vars, vars_to_decl, params);
 
       /* free local variables */
       NodeList_destroy(vars);
       NodeList_destroy(vars_to_decl);
-      NodeList_destroy(vars1);
-      NodeList_destroy(vars2);
+
+      for(i=0;i<n_players;i++)
+        NodeList_destroy(varss[i]);
+
       array_free(layers);
 
       /* free strategy */
@@ -313,6 +320,8 @@ void Game_AfterCheckingSpec(PropGame_ptr prop,
 ******************************************************************************/
 Game_Who Game_Who_from_string(const char* s)
 {
+  int i;
+
   if (strcmp(s, GAME_WHO_NONE_STRING) == 0) {
     return GAME_WHO_NONE;
   } else if (strcmp(s, GAME_WHO_BOTH_STRING) == 0) {
@@ -321,10 +330,6 @@ Game_Who Game_Who_from_string(const char* s)
     return GAME_WHO_PROTAGONIST;
   } else if (strcmp(s, GAME_WHO_ANTAGONIST_STRING) == 0) {
     return GAME_WHO_ANTAGONIST;
-  } else if (strcmp(s, GAME_WHO_PLAYER_1_STRING) == 0) {
-    return GAME_WHO_PLAYER_1;
-  } else if (strcmp(s, GAME_WHO_PLAYER_2_STRING) == 0) {
-    return GAME_WHO_PLAYER_2;
   } else if (strcmp(s, GAME_WHO_WINNER_STRING) == 0) {
     return GAME_WHO_WINNER;
   } else if (strcmp(s, GAME_WHO_LOSER_STRING) == 0) {
@@ -332,7 +337,17 @@ Game_Who Game_Who_from_string(const char* s)
   } else {
     return GAME_WHO_INVALID;
   }
-  nusmv_assert(false);
+
+  for(i=0;i<n_players;i++) {
+    char *str;
+    sprintf(str, "%d", i + 1);
+
+    if (strcmp(s, str) == 0) {
+      return (i + 1);
+    }
+  }
+
+    nusmv_assert(false);
 }
 
 /**Function********************************************************************
@@ -349,18 +364,28 @@ Game_Who Game_Who_from_string(const char* s)
 ******************************************************************************/
 const char* Game_Who_to_string(const Game_Who w)
 {
+  int i;
+
   switch (w) {
   case GAME_WHO_INVALID:     return GAME_WHO_INVALID_STRING;
   case GAME_WHO_NONE:        return GAME_WHO_NONE_STRING;
   case GAME_WHO_BOTH:        return GAME_WHO_BOTH_STRING;
   case GAME_WHO_PROTAGONIST: return GAME_WHO_PROTAGONIST_STRING;
   case GAME_WHO_ANTAGONIST:  return GAME_WHO_ANTAGONIST_STRING;
-  case GAME_WHO_PLAYER_1:    return GAME_WHO_PLAYER_1_STRING;
-  case GAME_WHO_PLAYER_2:    return GAME_WHO_PLAYER_2_STRING;
   case GAME_WHO_WINNER:      return GAME_WHO_WINNER_STRING;
   case GAME_WHO_LOSER:       return GAME_WHO_LOSER_STRING;
-  default:                   nusmv_assert(false);
-  }
+  default:
+
+      for (i = 0; i < n_players; i++) {
+        if(w==i+1) {
+          char *str;
+          str = (char*)malloc(sizeof(char)*10);
+          sprintf(str,"%d",i+1);
+          return str;
+        }
+      }
+      nusmv_assert(false);
+    }
 }
 
 /*---------------------------------------------------------------------------*/

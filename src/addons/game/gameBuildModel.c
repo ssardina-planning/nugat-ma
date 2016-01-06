@@ -118,8 +118,12 @@ void Game_CommandBuildFlatModel(NuSMVEnv_ptr env)
 
     st = SYMB_TABLE(NuSMVEnv_get_value(env, ENV_SYMB_TABLE));
 
-    model_layers[0] = SymbTable_get_layer(st, MODEL_LAYER(1));
-    model_layers[1] = SymbTable_get_layer(st, MODEL_LAYER(2));
+    for(i=0;i<n_players;i++) {
+        char str[50];
+        sprintf(str,"layer_of_PLAYER_%d",i+1);
+        model_layers[i] = SymbTable_get_layer(st, str);
+    }
+
 
 
      /*NEW_CODE_START*/
@@ -204,12 +208,13 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
     /* create determinization layers */
     st = SYMB_TABLE(NuSMVEnv_get_value(env, ENV_SYMB_TABLE));
 
-    determ_layers[0] = SymbTable_create_layer(st,
-                                              DETERM_LAYER(1),
-                                            SYMB_LAYER_POS_BOTTOM);
-    determ_layers[1] = SymbTable_create_layer(st,
-                                            DETERM_LAYER(2),
-                                            SYMB_LAYER_POS_BOTTOM);
+    for(i=0;i<n_players;i++) {
+        char str[50];
+        sprintf(str, "determ_layer_of_PLAYER_%d", i + 1);
+        determ_layers[i] = SymbTable_create_layer(st,
+                                                  str,
+                                                  SYMB_LAYER_POS_BOTTOM);
+    }
 
     /* convert existing scalar FSM to the boolean FSM */
     scalar_fsm = GAME_SEXP_FSM(NuSMVEnv_get_value(env, ENV_SEXP_FSM));
@@ -221,15 +226,14 @@ void Game_CommandBuildBooleanModel(NuSMVEnv_ptr env)
       NuSMVEnv_set_value(env, ENV_BOOL_FSM, bool_fsm);
 
     /* commits layers to the encodings */
-    BaseEnc_commit_layer(BASE_ENC(bool_enc),
-                         DETERM_LAYER(1));
-    BaseEnc_commit_layer(BASE_ENC(bool_enc),
-                         DETERM_LAYER(2));
-
-    BaseEnc_commit_layer(BASE_ENC(bdd_enc),
-                         DETERM_LAYER(1));
-    BaseEnc_commit_layer(BASE_ENC(bdd_enc),
-                         DETERM_LAYER(2));
+    for(i=0;i<n_players;i++) {
+        char str[50];
+        sprintf(str, "determ_layer_of_PLAYER_%d", i + 1);
+        BaseEnc_commit_layer(BASE_ENC(bool_enc),
+                             str);
+        BaseEnc_commit_layer(BASE_ENC(bdd_enc),
+                             str);
+    }
 
      /*NEW_CODE_START*/
      SymbLayerIter iters[n_players];
@@ -292,8 +296,11 @@ void Game_CommandBuildBddModel(NuSMVEnv_ptr env)
   SymbLayer_ptr model_layers[n_players];
   int i;
 
-      model_layers[0] = SymbTable_get_layer(st, MODEL_LAYER(1));
-      model_layers[1] = SymbTable_get_layer(st, MODEL_LAYER(2));
+  for(i=0;i<n_players;i++) {
+      char str[50];
+      sprintf(str,"layer_of_PLAYER_%d",i+1);
+      model_layers[i] = SymbTable_get_layer(st, str);
+  }
 
   GameBddFsm_ptr bdd_fsm =
     Game_CreateGameBddFsm(builder,

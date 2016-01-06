@@ -150,7 +150,7 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
 
     SymbLayer_ptr model_layers[n_players];
 
-  int propErr;
+  int propErr,i;
 
   if (opt_verbose_level_gt(opts, 0)) {
     fprintf(errstream, "Flattening hierarchy...\n");
@@ -168,10 +168,14 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
   */
 
   /* create two layers - one for variables of every player */
-  model_layers[0] = SymbTable_create_layer(st,MODEL_LAYER(1),SYMB_LAYER_POS_BOTTOM);
-  model_layers[1] = SymbTable_create_layer(st,MODEL_LAYER(2),SYMB_LAYER_POS_BOTTOM);
-  SymbTable_layer_add_to_class(st, MODEL_LAYER(1), MODEL_LAYERS_CLASS);
-  SymbTable_layer_add_to_class(st, MODEL_LAYER(2), MODEL_LAYERS_CLASS);
+
+  for(i=0;i<n_players;i++) {
+    char str[50];
+    sprintf(str,"layer_of_PLAYER_%d",i+1);
+    model_layers[i] = SymbTable_create_layer(st, str, SYMB_LAYER_POS_BOTTOM);
+    SymbTable_layer_add_to_class(st, str, MODEL_LAYERS_CLASS);
+  }
+
   SymbTable_set_default_layers_class_name(st, MODEL_LAYERS_CLASS);
 
   /* Compilation the input file:
@@ -179,13 +183,16 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
      Processing of the parse tree and constructions of all the
      expressions for the state machine(s).
 
-     Note that two special modules PLAYER_NAME(1) and PLAYER_NAME(2) are
+     Note that n special modules "PLAYER_ i+1"  are
      actually the players\' declarations.
   */
     node_ptr players[n_players];
 
-    players[0] = sym_intern(env,PLAYER_NAME(1));
-    players[1] = sym_intern(env,PLAYER_NAME(2));
+  for(i=0;i<n_players;i++) {
+    char str[50];
+    sprintf(str,"PLAYER_%d",i+1);
+    players[i] = sym_intern(env,str);
+  }
 
   mainGameHierarchy = game_flatten_game_hierarchy(env,
                                                   st,
@@ -418,8 +425,8 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
     if (list != (node_ptr*) NULL) {
       spec = find_node(nodemgr,GAME_SPEC_WRAPPER,
                        sym_intern(env,((car(spec)) == (node_ptr)1 ?
-                                   PLAYER_NAME(1) :
-                                   PLAYER_NAME(2))),
+                                   "PLAYER_1" :
+                                   "PLAYER_2")),
                        cdr(spec));
       *list = cons(nodemgr,spec, *list);
     }

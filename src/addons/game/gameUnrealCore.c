@@ -289,29 +289,21 @@ struct Game_UnrealizableCore_Struct_TAG {
   int player;
 
   /* partial copies of FlatHierarchies */
-  hash_ptr assign_hash1;
-  hash_ptr assign_hash2;
+  hash_ptr *assign_hashs;
 
   /* specific to explicit algorithm */
-  node_ptr init1;
-  node_ptr invar1;
-  node_ptr trans1;
-  node_ptr init2;
-  node_ptr invar2;
-  node_ptr trans2;
+  node_ptr *inits;
+  node_ptr *invars;
+  node_ptr *transs;
 
   /* specific to activation variables */
   SymbLayer_ptr layer;
-  NodeList_ptr parameterList_1;
-  NodeList_ptr parameterList_2;
+  NodeList_ptr *parameterLists;
   /*node_ptr*/NodeList_ptr parameterList_all;
   hash_ptr parameter2expression;
-  int constraints_1_total_num;
-  int constraints_2_total_num;
-  int constraints_1_guarded_num;
-  int constraints_2_guarded_num;
-  int constraints_1_unique_num;
-  int constraints_2_unique_num;
+  int *constraintss_total_num;
+  int *constraintss_guarded_num;
+  int *constraintss_unique_num;
 };
 typedef struct Game_UnrealizableCore_Struct_TAG Game_UnrealizableCore_Struct;
 
@@ -482,11 +474,17 @@ int Game_CheckGameSpecAndComputeCores(NuSMVEnv_ptr env,
 
     PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(Prop_get_type(PROP(prop)) == PropGame_GenReactivity);
+
+  bool expr = false;
+  int i;
+
+  for(i=0;i<n_players;i++)
+    expr |= ( w == i+1 );
+
   nusmv_assert((algo == GAME_UNREALIZABLE_CORE_ALGORITHM_ACTIVATION_VARIABLES &&
                 (ct == GAME_UNREALIZABLE_CORE_CORE_TYPE_CORE ||
                  ct == GAME_UNREALIZABLE_CORE_CORE_TYPE_FIX) &&
-                (w == GAME_WHO_PLAYER_1 ||
-                 w == GAME_WHO_PLAYER_2 ||
+                (expr ||
                  w == GAME_WHO_BOTH) &&
                 (N >= -1)) ||
                (algo == GAME_UNREALIZABLE_CORE_ALGORITHM_EXPLICIT &&
@@ -659,17 +657,22 @@ Game_UnrealizableCore_Struct_create (NuSMVEnv_ptr env,
                                      boolean min_trans,
                                      boolean min_prop,
                                      Game_Who w,
-                                     int N)
-{
+                                     int N) {
   Game_UnrealizableCore_Struct_ptr cls;
 
   PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(Prop_get_type(PROP(prop)) == PropGame_GenReactivity);
+
+  bool expr = false;
+  int i;
+
+  for (i = 0; i < n_players; i++)
+    expr |= (w == i + 1);
+
   nusmv_assert((algo == GAME_UNREALIZABLE_CORE_ALGORITHM_ACTIVATION_VARIABLES &&
                 (ct == GAME_UNREALIZABLE_CORE_CORE_TYPE_CORE ||
                  ct == GAME_UNREALIZABLE_CORE_CORE_TYPE_FIX) &&
-                (w == GAME_WHO_PLAYER_1 ||
-                 w == GAME_WHO_PLAYER_2 ||
+                (expr ||
                  w == GAME_WHO_BOTH) &&
                 (N >= -1)) ||
                (algo == GAME_UNREALIZABLE_CORE_ALGORITHM_EXPLICIT &&
@@ -699,28 +702,31 @@ Game_UnrealizableCore_Struct_create (NuSMVEnv_ptr env,
   cls->w = w;
   cls->N = N;
 
-  cls->player = Game_StrToPlayer(env,PropGame_get_player(prop));
+  cls->player = Game_StrToPlayer(env, PropGame_get_player(prop));
 
-  cls->init1 = Nil;
-  cls->invar1 = Nil;
-  cls->trans1 = Nil;
-  cls->assign_hash1 = (hash_ptr) NULL;
-  cls->init2 = Nil;
-  cls->invar2 = Nil;
-  cls->trans2 = Nil;
-  cls->assign_hash2 = (hash_ptr) NULL;
+  cls->inits = (node_ptr *) malloc(sizeof(node_ptr) * n_players);
+  cls->invars = (node_ptr *) malloc(sizeof(node_ptr) * n_players);
+  cls->transs = (node_ptr *) malloc(sizeof(node_ptr) * n_players);
+  cls->assign_hashs = (hash_ptr *) malloc(sizeof(hash_ptr) * n_players);
+  cls->parameterLists = (NodeList_ptr *) malloc(sizeof(NodeList_ptr) * n_players);
+  cls->constraintss_total_num = (int *) malloc(sizeof(int) * n_players);
+  cls->constraintss_guarded_num = (int *) malloc(sizeof(int) * n_players);
+  cls->constraintss_unique_num = (int *) malloc(sizeof(int) * n_players);
+
+  for(i=0;i<n_players;i++) {
+    cls->inits[i] = Nil;
+    cls->invars[i] = Nil;
+    cls->transs[i] = Nil;
+    cls->assign_hashs[i] = (hash_ptr) NULL;
+    cls->parameterLists[i] = NODE_LIST(NULL);
+    cls->constraintss_total_num[i] = 0;
+    cls->constraintss_guarded_num[i] = 0;
+    cls->constraintss_unique_num[i] = 0;
+  }
 
   cls->layer = SYMB_LAYER(NULL);
-  cls->parameterList_1 = NODE_LIST(NULL);
-  cls->parameterList_2 = NODE_LIST(NULL);
   cls->parameterList_all = NODE_LIST(NULL); //Nil;
   cls->parameter2expression = (hash_ptr) NULL;
-  cls->constraints_1_total_num = 0;
-  cls->constraints_2_total_num = 0;
-  cls->constraints_1_guarded_num = 0;
-  cls->constraints_2_guarded_num = 0;
-  cls->constraints_1_unique_num = 0;
-  cls->constraints_2_unique_num = 0;
 
   return cls;
 }
@@ -739,18 +745,18 @@ Game_UnrealizableCore_Struct_create (NuSMVEnv_ptr env,
 static void Game_UnrealizableCore_Struct_destroy(
                                           Game_UnrealizableCore_Struct_ptr self)
 {
+  int i;
+
   GAME_UNREALIZABLE_CORE_STRUCT_CHECK_INSTANCE(self);
-  nusmv_assert(self->init1 == Nil);
-  nusmv_assert(self->invar1 == Nil);
-  nusmv_assert(self->trans1 == Nil);
-  nusmv_assert(self->assign_hash1 == (hash_ptr) NULL);
-  nusmv_assert(self->init2 == Nil);
-  nusmv_assert(self->invar2 == Nil);
-  nusmv_assert(self->trans2 == Nil);
-  nusmv_assert(self->assign_hash2 == (hash_ptr) NULL);
+
+  for(i=0;i<n_players;i++) {
+    nusmv_assert(self->inits[i] == Nil);
+    nusmv_assert(self->invars[i] == Nil);
+    nusmv_assert(self->transs[i] == Nil);
+    nusmv_assert(self->assign_hashs[i] == (hash_ptr) NULL);
+    nusmv_assert(self->parameterLists[i] == NODE_LIST(NULL));
+  }
   nusmv_assert(self->layer == SYMB_LAYER(NULL));
-  nusmv_assert(self->parameterList_1 == NODE_LIST(NULL));
-  nusmv_assert(self->parameterList_2 == NODE_LIST(NULL));
   nusmv_assert(self->parameterList_all == /*Nil*/NODE_LIST(NULL));
   nusmv_assert(self->parameter2expression == (hash_ptr) NULL);
 
@@ -771,18 +777,17 @@ static void Game_UnrealizableCore_Struct_destroy(
 static void Game_UnrealizableCore_Struct_save_assign_hashes(
                                           Game_UnrealizableCore_Struct_ptr self)
 {
-  FlatHierarchy_ptr fh1;
-  FlatHierarchy_ptr fh2;
-
+  FlatHierarchy_ptr fhs[n_players];
+  int i;
   GAME_UNREALIZABLE_CORE_STRUCT_CHECK_INSTANCE(self);
-  nusmv_assert(self->assign_hash1 == (hash_ptr) NULL);
-  nusmv_assert(self->assign_hash2 == (hash_ptr) NULL);
 
-  fh1 = GameHierarchy_get_player((self->gh),0);
-  fh2 = GameHierarchy_get_player((self->gh),1);
+  for(i=0;i<n_players;i++)
+    nusmv_assert(self->assign_hashs[i] == (hash_ptr) NULL);
 
-  self->assign_hash1 = copy_assoc(FlatHierarchy_get_var_expr_associations(fh1));
-  self->assign_hash2 = copy_assoc(FlatHierarchy_get_var_expr_associations(fh2));
+  for(i=0;i<n_players;i++){
+    fhs[i] = GameHierarchy_get_player((self->gh),i);
+    self->assign_hashs[i] = copy_assoc(FlatHierarchy_get_var_expr_associations(fhs[i]));
+  }
 }
 
 /**Function********************************************************************
@@ -799,23 +804,22 @@ static void Game_UnrealizableCore_Struct_save_assign_hashes(
 static void Game_UnrealizableCore_Struct_restore_assign_hashes(
                                          Game_UnrealizableCore_Struct_ptr self)
 {
-  FlatHierarchy_ptr fh1;
-  FlatHierarchy_ptr fh2;
+  FlatHierarchy_ptr fhs[n_players];
+  int i;
 
   GAME_UNREALIZABLE_CORE_STRUCT_CHECK_INSTANCE(self);
-  nusmv_assert(self->assign_hash1 != (hash_ptr) NULL);
-  nusmv_assert(self->assign_hash2 != (hash_ptr) NULL);
 
-  fh1 = GameHierarchy_get_player((self->gh),0);
-  fh2 = GameHierarchy_get_player((self->gh),1);
+  for(i=0;i<n_players;i++)
+    nusmv_assert(self->assign_hashs[i] != (hash_ptr) NULL);
 
-  free_assoc(FlatHierarchy_get_var_expr_associations(fh1));
-  FlatHierarchy_set_var_expr_associations(fh1, self->assign_hash1);
-  self->assign_hash1 = (hash_ptr) NULL;
+  for(i=0;i<n_players;i++)
+    fhs[i] = GameHierarchy_get_player((self->gh),i);
 
-  free_assoc(FlatHierarchy_get_var_expr_associations(fh2));
-  FlatHierarchy_set_var_expr_associations(fh2, self->assign_hash2);
-  self->assign_hash2 = (hash_ptr) NULL;
+  for(i=0;i<n_players;i++) {
+      free_assoc(FlatHierarchy_get_var_expr_associations(fhs[i]));
+      FlatHierarchy_set_var_expr_associations(fhs[i], self->assign_hashs[i]);
+      self->assign_hashs[i] = (hash_ptr) NULL;
+  }
 }
 
 /**Function********************************************************************
@@ -836,38 +840,31 @@ static void Game_UnrealizableCore_Struct_restore_assign_hashes(
 static void Game_UnrealizableCore_Struct_save_flat_hierarchies(
                                           Game_UnrealizableCore_Struct_ptr self)
 {
-  FlatHierarchy_ptr fh1;
-  FlatHierarchy_ptr fh2;
+  FlatHierarchy_ptr fhs[n_players];
+  int i;
 
     const NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(self));
     const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
   GAME_UNREALIZABLE_CORE_STRUCT_CHECK_INSTANCE(self);
-  nusmv_assert(self->init1 == Nil);
-  nusmv_assert(self->invar1 == Nil);
-  nusmv_assert(self->trans1 == Nil);
-  nusmv_assert(self->assign_hash1 == (hash_ptr) NULL);
-  nusmv_assert(self->init2 == Nil);
-  nusmv_assert(self->invar2 == Nil);
-  nusmv_assert(self->trans2 == Nil);
-  nusmv_assert(self->assign_hash2 == (hash_ptr) NULL);
 
-  fh1 = GameHierarchy_get_player((self->gh),0);
-  fh2 = GameHierarchy_get_player((self->gh),1);
+  for(i=0;i<n_players;i++) {
+      nusmv_assert(self->inits[i] == Nil);
+      nusmv_assert(self->invars[i] == Nil);
+      nusmv_assert(self->transs[i] == Nil);
+      nusmv_assert(self->assign_hashs[i] == (hash_ptr) NULL);
+  }
 
-  self->init1 = FlatHierarchy_get_init(fh1);
-  FlatHierarchy_set_init(fh1, copy_opposite_list(nodemgr,self->init1));
-  self->invar1 = FlatHierarchy_get_invar(fh1);
-  FlatHierarchy_set_invar(fh1, copy_opposite_list(nodemgr,self->invar1));
-  self->trans1 = FlatHierarchy_get_trans(fh1);
-  FlatHierarchy_set_trans(fh1, copy_opposite_list(nodemgr,self->trans1));
+  for(i=0;i<n_players;i++) {
+    fhs[i] = GameHierarchy_get_player((self->gh), i);
 
-  self->init2 = FlatHierarchy_get_init(fh2);
-  FlatHierarchy_set_init(fh2, copy_opposite_list(nodemgr,self->init2));
-  self->invar2 = FlatHierarchy_get_invar(fh2);
-  FlatHierarchy_set_invar(fh2, copy_opposite_list(nodemgr,self->invar2));
-  self->trans2 = FlatHierarchy_get_trans(fh2);
-  FlatHierarchy_set_trans(fh2, copy_opposite_list(nodemgr,self->trans2));
+    self->inits[i] = FlatHierarchy_get_init(fhs[i]);
+    FlatHierarchy_set_init(fhs[i], copy_opposite_list(nodemgr, self->inits[i]));
+    self->invars[i] = FlatHierarchy_get_invar(fhs[i]);
+    FlatHierarchy_set_invar(fhs[i], copy_opposite_list(nodemgr, self->invars[i]));
+    self->transs[i] = FlatHierarchy_get_trans(fhs[i]);
+    FlatHierarchy_set_trans(fhs[i], copy_opposite_list(nodemgr, self->transs[i]));
+  }
 
   Game_UnrealizableCore_Struct_save_assign_hashes(self);
 }
@@ -886,35 +883,27 @@ static void Game_UnrealizableCore_Struct_save_flat_hierarchies(
 static void Game_UnrealizableCore_Struct_restore_flat_hierarchies(NodeMgr_ptr nodemgr,
                                          Game_UnrealizableCore_Struct_ptr self)
 {
-  FlatHierarchy_ptr fh1;
-  FlatHierarchy_ptr fh2;
+  FlatHierarchy_ptr fhs[n_players];
+  int i;
 
   GAME_UNREALIZABLE_CORE_STRUCT_CHECK_INSTANCE(self);
-  nusmv_assert(self->assign_hash1 != (hash_ptr) NULL);
-  nusmv_assert(self->assign_hash2 != (hash_ptr) NULL);
+  for(i=0;i<n_players;i++)
+    nusmv_assert(self->assign_hashs[i] != (hash_ptr) NULL);
 
-  fh1 = GameHierarchy_get_player((self->gh),0);
-  fh2 = GameHierarchy_get_player((self->gh),1);
+  for(i=0;i<n_players;i++)
+    fhs[i] = GameHierarchy_get_player((self->gh),i);
 
-  free_opposite_list(nodemgr,FlatHierarchy_get_init(fh1));
-  FlatHierarchy_set_init(fh1, self->init1);
-  self->init1 = Nil;
-  free_opposite_list(nodemgr,FlatHierarchy_get_invar(fh1));
-  FlatHierarchy_set_invar(fh1, self->invar1);
-  self->invar1 = Nil;
-  free_opposite_list(nodemgr,FlatHierarchy_get_trans(fh1));
-  FlatHierarchy_set_trans(fh1, self->trans1);
-  self->trans1 = Nil;
-
-  free_opposite_list(nodemgr,FlatHierarchy_get_init(fh2));
-  FlatHierarchy_set_init(fh2, self->init2);
-  self->init2 = Nil;
-  free_opposite_list(nodemgr,FlatHierarchy_get_invar(fh2));
-  FlatHierarchy_set_invar(fh2, self->invar2);
-  self->invar2 = Nil;
-  free_opposite_list(nodemgr,FlatHierarchy_get_trans(fh2));
-  FlatHierarchy_set_trans(fh2, self->trans2);
-  self->trans2 = Nil;
+  for(i=0;i<n_players;i++) {
+      free_opposite_list(nodemgr,FlatHierarchy_get_init(fhs[i]));
+      FlatHierarchy_set_init(fhs[i], self->inits[i]);
+      self->inits[i] = Nil;
+      free_opposite_list(nodemgr,FlatHierarchy_get_invar(fhs[i]));
+      FlatHierarchy_set_invar(fhs[i], self->invars[i]);
+      self->invars[i] = Nil;
+      free_opposite_list(nodemgr,FlatHierarchy_get_trans(fhs[i]));
+      FlatHierarchy_set_trans(fhs[i], self->transs[i]);
+      self->transs[i] = Nil;
+  }
 
   Game_UnrealizableCore_Struct_restore_assign_hashes(self);
 }
@@ -1022,11 +1011,13 @@ static GameGameFsms_ptr game_construct_game_fsms(NuSMVEnv_ptr env,
   int i;
     FlatHierarchy_ptr hierarchies[n_players];
 
-  model_layers[0] = SymbTable_get_layer(self->st, MODEL_LAYER(1));
-  model_layers[1] = SymbTable_get_layer(self->st, MODEL_LAYER(2));
+  for(i=0;i<n_players;i++) {
+    char str[50];
+    sprintf(str, "layer_of_PLAYER_%d", i + 1);
+    model_layers[i] = SymbTable_get_layer(self->st, str);
+  }
 
   FsmBuilder_ptr builder = FSM_BUILDER(NuSMVEnv_get_value(env, ENV_FSM_BUILDER));
-
 
    /*NEW_CODE_START*/
    SymbTable_gen_iter(self->st,&titer,STT_VAR);
@@ -1127,13 +1118,14 @@ static node_ptr game_create_new_param(Game_UnrealizableCore_Struct_ptr self,
                                       int kind,
                                       int player)
 {
+    int i;
 
     const NuSMVEnv_ptr env = EnvObject_get_environment(ENV_OBJECT(self));
     const ExprMgr_ptr exprs = EXPR_MGR(NuSMVEnv_get_value(env, ENV_EXPR_MANAGER));
     const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
 
-  if (player == 1) ++(self->constraints_1_total_num);
-  else ++(self->constraints_2_total_num);
+    for(i=0;i<n_players;i++)
+        if (player == i) ++(self->constraintss_total_num[i]);
 
   if (self->N == 0) {
     return NULL;
@@ -1151,20 +1143,28 @@ static node_ptr game_create_new_param(Game_UnrealizableCore_Struct_ptr self,
         (kind == GENREACTIVITY)) && !self->min_prop)) {
     return NULL;
   }
+
+  bool bexpr = true;
+
+  for(i=0;i<n_players;i++)
+    bexpr &= ( self->w != i+1  || player != i+1 );
+
   if (self->w != GAME_WHO_BOTH &&
-      (self->w != GAME_WHO_PLAYER_1 || player != 1) &&
-      (self->w != GAME_WHO_PLAYER_2 || player != 2)) {
+          bexpr) {
     return NULL;
   }
 
-  NodeList_ptr parameterList =
-    (1 == player) ? self->parameterList_1 : self->parameterList_2;
-  int* uniqueNum = ((1 == player) ?
-                    &(self->constraints_1_unique_num) :
-                    &(self->constraints_2_unique_num));
-  int guardedConstr = ((1 == player) ?
-                       self->constraints_1_guarded_num :
-                       self->constraints_2_guarded_num);
+  NodeList_ptr parameterList;
+  int* uniqueNum;
+  int guardedConstr;
+
+  for(i=0;i<n_players;i++)
+        if(i+1 == player) {
+            parameterList = self->parameterLists[i];
+            uniqueNum = &(self->constraintss_unique_num[i]);
+            guardedConstr = self->constraintss_guarded_num[i];
+        }
+
   /* A new activ. var is created for opt_game_unreal_core_N number of
      constraints. */
   boolean is_new_var = (0 == (guardedConstr % self->N));
@@ -1198,8 +1198,9 @@ static node_ptr game_create_new_param(Game_UnrealizableCore_Struct_ptr self,
   old_exp = cons(nodemgr,new_node(nodemgr,kind, expr, Nil), old_exp);
   insert_assoc(self->parameter2expression, var, old_exp);
 
-  if (player == 1) ++(self->constraints_1_guarded_num);
-  else ++(self->constraints_2_guarded_num);
+        for(i=0;i<n_players;i++)
+            if(i+1 == player)
+                ++(self->constraintss_guarded_num[i]);
 
   return var;
 }
@@ -1442,14 +1443,17 @@ static void game_guard_gamespecs_by_parameters(
 static void
 game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
 {
+    int i;
+
   nusmv_assert(self->layer == SYMB_LAYER(NULL));
-  nusmv_assert(self->parameterList_1 == NODE_LIST(NULL));
-  nusmv_assert(self->parameterList_2 == NODE_LIST(NULL));
-  nusmv_assert(self->parameterList_all == /*Nil*/NODE_LIST(NULL));
+
+  for(i=0;i<n_players;i++)
+    nusmv_assert(self->parameterLists[i] == NODE_LIST(NULL));
+
+    nusmv_assert(self->parameterList_all == /*Nil*/NODE_LIST(NULL));
   nusmv_assert(self->parameter2expression == (hash_ptr) NULL);
 
   FlatHierarchy_ptr players[n_players];
-    int i;
 
   for(i=0;i<n_players;i++)
       players[i]  = GameHierarchy_get_player((self->gh),i);
@@ -1459,8 +1463,9 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
 
   /* -- at first, initialize global vars and create a new layer */
 
-  self->parameterList_1 = NodeList_create();
-  self->parameterList_2 = NodeList_create();
+  for(i=0;i<n_players;i++)
+    self->parameterLists[i] = NodeList_create();
+
   self->parameterList_all = NodeList_create(); //Nil;
 
   self->parameter2expression = new_assoc();
@@ -1505,8 +1510,8 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
   /* After creating all the parameter create a total list. */
 
    /*NEW_CODE_START*/
-   NodeList_concat(self->parameterList_all, self->parameterList_1);
-   NodeList_concat(self->parameterList_all, self->parameterList_2);
+  for(i=0;i<n_players;i++)
+    NodeList_concat(self->parameterList_all, self->parameterLists[i]);
    /*NEW_CODE_END*/
 
    /*OLD_CODE_START
@@ -1561,6 +1566,12 @@ static void game_unguard_exprs_by_parameters(NodeMgr_ptr nodemgr,
 {
   node_ptr iter;
 
+  bool expr = false;
+  int i;
+
+  for(i=0;i<n_players;i++)
+    expr |= (self->w == i+1 && player == i+1);
+
   nusmv_assert(self->N > 0);
   nusmv_assert((kind == INIT && self->min_init) ||
                (kind == INVAR && self->min_invar) ||
@@ -1574,8 +1585,7 @@ static void game_unguard_exprs_by_parameters(NodeMgr_ptr nodemgr,
                  (kind == LTLGAME) ||
                  (kind == GENREACTIVITY)) && self->min_prop));
   nusmv_assert(self->w == GAME_WHO_BOTH ||
-               (self->w == GAME_WHO_PLAYER_1 && player == 1) ||
-               (self->w == GAME_WHO_PLAYER_2 && player == 2));
+                       expr);
 
   /* The expected format of exprs is a list connected by AND, right
      child is a head, left child is a tail, the last element is
@@ -1683,10 +1693,14 @@ static void game_unguard_gamespecs_by_parameters(NodeMgr_ptr nodemgr,
     nusmv_assert(GAME_TWO_EXP_LISTS == node_get_type(expcore));
     {
       node_ptr iter;
+      bool expr = false;
+      int i;
+
+      for(i=0;i<n_players;i++)
+        expr |= (self->w == i+1 && self->player == n_players-i);
 
       if (self->w == GAME_WHO_BOTH ||
-          (self->w == GAME_WHO_PLAYER_1 && self->player == 2) ||
-          (self->w == GAME_WHO_PLAYER_2 && self->player == 1)) {
+          expr) {
         for (iter = car(expcore); iter; iter = cdr(iter)) {
           tmp = car(iter);
           nusmv_assert(IMPLIES == node_get_type(tmp) &&
@@ -1699,9 +1713,12 @@ static void game_unguard_gamespecs_by_parameters(NodeMgr_ptr nodemgr,
         } /* for (iter) */
       }
 
+      expr = false;
+      for(i=0;i<n_players;i++)
+        expr |= (self->w == i+1 && self->player == i+1);
+
       if (self->w == GAME_WHO_BOTH ||
-          (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-          (self->w == GAME_WHO_PLAYER_2 && self->player == 2)) {
+          expr) {
         for (iter = cdr(expcore); iter; iter = cdr(iter)) {
           tmp = car(iter);
           nusmv_assert(IMPLIES == node_get_type(tmp) &&
@@ -1735,14 +1752,19 @@ static void game_unguard_gamespecs_by_parameters(NodeMgr_ptr nodemgr,
 static void game_unguard_game_hierarchy_with_parameters(NodeMgr_ptr nodemgr,
                                           Game_UnrealizableCore_Struct_ptr self)
 {
+    int i;
+
   SYMB_LAYER_CHECK_INSTANCE(self->layer);
-  NODE_LIST_CHECK_INSTANCE(self->parameterList_1);
-  NODE_LIST_CHECK_INSTANCE(self->parameterList_2);
-  nusmv_assert(self->parameter2expression != (hash_ptr) NULL);
+
+  for(i=0;i<n_players;i++)
+    NODE_LIST_CHECK_INSTANCE(self->parameterLists[i]);
+
+    nusmv_assert(self->parameter2expression != (hash_ptr) NULL);
   FlatHierarchy_ptr players[n_players];
 
-  players[0] = GameHierarchy_get_player((self->gh),0);
-  players[1] = GameHierarchy_get_player((self->gh),1);
+
+  for(i=0;i<n_players;i++)
+    players[i] = GameHierarchy_get_player((self->gh),i);
 
   /* Remove layer. */
   {
@@ -1761,57 +1783,41 @@ static void game_unguard_game_hierarchy_with_parameters(NodeMgr_ptr nodemgr,
   }
 
   if (self->N > 0) {
-    if (self->w == GAME_WHO_BOTH || self->w == GAME_WHO_PLAYER_1) {
-      if (self->min_init) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_init(players[0]),
-                                         INIT,
-                                         1);
-      }
-      if (self->min_invar) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_invar(players[0]),
-                                         INVAR,
-                                         1);
-      }
-      if (self->min_trans) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_trans(players[0]),
-                                         TRANS,
-                                         1);
-      }
-    }
 
-    if (self->w == GAME_WHO_BOTH || self->w == GAME_WHO_PLAYER_2) {
-      if (self->min_init) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_init(players[1]),
-                                         INIT,
-                                         2);
+    for(i=0;i<n_players;i++)
+      if (self->w == GAME_WHO_BOTH || self->w == i+1) {
+        if (self->min_init) {
+          game_unguard_exprs_by_parameters(nodemgr,self,
+                                           FlatHierarchy_get_init(players[i]),
+                                           INIT,
+                                           i+1);
+        }
+        if (self->min_invar) {
+          game_unguard_exprs_by_parameters(nodemgr,self,
+                                           FlatHierarchy_get_invar(players[i]),
+                                           INVAR,
+                                           i+1);
+        }
+        if (self->min_trans) {
+          game_unguard_exprs_by_parameters(nodemgr,self,
+                                           FlatHierarchy_get_trans(players[i]),
+                                           TRANS,
+                                           i+1);
+        }
       }
-      if (self->min_invar) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_invar(players[1]),
-                                         INVAR,
-                                         2);
-      }
-      if (self->min_trans) {
-        game_unguard_exprs_by_parameters(nodemgr,self,
-                                         FlatHierarchy_get_trans(players[1]),
-                                         TRANS,
-                                         2);
-      }
-    }
+
+    bool expr = false;
+    int i;
+
+    for(i=0;i<n_players;i++)
+      expr |= (self->w == i+1 && self->player == i+1) ||
+              (self->w == i+1 &&
+              self->player == n_players-i &&
+              Prop_get_type(PROP(self->prop)) == PropGame_GenReactivity);
+
 
     if (self->w == GAME_WHO_BOTH ||
-        (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-        (self->w == GAME_WHO_PLAYER_1 &&
-         self->player == 2 &&
-         Prop_get_type(PROP(self->prop)) == PropGame_GenReactivity) ||
-        (self->w == GAME_WHO_PLAYER_2 && self->player == 2) ||
-        (self->w == GAME_WHO_PLAYER_2 &&
-         self->player == 1 &&
-         Prop_get_type(PROP(self->prop)) == PropGame_GenReactivity)) {
+            expr) {
       if (self->min_prop) {
         game_unguard_gamespecs_by_parameters(nodemgr,self);
       }
@@ -1821,10 +1827,11 @@ static void game_unguard_game_hierarchy_with_parameters(NodeMgr_ptr nodemgr,
   free_assoc(self->parameter2expression);
   self->parameter2expression = (hash_ptr) NULL;
 
-  NodeList_destroy(self->parameterList_1);
-  self->parameterList_1 = NODE_LIST(NULL);
-  NodeList_destroy(self->parameterList_2);
-  self->parameterList_2 = NODE_LIST(NULL);
+  for(i=0;i<n_players;i++) {
+    NodeList_destroy(self->parameterLists[i]);
+    self->parameterLists[i] = NODE_LIST(NULL);
+  }
+
   //free_list(0,self->parameterList_all);
   //self->parameterList_all = Nil;
    NodeList_destroy(self->parameterList_all);
@@ -1900,40 +1907,52 @@ void game_process_unrealizable_core_with_params(
           " %d assumptions are guarded\n"
           " %d assumption unique activation vars\n",
           (self->player == 1 ?
-           self->constraints_2_total_num :
-           self->constraints_1_total_num),
+           self->constraintss_total_num[1] :
+           self->constraintss_total_num[0]),
           (self->player == 1 ?
-           self->constraints_2_guarded_num :
-           self->constraints_1_guarded_num),
+           self->constraintss_guarded_num[1] :
+           self->constraintss_guarded_num[0]),
           (self->player == 1 ?
-           self->constraints_2_unique_num :
-           self->constraints_1_unique_num));
+           self->constraintss_unique_num[1] :
+           self->constraintss_unique_num[0]));
   fprintf(outstream,
           " %d guarantees in total \n"
           " %d guarantees are guarded\n"
           " %d guarantee unique activation vars\n",
           (self->player == 1 ?
-           self->constraints_1_total_num :
-           self->constraints_2_total_num),
+           self->constraintss_total_num[0] :
+           self->constraintss_total_num[1]),
           (self->player == 1 ?
-           self->constraints_1_guarded_num :
-           self->constraints_2_guarded_num),
+           self->constraintss_guarded_num[0] :
+           self->constraintss_guarded_num[1]),
           (self->player == 1 ?
-           self->constraints_1_unique_num :
-           self->constraints_2_unique_num));
+           self->constraintss_unique_num[0] :
+           self->constraintss_unique_num[1]));
 
   /*  Output all the parameters. */
   {
     ListIter_ptr iter;
-    const char* player_names[3] = {PLAYER_NAME(1), PLAYER_NAME(2), (char*) NULL};
-    const char** player_name;
+    char* player_names[n_players+1];
+    char** player_name;
+    char str[50];
+    int i;
     fprintf(outstream, "\nLabels of Expressions (label, kind, expression)\n");
 
+    for(i=0;i<n_players;i++) {
+      sprintf(str,"PLAYER_%d",i+1);
+      strcpy(player_names[i],str);
+    }
+    player_names[i] = (char*) NULL;
+
+    NodeList_ptr parameters;
+
     for (player_name = player_names; *player_name != NULL; ++player_name) {
-      NodeList_ptr parameters =
-        ((strcmp(*player_name, PLAYER_NAME(1)) == 0) ?
-         self->parameterList_1 :
-         self->parameterList_2);
+
+        for(i=0;i<n_players;i++) {
+            sprintf(str,"PLAYER_%d",i+1);
+            if(strcmp(*player_name, str) == 0)
+                parameters = self->parameterLists[i];
+        }
 
       /* Skip the player if it does not have any guarded expressions. */
       if (NodeList_get_length(parameters) == 0) continue;
@@ -2108,7 +2127,7 @@ void game_process_unrealizable_core_with_params(
         /* Check if the vars of player 1 just finished and this var is
            of player 2. */
         if ((remove == (player_to_remove == 1)) &&
-            NodeList_belongs_to(self->parameterList_2, var)) {
+            NodeList_belongs_to(self->parameterLists[1], var)) {
           remove = !remove;
           something_printed = false;
           fprintf(outstream, " ] and %s", remove ? "remove [" : "keep [");
@@ -2263,6 +2282,13 @@ static void game_output_spec_without_params(
 {
   node_ptr exp = Prop_get_expr(PROP(self->prop));
   node_ptr iter;
+  bool expr = false , expr_inv;
+  int i;
+
+  for(i=0;i<n_players;i++) {
+    expr |= (self->w == i+1 && self->player == i+1);
+    expr_inv |= (self->w == i+1 && self->player == n_players-i );
+  }
 
   /* only game property can be met here */
   nusmv_assert((((Prop_get_type(PROP(self->prop)) == PropGame_ReachDeadlock) ||
@@ -2288,8 +2314,7 @@ static void game_output_spec_without_params(
     if (self->N > 0 &&
         self->min_prop &&
         (self->w == GAME_WHO_BOTH ||
-         (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-         (self->w == GAME_WHO_PLAYER_2 && self->player == 2))) {
+                expr )) {
       nusmv_assert(IMPLIES == node_get_type(exp) &&
                    DOT == node_get_type(car(exp)) &&
                    ATOM == node_get_type(cdr(car(exp))) &&
@@ -2311,8 +2336,7 @@ static void game_output_spec_without_params(
     if (self->N > 0 &&
         self->min_prop &&
         (self->w == GAME_WHO_BOTH ||
-         (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-         (self->w == GAME_WHO_PLAYER_2 && self->player == 2))) {
+                expr )) {
       nusmv_assert(AND == node_get_type(exp) &&
                    DOT == node_get_type(car(exp)) &&
                    ATOM == node_get_type(cdr(car(exp))) &&
@@ -2343,8 +2367,7 @@ static void game_output_spec_without_params(
       if (self->N > 0 &&
           self->min_prop &&
           (self->w == GAME_WHO_BOTH ||
-           (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-           (self->w == GAME_WHO_PLAYER_2 && self->player == 2))) {
+                  expr )) {
         nusmv_assert(IMPLIES == node_get_type(cond) &&
                      DOT == node_get_type(car(cond)) &&
                      ATOM == node_get_type(cdr(car(cond))) &&
@@ -2376,8 +2399,7 @@ static void game_output_spec_without_params(
           self->min_prop &&
           (self->w == GAME_WHO_BOTH ||
            /* note: switched players */
-           (self->w == GAME_WHO_PLAYER_1 && self->player == 2) ||
-           (self->w == GAME_WHO_PLAYER_2 && self->player == 1))) {
+           expr_inv )) {
         nusmv_assert(IMPLIES == node_get_type(cond) &&
                      DOT == node_get_type(car(cond)) &&
                      ATOM == node_get_type(cdr(car(cond))) &&
@@ -2402,8 +2424,7 @@ static void game_output_spec_without_params(
       if (self->N > 0 &&
           self->min_prop &&
           (self->w == GAME_WHO_BOTH ||
-           (self->w == GAME_WHO_PLAYER_1 && self->player == 1) ||
-           (self->w == GAME_WHO_PLAYER_2 && self->player == 2))) {
+           expr)) {
         nusmv_assert(IMPLIES == node_get_type(cond) &&
                      DOT == node_get_type(car(cond)) &&
                      ATOM == node_get_type(cdr(car(cond))) &&
