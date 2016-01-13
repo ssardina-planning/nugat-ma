@@ -153,8 +153,7 @@ EXTERN int nusmv_yylineno;
 /*---------------------------------------------------------------------------*/
 static node_ptr game_and_exp ARGS((NodeMgr_ptr nodemgr, node_ptr exp1, node_ptr exp2));
 
-static void game_fill_in_var_hash_table ARGS((NodeMgr_ptr nodemgr,node_ptr inVarList,
-                                              node_ptr outVarList));
+static void game_fill_in_var_hash_table ARGS((NodeMgr_ptr nodemgr,node_ptr* vars));
 
 static node_ptr game_create_unique_name ARGS((NuSMVEnv_ptr env));
 
@@ -235,82 +234,71 @@ static exp_kind game_property_to_game ARGS((NuSMVEnv_ptr env,
 
 ******************************************************************************/
 boolean Game_PropertyToGame(NuSMVEnv_ptr env,
-                            node_ptr* inputVars,
-                            node_ptr* outputVars,
-                            node_ptr exp_1,
-                            node_ptr* init_1,
-                            node_ptr* trans_1,
-                            node_ptr exp_2,
-                            node_ptr* init_2,
-                            node_ptr* trans_2,
-                            node_ptr* property)
-{
-  node_ptr req_1 = Nil;
-  node_ptr req_2 = Nil;
-  node_ptr inputVars_orig;  /* Stores the original list of input
+                            node_ptr** varss,
+                            node_ptr* exps,
+                            node_ptr** inits,
+                            node_ptr** trans,
+                            node_ptr* property) {
+  node_ptr reqs[n_players];
+  node_ptr varss_orig[n_players];  /* Stores the original list of input/output
                                variables; this relies on new variables
                                being added to the front. */
-  node_ptr outputVars_orig; /* Stores the original list of output
-                               variables; this relies on new variables
-                               being added to the front. */
-  node_ptr exp_1_orig;      /* Stores the original unPSL-ed exp_1. */
-  node_ptr exp_2_orig;      /* Stores the original unPSL-ed exp_2. */
+
+  node_ptr exps_orig[n_players];      /* Stores the original unPSL-ed exp_. */
+  int i;
+  bool expr;
 
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
+  MasterPrinter_ptr wffprint = MASTER_PRINTER(NuSMVEnv_get_value(env, ENV_WFF_PRINTER));
+  StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
+  FILE *errstream = StreamMgr_get_error_stream(streams);
+
+  for (i = 0; i < n_players; i++)
+    reqs[i] = Nil;
 
   nameToType = new_assoc();
   expToKind = new_assoc();
 
-  game_fill_in_var_hash_table(nodemgr,*inputVars, *outputVars);
+  game_fill_in_var_hash_table(nodemgr, *varss);
 
   /* Store inputVars, outputVars. */
-  inputVars_orig = *inputVars;
-  outputVars_orig = *outputVars;
+  for (i = 0; i < n_players; i++)
+    varss_orig[i] = *varss[i];
 
   /* Get rid of all PSL operators, i.e., convert to usual SMV format. */
-  exp_1 = PslNode_convert_psl_to_core(env,exp_1);
-  exp_2 = PslNode_convert_psl_to_core(env,exp_2);
+  for (i = 0; i < n_players; i++) {
+    exps[i] = PslNode_convert_psl_to_core(env, exps[i]);
 
-  /* Store exp_1, exp_2. */
-  exp_1_orig = exp_1;
-  exp_2_orig = exp_2;
+    /* Store exp_i. */
+    exps_orig[i] = exps[i];
+  }
 
   /* Perform at first syntactic transformations and then convert the
      exp to a game structure. */
-  if (exp_1 != Nil) {
-    exp_1 = game_normalize_syntactically(exp_1, false);
-
-//    /* debugging printing */
-//    fprintf(errstream,"\n-- SIMPLIFIED:"); print_node(errstream, exp_1);
-
-    game_property_to_game(env,
-                          &exp_1,
-                          TOP_LEVEL,
-                          inputVars,
-                          init_1,
-                          trans_1,
-                          &req_1);
+  expr = true;
+  for (i = 0; i < n_players; i++) { 
+    if (exps[i] != Nil) {
+      exps[i] = game_normalize_syntactically(exps[i], false);
+  
+      //    /* debugging printing */
+      fprintf(errstream, "\n-- SIMPLIFIED:");
+      print_node(wffprint, errstream, exps[i]);
+  
+      game_property_to_game(env,
+                            &exps[i],
+                            TOP_LEVEL,
+                            varss[i],
+                            inits[i],
+                            trans[i],
+                            &reqs[i]);
+    }
+    expr &= (Nil == exps[i]);
   }
-
-  if (exp_2 != Nil) {
-    exp_2 = game_normalize_syntactically(exp_2, false);
-
-//    /* debugging printing */
-//    fprintf(errstream,"\n-- SIMPLIFIED:"); print_node(errstream, exp_2);
-
-    game_property_to_game(env,
-                          &exp_2,
-                          TOP_LEVEL,
-                          outputVars,
-                          init_2,
-                          trans_2,
-                          &req_2);
-  }
-
-//  fprintf(errstream,"\n\n");/* debugging printing */
+  
+  fprintf(errstream,"\n\n");/* debugging printing */
 
   /* All the expressions were processed. */
-  nusmv_assert(Nil == exp_1 && Nil == exp_2);
+  nusmv_assert(expr);
 
 
   /* --- Convert the requirements into a property. --- */
@@ -325,22 +313,22 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
     expToKind = new_assoc();
 
     /* Check if both reqs are Nil => create an avoid-deadlock game. */
-    if (Nil == req_1 && Nil == req_2) {
+    if (Nil == reqs[0] && Nil == reqs[1]) {
       *property = new_node(nodemgr,AVOIDDEADLOCK, NODE_FROM_INT(2), Nil);
       success = true;
     }
     /* Check if this is a reachability game. */
     if ((!success) &&
-        (Nil == req_1 && Nil != req_2 && OP_FUTURE == node_get_type(req_2) &&
-         PURE_PROPOSITIONAL == game_get_expression_kind(car(req_2)))) {
-      *property = new_node(nodemgr,REACHTARGET, NODE_FROM_INT(2), car(req_2));
+        (Nil == reqs[0] && Nil != reqs[1] && OP_FUTURE == node_get_type(reqs[1]) &&
+         PURE_PROPOSITIONAL == game_get_expression_kind(car(reqs[1])))) {
+      *property = new_node(nodemgr,REACHTARGET, NODE_FROM_INT(2), car(reqs[1]));
       success = true;
     }
     /* Check if this is an avoidance game. */
     if ((!success) &&
-        (Nil == req_2 && Nil != req_1 && OP_FUTURE == node_get_type(req_1) &&
-         PURE_PROPOSITIONAL == game_get_expression_kind(car(req_1)))) {
-      *property = new_node(nodemgr,REACHTARGET, NODE_FROM_INT(1), car(req_1));
+        (Nil == reqs[1] && Nil != reqs[0] && OP_FUTURE == node_get_type(reqs[0]) &&
+         PURE_PROPOSITIONAL == game_get_expression_kind(car(reqs[0])))) {
+      *property = new_node(nodemgr,REACHTARGET, NODE_FROM_INT(1), car(reqs[0]));
       success = true;
     }
     /* Check if this is a buchi or gen-reactivity game. */
@@ -350,12 +338,12 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
 
       success = true; /* Set to false later if things don't work out. */
 
-      if (req_1 != Nil) {
-        if (node_get_type(req_1) != AND) { /* just one element */
-          req_1 = new_lined_node(nodemgr,CONS, req_1, Nil, node_get_lineno(req_1));
+      if (reqs[0] != Nil) {
+        if (node_get_type(reqs[0]) != AND) { /* just one element */
+          reqs[0] = new_lined_node(nodemgr,CONS, reqs[0], Nil, node_get_lineno(reqs[0]));
         }
         else { /* AND-list to CONS-list conversions */
-          for (iter = req_1; node_get_type(cdr(iter)) == AND; iter = cdr(iter)) {
+          for (iter = reqs[0]; node_get_type(cdr(iter)) == AND; iter = cdr(iter)) {
             node_set_type(iter, CONS);
           }
           node_set_type(iter, CONS);
@@ -363,12 +351,12 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
         }
       }
 
-      if (req_2 != Nil) {
-        if (node_get_type(req_2) != AND) { /* just one element */
-          req_2 = new_lined_node(nodemgr,CONS, req_2, Nil, node_get_lineno(req_2));
+      if (reqs[1] != Nil) {
+        if (node_get_type(reqs[1]) != AND) { /* just one element */
+          reqs[1] = new_lined_node(nodemgr,CONS, reqs[1], Nil, node_get_lineno(reqs[1]));
         }
         else { /* AND-list to CONS-list conversions */
-          for (iter = req_2; node_get_type(cdr(iter)) == AND; iter = cdr(iter)) {
+          for (iter = reqs[1]; node_get_type(cdr(iter)) == AND; iter = cdr(iter)) {
             node_set_type(iter, CONS);
           }
           node_set_type(iter, CONS);
@@ -376,8 +364,8 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
         }
       }
       /* Here req 2 must be not Nil. Create dummy requirement: "G F true". */
-      if (Nil == req_2) {
-        req_2 = cons(nodemgr,new_node(nodemgr,OP_GLOBAL,
+      if (Nil == reqs[1]) {
+        reqs[1] = cons(nodemgr,new_node(nodemgr,OP_GLOBAL,
                               new_node(nodemgr,OP_FUTURE,
                                        new_node(nodemgr,TRUEEXP, Nil, Nil),
                                        Nil),
@@ -387,7 +375,7 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
 
       /* Check that req are list of G F expressions only and then
          remove that G F. */
-      for (iter = req_1; iter != Nil; iter = cdr(iter)) {
+      for (iter = reqs[0]; iter != Nil; iter = cdr(iter)) {
         node_ptr exp = car(iter);
         if (node_get_type(exp) != OP_GLOBAL ||
             node_get_type(car(exp)) != OP_FUTURE ||
@@ -403,7 +391,7 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
         node_node_setcar(iter, car(car(exp)));
       }
 
-      for (iter = req_2; iter != Nil; iter = cdr(iter)) {
+      for (iter = reqs[1]; iter != Nil; iter = cdr(iter)) {
         node_ptr exp = car(iter);
         if (node_get_type(exp) != OP_GLOBAL ||
             node_get_type(car(exp)) != OP_FUTURE ||
@@ -421,13 +409,13 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
 
       /* Create the property, buchi or gen-reactivity. */
       if (success) {
-        if (Nil == req_1) {
+        if (Nil == reqs[0]) {
           *property = new_node(nodemgr,BUCHIGAME, NODE_FROM_INT(2),
-                               new_node(nodemgr,GAME_EXP_LIST, req_2, Nil));
+                               new_node(nodemgr,GAME_EXP_LIST, reqs[1], Nil));
         }
         else {
           *property = new_node(nodemgr,GENREACTIVITY, NODE_FROM_INT(2),
-                               new_node(nodemgr,GAME_TWO_EXP_LISTS, req_1, req_2));
+                               new_node(nodemgr,GAME_TWO_EXP_LISTS, reqs[0], reqs[1]));
         }
       }
 
@@ -438,18 +426,17 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
     /* Resort to LTLGAME. */
     if (!success) {
 
-      *inputVars = inputVars_orig;
-      *outputVars = outputVars_orig;
-      *init_1 = Nil;
-      *trans_1 = Nil;
-      *init_2 = Nil;
-      *trans_2 = Nil;
+      *varss = varss_orig;
+//      *init_1 = Nil;
+//      *trans_1 = Nil;
+//      *inits[1] = Nil;
+//      *trans_2 = Nil;
 
       /* Terminate AND chains with TRUEEXP. */
-      if (exp_1_orig == Nil) {
-        exp_1_orig = find_node(nodemgr,TRUEEXP, Nil, Nil);
+      if (exps_orig[0] == Nil) {
+        exps_orig[0] = find_node(nodemgr,TRUEEXP, Nil, Nil);
       } else {
-        node_ptr iter = exp_1_orig;
+        node_ptr iter = exps_orig[0];
         if (node_get_type(iter) == AND) {
           while(cdr(iter) != Nil) {
             iter = cdr(iter);
@@ -457,10 +444,10 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
           node_node_setcdr(iter, find_node(nodemgr,TRUEEXP, Nil, Nil));
         }
       }
-      if (exp_2_orig == Nil) {
-        exp_2_orig = find_node(nodemgr,TRUEEXP, Nil, Nil);
+      if (exps_orig[1] == Nil) {
+        exps_orig[1] = find_node(nodemgr,TRUEEXP, Nil, Nil);
       } else {
-        node_ptr iter = exp_2_orig;
+        node_ptr iter = exps_orig[1];
         if (node_get_type(iter) == AND) {
           while(cdr(iter) != Nil) {
             iter = cdr(iter);
@@ -472,8 +459,8 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
       *property = new_node(nodemgr,LTLGAME,
                            NODE_FROM_INT(2),
                            new_node(nodemgr,IMPLIES,
-                                    exp_1_orig,
-                                    exp_2_orig));
+                                    exps_orig[0],
+                                    exps_orig[1]));
     }
 #endif
   } /* end of property construction */
@@ -521,19 +508,17 @@ static node_ptr game_and_exp(NodeMgr_ptr nodemgr, node_ptr exp1, node_ptr exp2)
   SeeAlso     [ ]
 
 ******************************************************************************/
-static void game_fill_in_var_hash_table(NodeMgr_ptr nodemgr,node_ptr inVarList, node_ptr outVarList)
+static void game_fill_in_var_hash_table(NodeMgr_ptr nodemgr,node_ptr *varList)
 {
   node_ptr iter;
+  int i;
 
-  for (iter = inVarList; iter != Nil; iter = cdr(iter)) {
-    nusmv_assert(CONS == node_get_type(iter)); /* this is a list */
-    insert_assoc(nameToType, find_atom(nodemgr,car(car(iter))), cdr(car(iter)));
-  }
+  for(i=0;i<n_players;i++)
+    for (iter = varList[i]; iter != Nil; iter = cdr(iter)) {
+      nusmv_assert(CONS == node_get_type(iter)); /* this is a list */
+      insert_assoc(nameToType, find_atom(nodemgr,car(car(iter))), cdr(car(iter)));
+    }
 
-  for (iter = outVarList; iter != Nil; iter = cdr(iter)) {
-    nusmv_assert(CONS == node_get_type(iter)); /* this is a list */
-    insert_assoc(nameToType, find_atom(nodemgr,car(car(iter))), cdr(car(iter)));
-  }
 }
 
 /**Function********************************************************************

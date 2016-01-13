@@ -167,7 +167,7 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
      actual ones and the machine is replicated.
   */
 
-  /* create two layers - one for variables of every player */
+  /* create N layers - one for variables of every player */
 
   for(i=0;i<n_players;i++) {
     char str[50];
@@ -183,21 +183,21 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
      Processing of the parse tree and constructions of all the
      expressions for the state machine(s).
 
-     Note that n special modules "PLAYER_ i+1"  are
+     Note that N special modules "PLAYER_ i+1"  are
      actually the players\' declarations.
   */
-    node_ptr players[n_players];
+    node_ptr modules[n_players];
 
   for(i=0;i<n_players;i++) {
     char str[50];
     sprintf(str,"PLAYER_%d",i+1);
-    players[i] = sym_intern(env,str);
+    modules[i] = sym_intern(env,str);
   }
 
   mainGameHierarchy = game_flatten_game_hierarchy(env,
                                                   st,
                                                   model_layers,
-                                                  players,
+                                                  modules,
                                                   expand_bounded_arrays);
 
   /* We store properties in the DB of properties */
@@ -284,8 +284,8 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
 static GameHierarchy_ptr
 game_flatten_game_hierarchy(NuSMVEnv_ptr env,
                             SymbTable_ptr symbol_table,
-                            SymbLayer_ptr model_layers[n_players],
-                            node_ptr modules[n_players],
+                            SymbLayer_ptr *model_layers,
+                            node_ptr *modules,
                             boolean expand_bounded_arrays)
 {
   node_ptr tmp, iter;
@@ -486,7 +486,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
 ******************************************************************************/
 static void game_check_first_player(NuSMVEnv_ptr env,
                                     SymbTable_ptr st,
-                                    FlatHierarchy_ptr player,
+                                    FlatHierarchy_ptr player_1,
                                     NodeList_ptr vars)
 {
   NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
@@ -494,42 +494,42 @@ static void game_check_first_player(NuSMVEnv_ptr env,
   /* check init */
   game_check_first_player_recur(env,
                                 st,
-                                FlatHierarchy_get_init(player),
+                                FlatHierarchy_get_init(player_1),
                                 vars,
                                 false,
                                 false);
   /* check invar */
   game_check_first_player_recur(env,
                                 st,
-                                FlatHierarchy_get_invar(player),
+                                FlatHierarchy_get_invar(player_1),
                                 vars,
                                 false,
                                 false);
   /* check justice */
   game_check_first_player_recur(env,
                                 st,
-                                FlatHierarchy_get_justice(player),
+                                FlatHierarchy_get_justice(player_1),
                                 vars,
                                 false,
                                 false);
   /* check compassion */
   game_check_first_player_recur(env,
                                 st,
-                                FlatHierarchy_get_compassion(player),
+                                FlatHierarchy_get_compassion(player_1),
                                 vars,
                                 false,
                                 false);
   /* check trans */
   game_check_first_player_recur(env,
                                 st,
-                                FlatHierarchy_get_trans(player),
+                                FlatHierarchy_get_trans(player_1),
                                 vars,
                                 true,
                                 false);
   /* check assign. "map" is used to get rid of processes names */
   game_check_first_player_recur(env,
                                 st,
-                                map(nodemgr,cdr, FlatHierarchy_get_assign(player)),
+                                map(nodemgr,cdr, FlatHierarchy_get_assign(player_1)),
                                 vars,
                                 false,
                                 false);

@@ -24,20 +24,20 @@ TRANS
 TRANS
   o1 <-> i1
 
-
---3
---VAR
---    o0: b;
---    o1: boolean;
---TRANS
---    o0.v <-> i0.v
-
+3
+VAR
+  e0: b;
+  e1: boolean;
+INIT
+  e0.v
+TRANS
+  e1 <-> i1
 
 -- realizable
 REACHTARGET 1 o0.v
 
 -- atl realizable
-ATLREACHTARGET 1 o0.v
+ATLREACHTARGET 3 e0.v
 
 -- unrealizable
 AVOIDTARGET 2 o0.v
@@ -52,7 +52,7 @@ AVOIDDEADLOCK 2
 BUCHIGAME 2 (i1, o1)
 
 -- unrealizable
-LTLGAME 1 F G i1
+-- LTLGAME 1 F G i1
 
 -- realizable
 GENREACTIVITY 2 (i0.v)->(o0.v, i1)

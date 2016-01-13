@@ -87,18 +87,13 @@ typedef struct XmlParseResult_TAG
 {
   /* Fields to store the final result. */
 
-  node_ptr input_vars;  /* A list (connected by CONS) of pairs
-                           (connected by COLON) of an input var name
+  node_ptr *varss;  /* A list (connected by CONS) of pairs
+                           (connected by COLON) of an var name
                            and its type (represented as in the NuGaT
                            parser). */
-  node_ptr output_vars; /* Similar to input_vars, but a list of output
-                           vars and their types. */
-  node_ptr assumptions; /* A tree (connected by AND) of PSL
-                           expressions representing the assumptions on
-                           the input behavior. */
-  node_ptr guarantees;  /* A tree (connected by AND) of PSL
-                           expressions representing the guarantees on
-                           the output behavior. */
+  node_ptr *exps; /* A tree (connected by AND) of PSL
+                           expressions representing the assumptions/guarantees on
+                           the input/output behavior. */
 
   /* Fields to store intermediate results. */
 
@@ -300,6 +295,7 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
   const UStringMgr_ptr strings =  USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR));
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
+  MasterPrinter_ptr wffprint = MASTER_PRINTER(NuSMVEnv_get_value(env, ENV_WFF_PRINTER));
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
@@ -374,19 +370,24 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
   /* Here we create a parse tree of a game structure from the read XML
      file. Player 1 is the input. Player 2 is the output. */
   {
-    node_ptr init1, init2, trans1, trans2, property;
-    node_ptr module1, module2;
+    node_ptr inits[n_players], transs[n_players], property;
+    node_ptr modules[n_players];
+    int i;
 
-    init1 = init2 = trans1 = trans2 = property = Nil;
-    module1 = module2 = Nil;
+    property = Nil;
+
+    for(i=0;i<n_players;i++)
+      modules[i] = inits[i] = transs[i] = Nil;
+    
 
 //     /* debugging printing */
-//   fprintf(errstream, "\n--PARSED XML FILE:\n");
-//   fprintf(errstream, "\n--ASSUMPTION:\n--");
-//   print_node(nusmv_stderr, parseResult->assumptions);
-//   fprintf(errstream, "\n\n--GUARANTEES:\n--");
-//   print_node(nusmv_stderr, parseResult->guarantees);
-//   fprintf(errstream, "\n\n");
+   fprintf(errstream, "\n--PARSED XML FILE:\n");
+
+    for(i=0;i<n_players;i++) {
+       fprintf(errstream, "\n--EXPS[%d]:\n--",i);
+       print_node(wffprint, errstream, parseResult->exps[i]);
+    }
+   fprintf(errstream, "\n\n--GUARANTEES:\n--");
 
     /* Divide each of the assumptions and guarantees on 3 sets, i.e.,
        initial condition (no temporal operators), transitions relation
@@ -396,77 +397,62 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
        assumptions/guarantees into the init or trans categories.
     */
     Game_PropertyToGame(env,
-                        &parseResult->input_vars,
-                        &parseResult->output_vars,
-                        parseResult->assumptions,
-                        &init1,
-                        &trans1,
-                        parseResult->guarantees,
-                        &init2,
-                        &trans2,
+                        &parseResult->varss,
+                        parseResult->exps,
+                        &inits,
+                        &transs,
                         &property);
 
-    if (Nil != parseResult->input_vars) {
-      module1 = cons(nodemgr,new_node(nodemgr,VAR, parseResult->input_vars, Nil), module1);
-    }
-    if (Nil != init1) {
-      module1 = cons(nodemgr,new_node(nodemgr,INIT, init1, Nil), module1);
-    }
-    if (Nil != trans1) {
-      module1 = cons(nodemgr,new_node(nodemgr,TRANS, trans1, Nil), module1);
-    }
+    node_ptr lst;
+    for(i=0;i<n_players;i++){
 
-    if (Nil != parseResult->output_vars) {
-      module2 = cons(nodemgr,new_node(nodemgr,VAR, parseResult->output_vars, Nil), module2);
-    }
-    if (Nil != init2) {
-      module2 = cons(nodemgr,new_node(nodemgr,INIT, init2, Nil), module2);
-    }
-    if (Nil != trans2) {
-      module2 = cons(nodemgr,new_node(nodemgr,TRANS, trans2, Nil), module2);
-    }
+      if (Nil != parseResult->varss[i]) {
+        modules[i] = cons(nodemgr,new_node(nodemgr,VAR, parseResult->varss[i], Nil), modules[i]);
+      }
+      if (Nil != inits[i]) {
+        modules[i] = cons(nodemgr,new_node(nodemgr,INIT, inits[i], Nil), modules[i]);
+      }
+      if (Nil != transs[i]) {
+        modules[i] = cons(nodemgr,new_node(nodemgr,TRANS, transs[i], Nil), modules[i]);
+      }
 
-    /* Create the players\' MODULE (the same as NuGaT parser does). */
-    module1 = new_node(nodemgr,MODULE,
-                       new_node(nodemgr,MODTYPE,
-                                new_node(nodemgr,ATOM,
-                                         (node_ptr) UStringMgr_find_string(strings,"PLAYER_1"),
-                                         Nil),
-                                Nil),
-                       module1);
 
-    module2 = new_node(nodemgr,MODULE,
-                       new_node(nodemgr,MODTYPE,
-                                new_node(nodemgr,ATOM,
-                                         (node_ptr) UStringMgr_find_string(strings,"PLAYER_2"),
-                                         Nil),
-                                Nil),
-                       module2);
+      /* Create the players\' MODULE (the same as NuGaT parser does). */
+      char str[50];
+      sprintf(str,"PLAYER_%d",i+1);
+      modules[i] = new_node(nodemgr,MODULE,
+                         new_node(nodemgr,MODTYPE,
+                                  new_node(nodemgr,ATOM,
+                                           (node_ptr) UStringMgr_find_string(strings,str),
+                                           Nil),
+                                  Nil),
+                         modules[i]);
+
+    }
 
     /* Create a GAME structure as the NuGaT parser does it. */
     parsed_tree = new_node(nodemgr,GAME,
                            cons(nodemgr,property, Nil),
-                           cons(nodemgr,module1,
-                                cons(nodemgr,module2,
-                                     Nil /*module list is empty*/)));
+                           cons(nodemgr,modules[0],
+                                cons(nodemgr,modules[1],
+                                     Nil /*modules list is empty*/)));
 
 //     /* debugging printing */
-//   fprintf(errstream, "PARSED XML FILE:\nGAME\n\n");
-//   fprintf(errstream, "PLAYER_1\nVAR ");
-//   print_sexp(nusmv_stderr, parseResult->input_vars);
-//   fprintf(errstream, "\nINIT :\n");
-//   print_node(nusmv_stderr, init1);
-//   fprintf(errstream, "\nTRANS :\n");
-//   print_node(nusmv_stderr, trans1);
-//   fprintf(errstream, "\n\nPLAYER_2\nVAR :\n");
-//   print_sexp(nusmv_stderr, parseResult->output_vars);
-//   fprintf(errstream, "\nINIT:\n");
-//   print_node(nusmv_stderr, init2);
-//   fprintf(errstream, "\nTRANS:\n");
-//   print_node(nusmv_stderr, trans2);
-//   fprintf(errstream, "\nPROPERTY:\n");
-//   print_node(nusmv_stderr, property);
-//   fprintf(errstream, "\n\n");
+   fprintf(errstream, "PARSED XML FILE:\nGAME\n\n");
+
+    for(i=0;i<n_players;i++) {
+
+      fprintf(errstream, "PLAYER_%d\nVAR ",i+1);
+      //print_sexp(errstream, parseResult->varss[0]);
+      fprintf(errstream, "\nINIT :\n");
+      print_node(wffprint, errstream, inits[i]);
+      fprintf(errstream, "\nTRANS :\n");
+      print_node(wffprint, errstream, transs[i]);
+    }
+
+   fprintf(errstream, "\nPROPERTY:\n");
+   print_node(wffprint, errstream, property);
+   fprintf(errstream, "\n\n");
   }
 
 
@@ -1034,10 +1020,10 @@ static void game_xml_reader_tag_end(void* data, const char *string)
       signal = new_node(nodemgr,COLON, car(name), car(type));
 
       if ('E' == PTR_TO_INT(car(kind))) {
-        parseResult->input_vars = cons(nodemgr,signal, parseResult->input_vars);
+        parseResult->varss[0] = cons(nodemgr,signal, parseResult->varss[0]);
       }
       else if ('S' == PTR_TO_INT(car(kind))) {
-        parseResult->output_vars = cons(nodemgr,signal, parseResult->output_vars);
+        parseResult->varss[1] = cons(nodemgr,signal, parseResult->varss[1]);
       }
       else {
         ErrorMgr_rpterr(errmgr,"The value of kind of a signal can only be E or S (found: %c).",
@@ -1104,14 +1090,14 @@ static void game_xml_reader_tag_end(void* data, const char *string)
          ignore it). */
       if ('1' == PTR_TO_INT(car(toggled))) {
         if ('A' == PTR_TO_INT(car(kind))) {
-          parseResult->assumptions = new_node(nodemgr,AND,
+          parseResult->exps[0] = new_node(nodemgr,AND,
                                               car(property),
-                                              parseResult->assumptions);
+                                          parseResult->exps[0]);
         }
         else if ('G' == PTR_TO_INT(car(kind))) {
-          parseResult->guarantees = new_node(nodemgr,AND,
+          parseResult->exps[1] = new_node(nodemgr,AND,
                                              car(property),
-                                             parseResult->guarantees);
+                                          parseResult->exps[1]);
         }
         else {
           ErrorMgr_rpterr(errmgr,"The value of kind of a requirement can only be A or G "
@@ -1373,17 +1359,20 @@ static void game_xml_reader_char_handler(void* data, const char *txt, int len)
   SeeAlso     [ gameXmlReader_XmlParseResult_destroy ]
 
 ******************************************************************************/
-static XmlParseResult_ptr gameXmlReader_XmlParseResult_create(const ErrorMgr_ptr errmgr,XML_Parser parser)
-{
+static XmlParseResult_ptr gameXmlReader_XmlParseResult_create(const ErrorMgr_ptr errmgr,XML_Parser parser) {
   XmlParseResult_ptr self;
+  int i;
 
   self = ALLOC(XmlParseResult, 1);
-  if (XML_PARSE_RESULT(NULL) == self) ErrorMgr_error_out_of_memory(errmgr,0);
+  if (XML_PARSE_RESULT(NULL) == self) ErrorMgr_error_out_of_memory(errmgr, 0);
 
-  self->input_vars = Nil;
-  self->output_vars = Nil;
-  self->assumptions = Nil;
-  self->guarantees = Nil;
+  self->varss = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+  self->exps = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+
+  for(i=0;i<n_players;i++) {
+    self->varss[i] = Nil;
+    self->exps[i] = Nil;
+  }
   self->parser = parser;
   self->isIgnore = false;
   self->stack = Nil;
@@ -1423,10 +1412,16 @@ static void gameXmlReader_XmlParseResult_destroy_parser(XmlParseResult_ptr self)
 ******************************************************************************/
 static void gameXmlReader_XmlParseResult_destroy(XmlParseResult_ptr self)
 {
-  self->input_vars = Nil;
-  self->output_vars = Nil;
-  self->assumptions = Nil;
-  self->guarantees = Nil;
+  int i;
+
+  self->varss = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+  self->exps = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+
+  for(i=0;i<n_players;i++) {
+    self->varss[i] = Nil;
+    self->exps[i] = Nil;
+  }
+
   if ((XML_Parser) NULL != self->parser) {
     XML_ParserFree(self->parser);
     self->parser = (XML_Parser) NULL;

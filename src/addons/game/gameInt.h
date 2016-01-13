@@ -443,9 +443,8 @@ EXTERN Game_RealizabilityStatus
         GameStrategy_ptr* strategy));
 
 EXTERN boolean Game_PropertyToGame
- ARGS((NuSMVEnv_ptr env,node_ptr* inputVars, node_ptr* outputVars,
-       node_ptr exp_1, node_ptr* init_1, node_ptr* trans_1,
-       node_ptr exp_2, node_ptr* init_2, node_ptr* trans_2,
+ ARGS((NuSMVEnv_ptr env,node_ptr** varss,
+       node_ptr* exps, node_ptr** inits, node_ptr** transs,
        node_ptr* property));
 
 EXTERN void Game_init_opt ARGS((NuSMVEnv_ptr env));
