@@ -123,7 +123,7 @@ void Game_CommandWriteFlatModel(NuSMVEnv_ptr env,FILE* ofileid)
   for(i=0;i<n_players;i++) {
     char str[50];
     sprintf(str, "layer_of_PLAYER_%d", i + 1);
-    array_insert_last(const char*, layers[0], str);
+    array_insert_last(const char*, layers[i], str);
   }
 
   fprintf(ofileid, "\n-- Begin GAME Flat Model\n");

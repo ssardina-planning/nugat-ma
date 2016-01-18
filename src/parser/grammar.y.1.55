@@ -20,7 +20,7 @@
 %nonassoc <lineno> TOK_BUCHIGAME TOK_LTLGAME TOK_GENREACTIVITY
 
 
-%type <node> simple_list_expression
+%type <node> simple_list_expression simple_players_list
 
 %type <node> game_module_list
 

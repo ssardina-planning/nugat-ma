@@ -1,46 +1,33 @@
-MODULE b
-VAR
-  v: boolean;
-
 GAME
 
 1
 VAR
-  i0: b;
-  i1: boolean;
+  x1: boolean;
 INIT
-  i0.v
-TRANS
-  i1 -> !next(i1)
-TRANS
-  !i1 -> next(i1)
+  x1
 
 2
 VAR
-  o0: b;
-  o1: boolean;
+  x2: boolean;
 TRANS
-  o0.v <-> i0.v
-TRANS
-  o1 <-> i1
+  x1=x3 -> next(x2)
 
 3
 VAR
-  e0: b;
-  e1: boolean;
+  x3: boolean;
 INIT
-  e0.v
-TRANS
-  e1 <-> i1
+  !x3
+
 
 -- realizable
-REACHTARGET 1 o0.v
+REACHTARGET 1 x2
 
--- atl realizable
-ATLREACHTARGET 3 e0.v
+ATLREACHTARGET (1) x1 -- unrealizable
+ATLREACHTARGET (3) x3 -- unrealizable
+ATLREACHTARGET (1,2) x2 -- realizable
 
 -- unrealizable
-AVOIDTARGET 2 o0.v
+AVOIDTARGET 2 x2
 
 -- unrealizable
 REACHDEADLOCK 1
@@ -49,10 +36,10 @@ REACHDEADLOCK 1
 AVOIDDEADLOCK 2
 
 -- realizable
-BUCHIGAME 2 (i1, o1)
+BUCHIGAME 1 (x1,x3)
 
 -- unrealizable
--- LTLGAME 1 F G i1
+-- LTLGAME 1 F G x1
 
 -- realizable
-GENREACTIVITY 2 (i0.v)->(o0.v, i1)
+GENREACTIVITY 1 (x1)->(x3)

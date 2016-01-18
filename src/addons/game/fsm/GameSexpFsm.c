@@ -152,17 +152,20 @@ GameSexpFsm_ptr GameSexpFsm_create(NuSMVEnv_ptr env,
   FLAT_HIERARCHY_CHECK_INSTANCE(hierarchies[i]);
 
   self = ALLOC(GameSexpFsm, 1);
+  self->players = (SexpFsm_ptr*)malloc(sizeof(SexpFsm_ptr)*n_players);
+  self->vars_sets = (Set_t*)malloc(sizeof(Set_t)*n_players);
+
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
-    for(i=0;i<n_players;i++)
+  for(i=0;i<n_players;i++)
     players[i] = SexpFsm_create(hierarchies[i], all_vars_set);
 
   game_sexp_fsm_init(self,
                      players,
                      vars_sets);
 
-    for(i=0;i<n_players-1;i++)
-    expr = Nil != FlatHierarchy_get_invar(hierarchies[i]) || Nil != FlatHierarchy_get_invar(hierarchies[i+1]);
+  for(i=0;i<n_players;i++)
+    expr |= Nil != FlatHierarchy_get_invar(hierarchies[i]);
 
   if (expr) {
     ErrorMgr_rpterr(errmgr,"Game has an invariant construct (INVAR or ASSIGN)."
@@ -198,6 +201,9 @@ GameSexpFsm_ptr GameSexpFsm_copy(const GameSexpFsm_ptr self)
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
 
   copy = ALLOC(GameSexpFsm, 1);
+  copy->players = (SexpFsm_ptr*)malloc(sizeof(SexpFsm_ptr)*n_players);
+  copy->vars_sets = (Set_t*)malloc(sizeof(Set_t)*n_players);
+
   GAME_SEXP_FSM_CHECK_INSTANCE(copy);
 
     for(i=0;i<n_players;i++)
@@ -250,7 +256,7 @@ void GameSexpFsm_destroy(GameSexpFsm_ptr self)
 ******************************************************************************/
 GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
                                               BddEnc_ptr enc,
-                                              SymbLayer_ptr det_layers[n_players])
+                                              SymbLayer_ptr *det_layers)
 {
   GameSexpFsm_ptr result;
   int i;
@@ -262,17 +268,17 @@ GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
   nusmv_assert(!SexpFsm_is_boolean(self->players[0]));
 
   result = ALLOC(GameSexpFsm, 1);
-  GAME_SEXP_FSM_CHECK_INSTANCE(result);
-
   result->players = (SexpFsm_ptr *)malloc(sizeof(SexpFsm_ptr)*n_players);
   result->vars_sets = (Set_t *)malloc(sizeof(Set_t)*n_players);
 
-    for(i=0;i<n_players;i++)
-  result->players[i] = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->players[i],
+  GAME_SEXP_FSM_CHECK_INSTANCE(result);
+
+  for(i=0;i<n_players;i++)
+    result->players[i] = SEXP_FSM(BoolSexpFsm_create_from_scalar_fsm(self->players[i],
                                                                  enc,
                                                                  det_layers[i]));
-    for(i=0;i<n_players;i++)
-  result->vars_sets[i] = Set_Copy(self->vars_sets[i]);
+  for(i=0;i<n_players;i++)
+    result->vars_sets[i] = Set_Copy(self->vars_sets[i]);
 
   return result;
 }
@@ -292,11 +298,11 @@ GameSexpFsm_ptr GameSexpFsm_scalar_to_boolean(const GameSexpFsm_ptr self,
 boolean GameSexpFsm_is_boolean(const GameSexpFsm_ptr self)
 {
   GAME_SEXP_FSM_CHECK_INSTANCE(self);
-    boolean expr = false;
+    boolean expr = true;
     int i;
 
     for(i=0;i<n_players-1;i++)
-        expr += SexpFsm_is_boolean(self->players[i]) == SexpFsm_is_boolean(self->players[i+1]);
+        expr &= SexpFsm_is_boolean(self->players[i]) == SexpFsm_is_boolean(self->players[i+1]);
 
   nusmv_assert(expr);
 
@@ -385,9 +391,6 @@ static void game_sexp_fsm_init(GameSexpFsm_ptr self,
 {
   int i;
 
-  self->players = (SexpFsm_ptr*)malloc(sizeof(SexpFsm_ptr)*n_players);
-  self->vars_sets = (Set_t*)malloc(sizeof(Set_t)*n_players);
-
   for(i=0;i<n_players;i++) {
 
     self->players[i] = players[i];
@@ -408,11 +411,11 @@ static void game_sexp_fsm_init(GameSexpFsm_ptr self,
 ******************************************************************************/
 static void game_sexp_fsm_deinit(GameSexpFsm_ptr self)
 {
-    int i;
+  int i;
 
-    for(i=0;i<n_players;i++)
-  SexpFsm_destroy(self->players[i]);
+  for(i=0;i<n_players;i++)
+    SexpFsm_destroy(self->players[i]);
 
-    for(i=0;i<n_players;i++)
-  Set_ReleaseSet(self->vars_sets[i]);
+  for(i=0;i<n_players;i++)
+    Set_ReleaseSet(self->vars_sets[i]);
 }

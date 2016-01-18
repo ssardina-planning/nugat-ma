@@ -856,7 +856,7 @@ static void Game_SF07_StructCheckLTLGameSF07_run_iteration
             "\nGame_CheckLtlGameSpecSF07: performing iteration with curr_k = "
             "%d, curr_player = %d.\n\n",
             curr_k,
-            (curr_player == 1) ? 1 : 2);
+            curr_player);
   }
 
   CATCH(errmgr) {

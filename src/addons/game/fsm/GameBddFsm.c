@@ -97,14 +97,12 @@ typedef struct GameBddFsm_TAG
 /* Variable declarations                                                     */
 /*---------------------------------------------------------------------------*/
 long gameBddFsm_notGoalTotalTime;
-long gameBddFsm_andInvar2TotalTime;
-long gameBddFsm_moveGoalAndInvar2TotalTime;
-long gameBddFsm_trans2TotalTime;
-long gameBddFsm_notTrans2TotalTime;
-long gameBddFsm_moveInvar1TotalTime;
-long gameBddFsm_andInvar1TotalTime;
-long gameBddFsm_trans1TotalTime;
-long gameBddFsm_andInvar1AndInvar2TotalTime;
+long *gameBddFsm_andInvarTotalTime;
+long *gameBddFsm_moveGoalAndInvarTotalTime;
+long *gameBddFsm_transTotalTime;
+long *gameBddFsm_notTransTotalTime;
+long *gameBddFsm_moveInvarTotalTime;
+long gameBddFsm_andInvarsTotalTime;
 long gameBddFsm_totalMoveTotalTime;
 
 /*---------------------------------------------------------------------------*/
@@ -149,21 +147,28 @@ GameBddFsm_ptr GameBddFsm_create(BddEnc_ptr enc,
                                  bdd_ptr *stateFrozenVarCubes)
 {
   GameBddFsm_ptr self;
-    boolean expr = false;
+    boolean expr = true;
     int i;
 
   BDD_ENC_CHECK_INSTANCE(enc);
   for(i=0;i<n_players;i++) BDD_FSM_CHECK_INSTANCE(players[i]);
 
   self = ALLOC(GameBddFsm, 1);
+
+  self->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
+  self->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  self->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+  self->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
   game_bdd_fsm_init(self, enc,
                     players, stateVarCubes, stateFrozenVarCubes);
 
-    for(i=0;i<n_players-1;i++)
-    expr = bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i])) &&
-           bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i+1]));
+  for(i=0;i<n_players;i++)
+    expr &= bdd_is_true(self->dd, BddFsm_get_input_constraints(players[i]));
 
   nusmv_assert(expr);
 
@@ -207,6 +212,14 @@ GameBddFsm_ptr GameBddFsm_copy(const GameBddFsm_ptr self)
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
   copy = ALLOC(GameBddFsm, 1);
+
+  copy->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
+  copy->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
+  copy->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+  copy->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
+
   GAME_BDD_FSM_CHECK_INSTANCE(copy);
 
   game_bdd_fsm_copy(self, copy);
@@ -416,13 +429,12 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
 {
   BddStates* withSuccessors;
   BddStates* withoutSuccessors;
+  int i;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  withSuccessors = 1 == player
-    ? &self->withSuccessorss[0] : &self->withSuccessorss[1];
-  withoutSuccessors = 1 == player
-    ? &self->woSuccessorss[0] : &self->woSuccessorss[1];
+  withSuccessors = &self->withSuccessorss[player-1];
+  withoutSuccessors = &self->woSuccessorss[player-1];
 
   /* check the cache. Compute if result has not been computed before */
   if (BDD_STATES(NULL) == *withSuccessors) {
@@ -431,25 +443,21 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
     /* with and without successor states are computed here only */
     nusmv_assert((bdd_ptr) NULL == *withoutSuccessors);
 
-    constrs[0] = GameBddFsm_get_invars(self,0);
-    constrs[1] = GameBddFsm_get_invars(self,1);
+    for(i=0;i<n_players;i++)
+      constrs[i] = GameBddFsm_get_invars(self,i);
 
-    if (1 == player) { /* FIRST PLAYER */
+     /* ALL PLAYER */
       bdd_ptr tmp;
-      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
-      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,0),
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[player-1]);
+      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,player-1),
                                                tmp);
       without = bdd_not(self->dd, with);
       bdd_free(self->dd, tmp);
-    }
-    else { /* SECOND PLAYER */
-      bdd_ptr tmp;
+
+
+    if (player > 1 )
+    { /* OTHER PLAYERS */
       bdd_ptr trans;
-      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[1]);
-      with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,1),
-                                               tmp);
-      without = bdd_not(self->dd, with);
-      bdd_free(self->dd, tmp);
 
       tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
       bdd_and_accumulate(self->dd, &with, tmp);
@@ -462,15 +470,17 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
       bdd_free(self->dd, trans);
     }
 
-    bdd_and_accumulate(self->dd, &with, constrs[0]);
-    bdd_and_accumulate(self->dd, &with, constrs[1]);
-    bdd_and_accumulate(self->dd, &without, constrs[0]);
-    bdd_and_accumulate(self->dd, &without, constrs[1]);
+    for(i=0;i<n_players;i++) {
+
+      bdd_and_accumulate(self->dd, &with, constrs[i]);
+      bdd_and_accumulate(self->dd, &without, constrs[i]);
+    }
+
     *withSuccessors = with;
     *withoutSuccessors = without;
 
-    bdd_free(self->dd, constrs[1]);
-    bdd_free(self->dd, constrs[0]);
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd, constrs[i]);
   }
 
   return *withSuccessors;
@@ -603,32 +613,32 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 
   /* add the second player constraints and move to the next state */
   bdd_and_accumulate(self->dd, &result, constrs[1]);
-        gameBddFsm_andInvar2TotalTime += util_cpu_time() - time;
+        gameBddFsm_andInvarTotalTime[1] += util_cpu_time() - time;
         time = util_cpu_time();
   tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
   bdd_free(self->dd, result);
   result = tmp;
-        gameBddFsm_moveGoalAndInvar2TotalTime += util_cpu_time() - time;
+        gameBddFsm_moveGoalAndInvarTotalTime[1] += util_cpu_time() - time;
         time = util_cpu_time();
 
   /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
   tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,1),
                                                 result);
   bdd_free(self->dd, result);
-        gameBddFsm_trans2TotalTime += util_cpu_time() - time;
+        gameBddFsm_transTotalTime[1] += util_cpu_time() - time;
         time = util_cpu_time();
   result = bdd_not(self->dd, tmp);
   bdd_free(self->dd, tmp);
-        gameBddFsm_notTrans2TotalTime += util_cpu_time() - time;
+        gameBddFsm_notTransTotalTime[1] += util_cpu_time() - time;
         time = util_cpu_time();
 
   /* add the first player constraints moved to the next state */
   tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
-        gameBddFsm_moveInvar1TotalTime += util_cpu_time() - time;
+        gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
         time = util_cpu_time();
   bdd_and_accumulate(self->dd, &result, tmp);
   bdd_free(self->dd, tmp);
-        gameBddFsm_andInvar1TotalTime += util_cpu_time() - time;
+        gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
         time = util_cpu_time();
 
   /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
@@ -638,13 +648,41 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
   /* negate if the game is for player 2 */
   result = 2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
   bdd_free(self->dd, tmp);
-        gameBddFsm_trans1TotalTime += util_cpu_time() - time;
+        gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
         time = util_cpu_time();
+
+
+
+//
+//
+//
+//  /* add the first player constraints moved to the next state */
+//  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
+//  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//  bdd_and_accumulate(self->dd, &result, tmp);
+//  bdd_free(self->dd, tmp);
+//  gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//
+//  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
+//  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
+//                                                result);
+//  bdd_free(self->dd, result);
+//  /* negate if the game is for player 2 */
+//  result = 2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
+//  bdd_free(self->dd, tmp);
+//  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//
+//
+//
+
 
   /* apply both constraints on the current state */
   bdd_and_accumulate(self->dd, &result, constrs[0]);
   bdd_and_accumulate(self->dd, &result, constrs[1]);
-        gameBddFsm_andInvar1AndInvar2TotalTime += util_cpu_time() - time;
+        gameBddFsm_andInvarsTotalTime += util_cpu_time() - time;
         time = util_cpu_time();
 
   bdd_free(self->dd, constrs[0]);
@@ -655,6 +693,128 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
      have a transition (i.e. it may be a deadlock and this is OK).
    */
        gameBddFsm_totalMoveTotalTime += util_cpu_time();
+  return BDD_STATES(result);
+}
+
+BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
+                                               BddStates goal,
+                                               int *players,int *opponents)
+{
+  /* Rewriting of the above formulas:
+
+     S_1 = Inv1 & Inv2 & E p1'.Tr1 & Inv1' & not E p2'.Tr2 & Inv2' & not goal
+
+     S_2 = Inv1 & Inv2 & not E p1'.Tr1 & Inv1' & not E p2'.Tr2 & Inv2' & goal
+  */
+
+  bdd_ptr tmp, constrs[n_players], result;
+  int i;
+  
+  GAME_BDD_FSM_CHECK_INSTANCE(self);
+
+  long time;
+
+  gameBddFsm_totalMoveTotalTime -= util_cpu_time();
+  time = util_cpu_time();
+
+  for(i=0;i<n_players;i++)
+    constrs[i] = GameBddFsm_get_invars(self,i);
+
+  /* depending on the player 'goal' or 'not goal' is used */
+  result = 1 == players[0] ? bdd_not(self->dd, goal) : bdd_dup(goal);
+
+  gameBddFsm_notGoalTotalTime += util_cpu_time() - time;
+  time = util_cpu_time();
+
+  /* Invariants of the next states MUST be added to the constraints,
+     i.e.  it is not enough to have invars in the input 'goal'.
+     Otherwise, for example, some states would be erroneously removed
+     from the result.
+  */
+
+  /* add the second player constraints and move to the next state */
+  bdd_and_accumulate(self->dd, &result, constrs[1]);
+  gameBddFsm_andInvarTotalTime[1] += util_cpu_time() - time;
+  time = util_cpu_time();
+  tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
+  bdd_free(self->dd, result);
+  result = tmp;
+  gameBddFsm_moveGoalAndInvarTotalTime[1] += util_cpu_time() - time;
+  time = util_cpu_time();
+
+  /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
+  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,1),
+                                                result);
+  bdd_free(self->dd, result);
+  gameBddFsm_transTotalTime[1] += util_cpu_time() - time;
+  time = util_cpu_time();
+  result = bdd_not(self->dd, tmp);
+  bdd_free(self->dd, tmp);
+  gameBddFsm_notTransTotalTime[1] += util_cpu_time() - time;
+  time = util_cpu_time();
+
+  /* add the first player constraints moved to the next state */
+  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
+  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
+  time = util_cpu_time();
+  bdd_and_accumulate(self->dd, &result, tmp);
+  bdd_free(self->dd, tmp);
+  gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
+  time = util_cpu_time();
+
+  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
+  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
+                                                result);
+  bdd_free(self->dd, result);
+  /* negate if the game is for player 2 */
+  result = 2 == players[0] ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
+  bdd_free(self->dd, tmp);
+  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
+  time = util_cpu_time();
+
+
+
+//
+//
+//
+//  /* add the first player constraints moved to the next state */
+//  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
+//  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//  bdd_and_accumulate(self->dd, &result, tmp);
+//  bdd_free(self->dd, tmp);
+//  gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//
+//  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
+//  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
+//                                                result);
+//  bdd_free(self->dd, result);
+//  /* negate if the game is for player 2 */
+//  result = 2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
+//  bdd_free(self->dd, tmp);
+//  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
+//  time = util_cpu_time();
+//
+//
+//
+
+
+  /* apply both constraints on the current state */
+  for(i=0;i<n_players;i++)
+    bdd_and_accumulate(self->dd, &result, constrs[i]);
+  
+  gameBddFsm_andInvarsTotalTime += util_cpu_time() - time;
+  time = util_cpu_time();
+
+  for(i=0;i<n_players;i++)
+    bdd_free(self->dd, constrs[i]);
+
+  /* this would make the player win only if opponent survive.
+     Probably, this is not good because if this is a goal state it may not
+     have a transition (i.e. it may be a deadlock and this is OK).
+   */
+  gameBddFsm_totalMoveTotalTime += util_cpu_time();
   return BDD_STATES(result);
 }
 
@@ -692,20 +852,23 @@ BddStates GameBddFsm_get_weak_forward_image(const GameBddFsm_ptr self,
   */
 
   bdd_ptr constrs[n_players], transs[n_players], tmp, result;
+  int i;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  constrs[0] = GameBddFsm_get_invars(self,0);
-  constrs[1] = GameBddFsm_get_invars(self,1);
-  transs[0] = BddFsm_get_monolithic_trans_bdd(self->players[0]);
-  transs[1] = BddFsm_get_monolithic_trans_bdd(self->players[1]);
+  for (i = 0; i < n_players; i++) {
+    constrs[i] = GameBddFsm_get_invars(self,i);
+    transs[i] = BddFsm_get_monolithic_trans_bdd(self->players[i]);
+  }
 
   /* compute the formula
      Exist p1 (Exist p2, tr2 & (tr1 & constrs[0] & constrs[1] & states))
   */
   tmp = bdd_dup(states);
-  bdd_and_accumulate(self->dd, &tmp, constrs[0]);
-  bdd_and_accumulate(self->dd, &tmp, constrs[1]);
+
+  for (i = 0; i < n_players; i++)
+    bdd_and_accumulate(self->dd, &tmp, constrs[i]);
+
   bdd_and_accumulate(self->dd, &tmp, transs[0]);
 
   result = BddTrans_get_forward_image_state(GameBddFsm_get_trans(self,1), tmp);
@@ -718,13 +881,13 @@ BddStates GameBddFsm_get_weak_forward_image(const GameBddFsm_ptr self,
   result = BddEnc_next_state_var_to_state_var(self->enc, tmp);
   bdd_free(self->dd, tmp);
 
-  bdd_and_accumulate(self->dd, &result, constrs[0]);
-  bdd_and_accumulate(self->dd, &result, constrs[1]);
+  for (i = 0; i < n_players; i++)
+    bdd_and_accumulate(self->dd, &result, constrs[i]);
 
-  bdd_free(self->dd, constrs[0]);
-  bdd_free(self->dd, constrs[1]);
-  bdd_free(self->dd, transs[0]);
-  bdd_free(self->dd, transs[1]);
+  for (i = 0; i < n_players; i++) {
+    bdd_free(self->dd, constrs[i]);
+    bdd_free(self->dd, transs[i]);
+  }
 
   return BDD_STATES(result);
 }
@@ -773,11 +936,12 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
                               int player)
 {
   bdd_ptr tmp, constrs[n_players], result;
+  int i;
 
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
-  constrs[0] = GameBddFsm_get_invars(self,0);
-  constrs[1] = GameBddFsm_get_invars(self,1);
+  for (i = 0; i < n_players; i++)
+    constrs[i] = GameBddFsm_get_invars(self,i);
 
   if (1 == player) {
     /* Any p2', Trans_2(p1,p2,p1',p2') & Invar_2(p1',p2') -> States(p1',p2')
@@ -806,20 +970,18 @@ BddStates GameBddFsm_get_move(const GameBddFsm_ptr self,
     result = BddEnc_state_var_to_next_state_var(self->enc, tmp);
     bdd_free(self->dd, tmp);
 
-    tmp = BddFsm_get_monolithic_trans_bdd(self->players[0]);
-    bdd_and_accumulate(self->dd, &result, tmp);
-    bdd_free(self->dd, tmp);
+    for (i = 0; i < n_players; i++) {
+      tmp = BddFsm_get_monolithic_trans_bdd(self->players[i]);
+      bdd_and_accumulate(self->dd, &result, tmp);
+      bdd_free(self->dd, tmp);
+    }
 
-    tmp = BddFsm_get_monolithic_trans_bdd(self->players[1]);
-    bdd_and_accumulate(self->dd, &result, tmp);
-    bdd_free(self->dd, tmp);
-
-    bdd_and_accumulate(self->dd, &result, constrs[0]);
-    bdd_and_accumulate(self->dd, &result, constrs[1]);
+    for (i = 0; i < n_players; i++)
+      bdd_and_accumulate(self->dd, &result, constrs[i]);
   }
 
-  bdd_free(self->dd, constrs[0]);
-  bdd_free(self->dd, constrs[1]);
+  for (i = 0; i < n_players; i++)
+    bdd_free(self->dd, constrs[i]);
 
   return result;
 }
@@ -943,6 +1105,97 @@ EXTERN boolean GameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
 
   default:
     ErrorMgr_internal_error(errmgr,"unknown intial condition interpretation");
+  } /* switch */
+
+  /* negate the goal states */
+  result = goalNegation ? bdd_not(dd_manager, goalStates) : bdd_dup(goalStates);
+
+  bdd_and_accumulate(dd_manager, &result, constrs[1]);
+  tmp = bdd_forsome(dd_manager,
+                    result,
+                    GameBddFsm_get_state_frozen_var_cube(self,1));
+  bdd_free(dd_manager, result);
+
+  result = p2Negation ? bdd_not(dd_manager, tmp) : bdd_dup(tmp);
+  bdd_free(dd_manager, tmp);
+
+  bdd_and_accumulate(dd_manager, &result, constrs[0]);
+
+  /* NEW_CODE */
+  /* Here is an optimisation:  (E p.G) != 0 <=> G != 0 and
+     (not E p.G) != 0 <=> G == 0. I.e. quantification of p1 is not required.
+     Benchmarking showed that this code is more efficient.
+  */
+  isOne = bdd_isnot_false(dd_manager, result);
+  if (p1Negation) isOne = !isOne;
+  bdd_free(dd_manager, result);
+
+  return isOne;
+}
+
+EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
+                                             const GameBddFsm_ptr self,
+                                             BddStates *constrs,
+                                             BddStates goalStates,
+                                             int *players,
+                                             char quantifiers)
+{
+  /* For developers: if the code of this function changes then
+     implementation of GameBddFsm_player_satisfies_from has to be
+     changed as well !!!
+  */
+
+  DDMgr_ptr dd_manager;
+  bdd_ptr tmp, result;
+  boolean isOne;
+  boolean goalNegation, p2Negation, p1Negation;
+
+  const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
+
+  GAME_BDD_FSM_CHECK_INSTANCE(self);
+
+  dd_manager = BddEnc_get_dd_manager(self->enc);
+
+  /* The above formulas can be rewritten as
+     Interpretation is "N":
+       for player 1 : E p1, Cnstr1 & not E p2, Cnstr2 & not Goal
+       for player 2 : not E p1, Cnstr1 & not E p2, Cnstr2 & Goal
+     Interpretation is "A":
+       for both players : not E p1, Cnstr1 & E p2, Cnstr2 & not Goal
+     Interpretation is "E":
+       for both players : E p1, Cnstr1 & E p2, Cnstr2 & Goal
+
+     The difference is only in negations. Lets identify them.
+  */
+
+  switch (quantifiers) {
+    case 'N': /* Normal interpretation of initial conditions */
+      if (1 == players[0]) {
+        p1Negation = false;
+        p2Negation = true;
+        goalNegation = true;
+      }
+      else {
+        p1Negation = true;
+        p2Negation = true;
+        goalNegation = false;
+      }
+          break;
+
+    case 'A': /* Universal interpration of initial conditions */
+      p1Negation = true;
+          p2Negation = false;
+          goalNegation = true;
+          break;
+
+    case 'E': /* Existential interpration of initial conditions */
+      p1Negation = false;
+          p2Negation = false;
+          goalNegation = false;
+          break;
+
+    default:
+      ErrorMgr_internal_error(errmgr,"unknown intial condition interpretation");
   } /* switch */
 
   /* negate the goal states */
@@ -1158,63 +1411,52 @@ void GameBddFsm_apply_synchronous_product(GameBddFsm_ptr self,
   {
     bdd_ptr tmp;
 
-    tmp = self->stateVarCubes[0];
-    self->stateVarCubes[0] = bdd_cube_union(self->dd,
-                                          self->stateVarCubes[0],
-                                          other->stateVarCubes[0]);
-    bdd_free(self->dd, tmp);
-    tmp = self->stateVarCubes[1];
-    self->stateVarCubes[1] = bdd_cube_union(self->dd,
-                                          self->stateVarCubes[1],
-                                          other->stateVarCubes[1]);
-    bdd_free(self->dd, tmp);
-    tmp = self->nextStateVarCubes[0];
-    self->nextStateVarCubes[0] = bdd_cube_union(self->dd,
-                                              self->nextStateVarCubes[0],
-                                              other->nextStateVarCubes[0]);
-    bdd_free(self->dd, tmp);
-    tmp = self->nextStateVarCubes[1];
-    self->nextStateVarCubes[1] = bdd_cube_union(self->dd,
-                                              self->nextStateVarCubes[1],
-                                              other->nextStateVarCubes[1]);
-    bdd_free(self->dd, tmp);
-    tmp = self->stateFrozenVarCubes[0];
-    self->stateFrozenVarCubes[0] = bdd_cube_union(self->dd,
-                                                self->stateFrozenVarCubes[0],
-                                                other->stateFrozenVarCubes[0]);
-    bdd_free(self->dd, tmp);
-    tmp = self->stateFrozenVarCubes[1];
-    self->stateFrozenVarCubes[1] = bdd_cube_union(self->dd,
-                                                self->stateFrozenVarCubes[1],
-                                                other->stateFrozenVarCubes[1]);
-    bdd_free(self->dd, tmp);
+    for (i = 0; i < n_players; i++) {
+      tmp = self->stateVarCubes[i];
+      self->stateVarCubes[i] = bdd_cube_union(self->dd,
+                                              self->stateVarCubes[i],
+                                              other->stateVarCubes[i]);
+      bdd_free(self->dd, tmp);
+    }
+
+    for (i = 0; i < n_players; i++) {
+      tmp = self->nextStateVarCubes[i];
+      self->nextStateVarCubes[i] = bdd_cube_union(self->dd,
+                                                  self->nextStateVarCubes[i],
+                                                  other->nextStateVarCubes[i]);
+      bdd_free(self->dd, tmp);
+    }
+
+    for (i = 0; i < n_players; i++) {
+      tmp = self->stateFrozenVarCubes[i];
+      self->stateFrozenVarCubes[i] = bdd_cube_union(self->dd,
+                                                    self->stateFrozenVarCubes[i],
+                                                    other->stateFrozenVarCubes[i]);
+      bdd_free(self->dd, tmp);
+    }
+
   }
 
   /* w, w/o successors cache: reset */
-  if (self->withSuccessorss[0]) {
-    bdd_free(self->dd, self->withSuccessorss[0]);
-    self->withSuccessorss[0] = BDD_STATES(NULL);
-  }
-  if (self->withSuccessorss[1]) {
-    bdd_free(self->dd, self->withSuccessorss[1]);
-    self->withSuccessorss[1] = BDD_STATES(NULL);
-  }
-  if (self->woSuccessorss[0]) {
-    bdd_free(self->dd, self->woSuccessorss[0]);
-    self->woSuccessorss[0] = BDD_STATES(NULL);
-  }
-  if (self->woSuccessorss[1]) {
-    bdd_free(self->dd, self->woSuccessorss[1]);
-    self->woSuccessorss[1] = BDD_STATES(NULL);
-  }
+  for (i = 0; i < n_players; i++)
+    if (self->withSuccessorss[i]) {
+      bdd_free(self->dd, self->withSuccessorss[i]);
+      self->withSuccessorss[i] = BDD_STATES(NULL);
+    }
+
+  for (i = 0; i < n_players; i++)
+    if (self->woSuccessorss[i]) {
+      bdd_free(self->dd, self->woSuccessorss[i]);
+      self->woSuccessorss[i] = BDD_STATES(NULL);
+    }
 
   /* player_1, 2: synchronous product of players */
   {
     bdd_ptr one;
 
     one = bdd_true(self->dd);
-      for(i=0;i<n_players;i++)
-    BddFsm_apply_synchronous_product_custom_varsets(self->players[i],
+    for(i=0;i<n_players;i++)
+      BddFsm_apply_synchronous_product_custom_varsets(self->players[i],
                                                     other->players[i],
                                                     self->stateVarCubes[i],
                                                     one,
@@ -1249,13 +1491,6 @@ static void game_bdd_fsm_init(GameBddFsm_ptr self,
     self->enc = enc;
   self->dd = BddEnc_get_dd_manager(enc);
 
-  self->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
-  self->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  self->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  self->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  self->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
-  self->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
-
     for(i=0;i<n_players;i++) {
 
         self->players[i] = players[i];
@@ -1271,6 +1506,12 @@ static void game_bdd_fsm_init(GameBddFsm_ptr self,
         self->woSuccessorss[i] = BDD_STATES(NULL);
 
     }
+
+  gameBddFsm_andInvarTotalTime = (long*)malloc(sizeof(long)*n_players);
+  gameBddFsm_moveGoalAndInvarTotalTime = (long*)malloc(sizeof(long)*n_players);
+  gameBddFsm_transTotalTime = (long*)malloc(sizeof(long)*n_players);
+  gameBddFsm_notTransTotalTime = (long*)malloc(sizeof(long)*n_players);
+  gameBddFsm_moveInvarTotalTime = (long*)malloc(sizeof(long)*n_players);
 
 }
 
@@ -1291,13 +1532,6 @@ static void game_bdd_fsm_copy(const GameBddFsm_ptr self, GameBddFsm_ptr copy)
 
   copy->enc = self->enc;
   copy->dd = self->dd;
-
-  copy->players = (BddFsm_ptr*)malloc(sizeof(BddFsm_ptr)*n_players);
-  copy->stateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  copy->nextStateVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  copy->stateFrozenVarCubes = (bdd_ptr*)malloc(sizeof(bdd_ptr)*n_players);
-  copy->withSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
-  copy->woSuccessorss = (BddStates*)malloc(sizeof(BddStates)*n_players);
 
     for(i=0;i<n_players;i++) {
 

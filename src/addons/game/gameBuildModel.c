@@ -356,14 +356,15 @@ GameBddFsm_ptr Game_CreateGameBddFsm(const FsmBuilder_ptr self,
   FSM_BUILDER_CHECK_INSTANCE(self);
   BDD_ENC_CHECK_INSTANCE(enc);
   GAME_SEXP_FSM_CHECK_INSTANCE(sexp_fsm);
-  SYMB_LAYER_CHECK_INSTANCE(layers[0]);
-  SYMB_LAYER_CHECK_INSTANCE(layers[1]);
+
+  for(i=0;i<n_players;i++)
+    SYMB_LAYER_CHECK_INSTANCE(layers[i]);
 
   dd = BddEnc_get_dd_manager(enc);
   one = bdd_true(dd);
 
-    for(i=0;i<n_players;i++)
-  players[i] = GameSexpFsm_get_player(sexp_fsm,i);
+  for(i=0;i<n_players;i++)
+    players[i] = GameSexpFsm_get_player(sexp_fsm,i);
 
   /* ---------------------------------------------------------------------- */
   /* Players variables cubes constraction                                   */

@@ -126,10 +126,12 @@ GameBeFsm_ptr GameBeFsm_create(BeFsm_ptr *players)
   GameBeFsm_ptr self;
   int i;
 
-  BE_FSM_CHECK_INSTANCE(players[0]);
-  BE_FSM_CHECK_INSTANCE(players[1]);
+  for(i=0;i<n_players;i++)
+    BE_FSM_CHECK_INSTANCE(players[i]);
 
   self = ALLOC(GameBeFsm, 1);
+  self->players = (BeFsm_ptr*)malloc(sizeof(BeFsm_ptr)*n_players);
+
   GAME_BE_FSM_CHECK_INSTANCE(self);
 
   game_be_fsm_init(self, players);
@@ -263,8 +265,6 @@ static void game_be_fsm_init(GameBeFsm_ptr self,
                              BeFsm_ptr *players)
 {
     int i;
-
-  self->players = (BeFsm_ptr*)malloc(sizeof(BeFsm_ptr)*n_players);
 
     for(i=0;i<n_players;i++)
   self->players[i] = players[i];

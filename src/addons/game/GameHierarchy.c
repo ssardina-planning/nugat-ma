@@ -164,6 +164,9 @@ GameHierarchy_ptr GameHierarchy_create(FlatHierarchy_ptr *players,
                                        node_ptr genreactivity)
 {
   GameHierarchy_ptr self = ALLOC(GameHierarchy, 1);
+
+  self->players = (FlatHierarchy_ptr*)malloc(sizeof(FlatHierarchy_ptr)*n_players);
+
   GAME_HIERARCHY_CHECK_INSTANCE(self);
 
   game_hierarchy_init(self,
@@ -490,9 +493,6 @@ void game_hierarchy_init(GameHierarchy_ptr self,
                          node_ptr genreactivity)
 {
   int i;
-
-  self->players = (FlatHierarchy_ptr*)malloc(sizeof(FlatHierarchy_ptr)*n_players);
-
   for(i=0;i<n_players;i++)
     self->players[i] = players[i];
 

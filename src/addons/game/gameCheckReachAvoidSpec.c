@@ -412,7 +412,10 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   FILE* outstream = StreamMgr_get_output_stream(streams);
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    int i;
+    int i, old_n_players;
+
+    old_n_players = n_players;
+    n_players = 2;
 
   PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
@@ -749,6 +752,8 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     bdd_free(dd_manager, invars[i]);
   }
 
+    n_players = old_n_players;
+
   return
     ( PropGame_ReachTarget == Prop_get_type(PROP(prop))
       || PropGame_ReachDeadlock == Prop_get_type(PROP(prop))
@@ -776,7 +781,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     FILE* outstream = StreamMgr_get_output_stream(streams);
     FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    int i;
+    int i,j;
 
     PROP_GAME_CHECK_INSTANCE(prop);
     nusmv_assert(PropGame_AtlReachTarget == Prop_get_type(PROP(prop)) ||
@@ -785,17 +790,45 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                  PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop)));
 
     /* flag which player this game is for */
-    int players[n_players];
-
-    int player;
+    int np = 0, no = 0 , avoidTarget = 0, playerTarget;
     char str[50];
 
-    for(i=0;i<n_players;i++) {
-        sprintf(str,"PLAYER_%d",i+1);
-        if(UStringMgr_find_string(strings,str) == PropGame_get_player(prop))
-            player = i+1;
+    char  *tmp;
+
+    strcpy(tmp,PropGame_get_player(prop)->text); // contain multiple players "PLAYER_1 PLAYER_2 ..."
+    int k,count=0;
+    char *p;
+    int length = strlen(tmp);
+
+    for (k = 0; k < length; k++)
+        if (tmp[k]==' ')
+            count++;
+
+    string_ptr playersProp[count];
+    k = 0;
+    p = strtok (tmp," ");
+    while (p != NULL)
+    {
+        playersProp[k++] = UStringMgr_find_string(strings,p);
+        p = strtok (NULL, " ");
     }
-    int opponent = (UStringMgr_find_string(strings,"PLAYER_1") == PropGame_get_player(prop)) ? 2 : 1;
+
+    int players[count], opponents[n_players-count];
+
+    int found;
+
+    for(i=0;i<n_players;i++) {
+        found = 0;
+        sprintf(str,"PLAYER_%d",i+1);
+        for(j=0;j<count;j++)
+            if(UStringMgr_find_string(strings,str) == playersProp[j])
+                found = 1;
+
+        if(found)
+            players[np++] = i+1;
+        else
+            opponents[no++] = i+1;
+    }
 
     char quantifiers = opt_game_game_initial_condition(oh);
 
@@ -830,8 +863,8 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         originalTarget = bdd_false(dd_manager);
     }
 
-    bdd_and_accumulate(dd_manager, &originalTarget, invars[0]);
-    bdd_and_accumulate(dd_manager, &originalTarget, invars[1]);
+    for(i=0;i<n_players;i++)
+        bdd_and_accumulate(dd_manager, &originalTarget, invars[i]);
 
     /* For avoidance games it is necessary to reverse the player and, as
        result, initial quantifiers (because now we play for the
@@ -840,9 +873,12 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     if (PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop)) ||
         PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop))) {
 
-        for(i=0;i<n_players;i++) players[i] = !players[i];
-//        players = 1 == players ? 2 : 1;
-//        opponents = 1 == opponents ? 2 : 1;
+        int *tmp;
+        *tmp = *players;
+        *players = *opponents;
+        *opponents = *tmp;
+        avoidTarget = 1;
+
         quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
                                          : quantifiers == 'E' ? 'A'
                                                               : quantifiers == 'A' ? 'E'
@@ -853,11 +889,9 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     reachStateList = cons(nodemgr,(node_ptr)bdd_dup(originalTarget), Nil);
 
     /* check whether the target can be reached at the initial state */
-    isTargetReached = false;
-
-    isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
-                                                    allReachStates, player,
-                                                    quantifiers);
+    isTargetReached = AtlGameBddFsm_can_player_satisfy(env,fsm, inits,
+                                                        allReachStates, players,
+                                                        quantifiers);
 
     /* Makes a few checks and prints a few warning in the case of
        suspicious input, i.e., if init is zero, target is zero or one.
@@ -918,21 +952,22 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         // This can speed up computation of pre-image.
 
         /* compute the strong pre-image for reach states and given player. */
-        isFixedpointReached = false;
-        for(i=0;i<n_players && !isFixedpointReached && !isTargetReached;i++) { // 0000000000000000000000
-            preImage = GameBddFsm_get_strong_backward_image(fsm, allReachStates,
-                                                            players[i]);
 
-            bdd_or_accumulate(dd_manager, &allReachStates, preImage);
+        preImage = AtlGameBddFsm_get_strong_backward_image(fsm, allReachStates,
+                                                        players,opponents);
 
-            isFixedpointReached = (previousReachStates == allReachStates);
+        bdd_or_accumulate(dd_manager, &allReachStates, preImage);
 
-            /* check reachability only if fixpoint has not been reached */
-            if (!isFixedpointReached) {
-                isTargetReached = GameBddFsm_can_player_satisfy(env,fsm, inits,
-                                                                allReachStates, players[i],
-                                                                quantifiers);
-            }
+        isFixedpointReached = (previousReachStates == allReachStates);
+
+        /* check reachability only if fixpoint has not been reached */
+        if (!isFixedpointReached) {
+            isTargetReached = AtlGameBddFsm_can_player_satisfy(env,fsm, inits,
+                                                            allReachStates, players,
+                                                            quantifiers);
+            if(isTargetReached) // TODO : remove and find a solution
+                playerTarget = players[i];
+
         }
 
         /* add to the list of reach states sets */
@@ -942,7 +977,6 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         bdd_free(dd_manager, preImage);
         bdd_free(dd_manager, previousReachStates);
     } /* while */
-
 
     /* auxiliary info */
     if(opt_verbose_level_gt(oh, 0)) {
@@ -1008,7 +1042,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                    removed by GameBddFsm_get_move.  They will be added later
                    in a separate field.
                 */
-                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), player);
+                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), playerTarget);
                 bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
 
                 bdd_or_accumulate(dd_manager, &trans, move);
@@ -1020,9 +1054,13 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             } /* while */
 
             /* add back the opponent-deadlock moves for the first player */
-            if (1 == player) {
-                bdd_or_accumulate(dd_manager, &trans,
-                                  GameBddFsm_without_successor_states(fsm, 2));
+            if (avoidTarget==0) {
+
+                for(i=0;i<no;i++)
+                    bdd_or_accumulate(dd_manager, &trans,
+                                      GameBddFsm_without_successor_states(fsm, opponents[i]));
+
+
             }
 
             /* free the list of reach-states differences, i.e. diffReachStateList */
@@ -1037,7 +1075,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             *strategy =
                     GameStrategy_construct(env,
                                            fsm,
-                                           player,
+                                           playerTarget,
                             /* initial quantifiers have been
                                reversed => reverse */
                                            (quantifiers !=
@@ -1058,16 +1096,21 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                not-reach states */
             winStates = bdd_not(dd_manager, allReachStates);
 
-            trans = GameBddFsm_get_move(fsm, winStates, opponent);
+            for(i=0;i<no;i++)
+                trans = GameBddFsm_get_move(fsm, winStates, opponents[i]);
+
             bdd_and_accumulate(dd_manager, &trans, winStates);
 
 
             /* for player 1 GameBddFsm_get_move removes opponent deadlock states.
                Add them back now.
             */
-            if (1 == opponent) {
-                bdd_or_accumulate(dd_manager, &trans,
-                                  GameBddFsm_without_successor_states(fsm, 2));
+            if (avoidTarget) {
+
+                for(i=0;i<np;i++)
+                    bdd_or_accumulate(dd_manager, &trans,
+                                      GameBddFsm_without_successor_states(fsm, players[i]));
+
             }
 
             zero = bdd_false(dd_manager);
@@ -1076,7 +1119,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             *strategy =
                     GameStrategy_construct(env,
                                            fsm,
-                                           opponent,
+                                           opponents[0], // TODO : remove 0 and find a solution
                             /*initial quantifiers have been reversed
                               => keep them */
                                            (quantifiers ==

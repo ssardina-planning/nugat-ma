@@ -157,6 +157,10 @@ EXTERN BddStates
 GameBddFsm_get_strong_backward_image ARGS((const GameBddFsm_ptr self,
                                            BddStates states,
                                            int player));
+EXTERN BddStates
+AtlGameBddFsm_get_strong_backward_image ARGS((const GameBddFsm_ptr self,
+                                                          BddStates states,
+                                                          int *players,int *opponents));
 
 EXTERN BddStates
 GameBddFsm_get_weak_forward_image ARGS((const GameBddFsm_ptr self,
@@ -172,6 +176,12 @@ EXTERN boolean GameBddFsm_can_player_satisfy ARGS((NuSMVEnv_ptr env,
                                                    BddStates goalStates,
                                                    int player,
                                                    char quantifiers));
+EXTERN boolean AtlGameBddFsm_can_player_satisfy ARGS((NuSMVEnv_ptr env,
+                                                          const GameBddFsm_ptr self,
+                                                          BddStates *constrs,
+                                                          BddStates goalStates,
+                                                          int *players,
+                                                          char quantifiers));
 
 EXTERN BddStates
 GameBddFsm_player_satisfies_from ARGS((const GameBddFsm_ptr self,

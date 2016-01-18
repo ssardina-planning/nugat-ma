@@ -370,9 +370,12 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
   /* Here we create a parse tree of a game structure from the read XML
      file. Player 1 is the input. Player 2 is the output. */
   {
-    node_ptr inits[n_players], transs[n_players], property;
+    node_ptr *inits, *transs, property;
     node_ptr modules[n_players];
     int i;
+
+    inits = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
+    transs = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
 
     property = Nil;
 

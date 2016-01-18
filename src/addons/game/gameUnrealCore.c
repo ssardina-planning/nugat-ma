@@ -1444,6 +1444,7 @@ static void
 game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
 {
     int i;
+  bool expr;
 
   nusmv_assert(self->layer == SYMB_LAYER(NULL));
 
@@ -1489,12 +1490,15 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
 
 
   /* Processes are not implemented for games. */
-  nusmv_assert(Nil == cdr(FlatHierarchy_get_assign(players[0])));
-  nusmv_assert(Nil == cdr(FlatHierarchy_get_assign(players[1])));
+  for(i=0;i<n_players;i++)
+    nusmv_assert(Nil == cdr(FlatHierarchy_get_assign(players[i])));
 
   /* Assignments are not implemented. See warning half a page below! */
-  nusmv_assert(Nil == cdr(car(FlatHierarchy_get_assign(players[0]))) &&
-               Nil == cdr(car(FlatHierarchy_get_assign(players[1]))));
+  expr = true;
+  for(i=0;i<n_players;i++)
+    expr &= Nil == cdr(car(FlatHierarchy_get_assign(players[i])));
+
+  nusmv_assert(expr);
 
   /* Standard properties are not implemented for games. */
   nusmv_assert(Nil == GameHierarchy_get_ctlspec(self->gh) &&
@@ -1529,8 +1533,8 @@ game_guard_game_hierarchy_with_parameters(Game_UnrealizableCore_Struct_ptr self)
      Note: this clearing makes COI or any dependencies check
            impossible. Be careful to invoke this function after all
            checkes are done. */
-  FlatHierarchy_clear_var_expr_associations(players[0]);
-  FlatHierarchy_clear_var_expr_associations(players[1]);
+  for(i=0;i<n_players;i++)
+    FlatHierarchy_clear_var_expr_associations(players[i]);
 
   /* Encode the created vars. */
   BaseEnc_commit_layer(BASE_ENC(self->bool_enc),

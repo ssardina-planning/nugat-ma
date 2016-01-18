@@ -220,8 +220,10 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
   if (0 != propErr) {
     GameHierarchy_destroy(mainGameHierarchy);
     mainGameHierarchy = GAME_HIERARCHY(NULL);
-    SymbTable_remove_layer(st, model_layers[0]);
-    SymbTable_remove_layer(st, model_layers[1]);
+
+      for(i=0;i<n_players;i++)
+    SymbTable_remove_layer(st, model_layers[i]);
+
     PropDb_clean(PROP_DB(NuSMVEnv_get_value(env, ENV_PROP_DB)));
     CompileFlatten_quit_flattener(env);
     cmp_struct_unset_read_model(cmps); /* resets also the command read_model */
@@ -288,7 +290,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
                             node_ptr *modules,
                             boolean expand_bounded_arrays)
 {
-  node_ptr tmp, iter;
+  node_ptr tmp, iter, iterloop;
   node_ptr ctlspec = Nil;
   node_ptr ltlspec = Nil;
   node_ptr invarspec = Nil;
@@ -302,6 +304,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
   node_ptr ltlgame = Nil;
   node_ptr genreactivity = Nil;
   node_ptr atlreachtarget = Nil;
+  bool expr;
 
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
@@ -333,10 +336,17 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
   free_assoc(instances);
 
   /* Processes are not allowed in realizability (game declaration). */
-  nusmv_assert(Nil != FlatHierarchy_get_assign(players[0]) &&
-               Nil != FlatHierarchy_get_assign(players[1]));
-  if (Nil != cdr(FlatHierarchy_get_assign(players[0])) ||
-      Nil != cdr(FlatHierarchy_get_assign(players[1]))) {
+  expr = true;
+  for(i=0;i<n_players;i++)
+    expr &= Nil != FlatHierarchy_get_assign(players[i]);
+
+  nusmv_assert(expr);
+
+  expr = false;
+  for(i=0;i<n_players;i++)
+    expr |= Nil != cdr(FlatHierarchy_get_assign(players[i]));
+
+  if (expr) {
     ErrorMgr_rpterr(errmgr,"A game declaration should not contain process declarations.\n");
   }
   /* input vars are not allowed. */
@@ -423,17 +433,54 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
        child is the body of spec.
     */
     if (list != (node_ptr*) NULL) {
-      spec = find_node(nodemgr,GAME_SPEC_WRAPPER,
-                       sym_intern(env,((car(spec)) == (node_ptr)1 ?
-                                   "PLAYER_1" :
-                                   "PLAYER_2")),
-                       cdr(spec));
-      *list = cons(nodemgr,spec, *list);
+      char str[50];
+
+//       if(spec->type==ATLREACHTARGET) {
+//         //iter = cdr(iter);
+//         spec = car(iter);
+//       }
+
+      node_ptr spec_body;
+
+      spec_body = cdr(spec);
+
+      if(spec->type==ATLREACHTARGET) {
+
+        char str2[50];
+
+        strcpy(str,"");
+        for (iterloop = car(spec); iterloop != Nil; iterloop = cdr(iterloop)) {
+
+          spec = car(iterloop);
+
+          if(NODE_TO_INT(car(spec))<1000) {
+
+            sprintf(str2, "PLAYER_%d ", NODE_TO_INT(car(spec)));
+            strcat(str,str2);
+          }
+        }
+
+      }
+      else sprintf(str, "PLAYER_%d", NODE_TO_INT(car(spec)));
+
+
+        spec = find_node(nodemgr, GAME_SPEC_WRAPPER,
+                         sym_intern(env, str),
+                         spec_body);
+
+        *list = cons(nodemgr, spec, *list);
+
+
+
     }
   } /* for */
 
-  if (FlatHierarchy_get_compassion(players[0]) != Nil ||
-      FlatHierarchy_get_compassion(players[1]) != Nil) {
+
+  expr = false;
+  for(i=0;i<n_players;i++)
+    expr |= FlatHierarchy_get_compassion(players[i]) != Nil;
+
+  if (expr) {
     fprintf(outstream,
          "WARNING *** The model contains COMPASSION declarations.        ***\n"
          "WARNING *** Full fairness is not yet fully supported in NuGaT. ***\n"

@@ -71,6 +71,15 @@ simple_list_expression
               | simple_list_expression TOK_COMMA simple_expression {$$ = cons(NODEMGR,$3, $1);}
               ;
 
+simple_players_list
+//        : TOK_NUMBER {$$=node_get_int($1);}
+//        | simple_players_list TOK_COMMA TOK_NUMBER {$$ = cons(NODEMGR,($3), ($1));}
+
+        : TOK_NUMBER {$$ = cons(NODEMGR,$1,Nil);}
+        | simple_players_list TOK_COMMA TOK_NUMBER {$$ = cons(NODEMGR,$3, $1);}
+        ;
+
+
 /* ------------------------------------------------------------------------ */
 /* ---------------------------- DECLARATIONS  ----------------------------- */
 /* ------------------------------------------------------------------------ */
@@ -215,10 +224,11 @@ reachtarget   : TOK_REACHTARGET player_num simple_expression optsemi
 #endif
                        }
               ;
-atlreachtarget   : TOK_ATLREACHTARGET player_num simple_expression optsemi
+atlreachtarget   : TOK_ATLREACHTARGET
+                    TOK_LP simple_players_list TOK_RP simple_expression optsemi
                         {
 #if HAVE_GAME
-                        $$ = new_lined_node(NODEMGR,ATLREACHTARGET, NODE_FROM_INT($2), $3, $1);
+                        $$ = new_lined_node(NODEMGR,ATLREACHTARGET, NODE_FROM_INT($3), $5, $1);
 #endif
                         }
               ;
