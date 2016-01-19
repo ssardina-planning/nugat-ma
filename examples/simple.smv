@@ -18,13 +18,12 @@ VAR
 INIT
   !x3
 
-
 -- realizable
 REACHTARGET 1 x2
 
-ATLREACHTARGET (1) x1 -- unrealizable
-ATLREACHTARGET (3) x3 -- unrealizable
-ATLREACHTARGET (1,2) x2 -- realizable
+ATLREACHTARGET (1) x2 -- unrealizable (reached at step0)
+ATLREACHTARGET (3) x2 -- unrealizable
+--ATLREACHTARGET (1,3) x2 -- realizable
 
 -- unrealizable
 AVOIDTARGET 2 x2

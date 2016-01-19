@@ -790,7 +790,8 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                  PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop)));
 
     /* flag which player this game is for */
-    int np = 0, no = 0 , avoidTarget = 0, playerTarget;
+    int np = 0, no = 0;
+    bool avoidTarget = false;
     char str[50];
 
     char  *tmp;
@@ -877,7 +878,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         *tmp = *players;
         *players = *opponents;
         *opponents = *tmp;
-        avoidTarget = 1;
+        avoidTarget = true;
 
         quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
                                          : quantifiers == 'E' ? 'A'
@@ -890,7 +891,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
     /* check whether the target can be reached at the initial state */
     isTargetReached = AtlGameBddFsm_can_player_satisfy(env,fsm, inits,
-                                                        allReachStates, players,
+                                                        allReachStates, players, np, opponents,
                                                         quantifiers);
 
     /* Makes a few checks and prints a few warning in the case of
@@ -954,7 +955,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         /* compute the strong pre-image for reach states and given player. */
 
         preImage = AtlGameBddFsm_get_strong_backward_image(fsm, allReachStates,
-                                                        players,opponents);
+                                                        players, np, opponents, avoidTarget);
 
         bdd_or_accumulate(dd_manager, &allReachStates, preImage);
 
@@ -963,11 +964,8 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         /* check reachability only if fixpoint has not been reached */
         if (!isFixedpointReached) {
             isTargetReached = AtlGameBddFsm_can_player_satisfy(env,fsm, inits,
-                                                            allReachStates, players,
+                                                            allReachStates, players, np, opponents,
                                                             quantifiers);
-            if(isTargetReached) // TODO : remove and find a solution
-                playerTarget = players[i];
-
         }
 
         /* add to the list of reach states sets */
@@ -1042,7 +1040,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                    removed by GameBddFsm_get_move.  They will be added later
                    in a separate field.
                 */
-                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), playerTarget);
+                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), players[0]);
                 bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
 
                 bdd_or_accumulate(dd_manager, &trans, move);
@@ -1075,7 +1073,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             *strategy =
                     GameStrategy_construct(env,
                                            fsm,
-                                           playerTarget,
+                                           players[0],
                             /* initial quantifiers have been
                                reversed => reverse */
                                            (quantifiers !=

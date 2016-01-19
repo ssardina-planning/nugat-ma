@@ -652,33 +652,6 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
         time = util_cpu_time();
 
 
-
-//
-//
-//
-//  /* add the first player constraints moved to the next state */
-//  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
-//  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
-//  time = util_cpu_time();
-//  bdd_and_accumulate(self->dd, &result, tmp);
-//  bdd_free(self->dd, tmp);
-//  gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
-//  time = util_cpu_time();
-//
-//  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
-//  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
-//                                                result);
-//  bdd_free(self->dd, result);
-//  /* negate if the game is for player 2 */
-//  result = 2 == player ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
-//  bdd_free(self->dd, tmp);
-//  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
-//  time = util_cpu_time();
-//
-//
-//
-
-
   /* apply both constraints on the current state */
   bdd_and_accumulate(self->dd, &result, constrs[0]);
   bdd_and_accumulate(self->dd, &result, constrs[1]);
@@ -698,7 +671,7 @@ BddStates GameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 
 BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
                                                BddStates goal,
-                                               int *players,int *opponents)
+                                               int *players, int np, int *opponents, bool avoidTarget)
 {
   /* Rewriting of the above formulas:
 
@@ -721,7 +694,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
     constrs[i] = GameBddFsm_get_invars(self,i);
 
   /* depending on the player 'goal' or 'not goal' is used */
-  result = 1 == players[0] ? bdd_not(self->dd, goal) : bdd_dup(goal);
+  result = !avoidTarget ? bdd_not(self->dd, goal) : bdd_dup(goal);
 
   gameBddFsm_notGoalTotalTime += util_cpu_time() - time;
   time = util_cpu_time();
@@ -732,51 +705,56 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
      from the result.
   */
 
-  /* add the second player constraints and move to the next state */
-  bdd_and_accumulate(self->dd, &result, constrs[1]);
-  gameBddFsm_andInvarTotalTime[1] += util_cpu_time() - time;
-  time = util_cpu_time();
-  tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
-  bdd_free(self->dd, result);
-  result = tmp;
-  gameBddFsm_moveGoalAndInvarTotalTime[1] += util_cpu_time() - time;
-  time = util_cpu_time();
+    for(i=0;i<n_players-np;i++) {
+        /* add the second player constraints and move to the next state */
+        bdd_and_accumulate(self->dd, &result, constrs[opponents[i]-1]);
+        gameBddFsm_andInvarTotalTime[opponents[i]-1] += util_cpu_time() - time;
+        time = util_cpu_time();
+        tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
+        bdd_free(self->dd, result);
+        result = tmp;
+        gameBddFsm_moveGoalAndInvarTotalTime[opponents[i]-1] += util_cpu_time() - time;
+        time = util_cpu_time();
 
-  /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
-  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,1),
-                                                result);
-  bdd_free(self->dd, result);
-  gameBddFsm_transTotalTime[1] += util_cpu_time() - time;
-  time = util_cpu_time();
-  result = bdd_not(self->dd, tmp);
-  bdd_free(self->dd, tmp);
-  gameBddFsm_notTransTotalTime[1] += util_cpu_time() - time;
-  time = util_cpu_time();
+        /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
+        tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, i),
+                                                      result);
+        bdd_free(self->dd, result);
+        gameBddFsm_transTotalTime[opponents[i]-1] += util_cpu_time() - time;
+        time = util_cpu_time();
+        result = bdd_not(self->dd, tmp);
+        bdd_free(self->dd, tmp);
+        gameBddFsm_notTransTotalTime[opponents[i]-1] += util_cpu_time() - time;
+        time = util_cpu_time();
+    }
+
+
 
   /* add the first player constraints moved to the next state */
-  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
-  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
-  time = util_cpu_time();
-  bdd_and_accumulate(self->dd, &result, tmp);
-  bdd_free(self->dd, tmp);
-  gameBddFsm_andInvarTotalTime[0] += util_cpu_time() - time;
-  time = util_cpu_time();
+    for(i=0;i<np;i++) {
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[players[i]-1]);
+      gameBddFsm_moveInvarTotalTime[players[i]-1] += util_cpu_time() - time;
+      time = util_cpu_time();
+      bdd_and_accumulate(self->dd, &result, tmp);
+      bdd_free(self->dd, tmp);
+      gameBddFsm_andInvarTotalTime[players[i]-1] += util_cpu_time() - time;
+      time = util_cpu_time();
 
-  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
-  tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,0),
-                                                result);
-  bdd_free(self->dd, result);
-  /* negate if the game is for player 2 */
-  result = 2 == players[0] ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
-  bdd_free(self->dd, tmp);
-  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
-  time = util_cpu_time();
+      /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
+      tmp = BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self,i),
+                                                    result);
+      bdd_free(self->dd, result);
+      /* negate if the game is for player 2 */
+      result = avoidTarget ? bdd_not(self->dd, tmp) : bdd_dup(tmp);
+      bdd_free(self->dd, tmp);
+      gameBddFsm_transTotalTime[players[i]-1] += util_cpu_time() - time;
+      time = util_cpu_time();
+    }
 
 
 
-//
-//
-//
+
+
 //  /* add the first player constraints moved to the next state */
 //  tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
 //  gameBddFsm_moveInvarTotalTime[0] += util_cpu_time() - time;
@@ -795,9 +773,9 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 //  bdd_free(self->dd, tmp);
 //  gameBddFsm_transTotalTime[0] += util_cpu_time() - time;
 //  time = util_cpu_time();
-//
-//
-//
+
+
+
 
 
   /* apply both constraints on the current state */
@@ -1137,7 +1115,7 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
                                              const GameBddFsm_ptr self,
                                              BddStates *constrs,
                                              BddStates goalStates,
-                                             int *players,
+                                             int *players, int np, int *opponents,
                                              char quantifiers)
 {
   /* For developers: if the code of this function changes then
@@ -1146,9 +1124,10 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
   */
 
   DDMgr_ptr dd_manager;
-  bdd_ptr tmp, result;
+  bdd_ptr tmp,tmp2, result;
   boolean isOne;
   boolean goalNegation, p2Negation, p1Negation;
+    int i;
 
   const ErrorMgr_ptr errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
 
@@ -1170,7 +1149,7 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
 
   switch (quantifiers) {
     case 'N': /* Normal interpretation of initial conditions */
-      if (1 == players[0]) {
+      if (1 == 1) {
         p1Negation = false;
         p2Negation = true;
         goalNegation = true;
@@ -1199,18 +1178,27 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
   } /* switch */
 
   /* negate the goal states */
-  result = goalNegation ? bdd_not(dd_manager, goalStates) : bdd_dup(goalStates);
+  for(i=0;i<n_players-np;i++) {
 
-  bdd_and_accumulate(dd_manager, &result, constrs[1]);
-  tmp = bdd_forsome(dd_manager,
-                    result,
-                    GameBddFsm_get_state_frozen_var_cube(self,1));
-  bdd_free(dd_manager, result);
+      result = goalNegation ? bdd_not(dd_manager, goalStates) : bdd_dup(goalStates);
 
-  result = p2Negation ? bdd_not(dd_manager, tmp) : bdd_dup(tmp);
-  bdd_free(dd_manager, tmp);
+      bdd_and_accumulate(dd_manager, &result, constrs[opponents[i]-1]);
 
-  bdd_and_accumulate(dd_manager, &result, constrs[0]);
+      tmp = bdd_forsome(dd_manager,
+                        result,
+                        GameBddFsm_get_state_frozen_var_cube(self, opponents[i]-1));
+    if(i==0) tmp2 = bdd_dup(tmp);
+    else bdd_and_accumulate(dd_manager, &tmp2, bdd_dup(tmp));
+
+    bdd_free(dd_manager, result);
+    bdd_free(dd_manager, tmp);
+  }
+
+  result = p2Negation ? bdd_not(dd_manager, tmp2) : bdd_dup(tmp2);
+  bdd_free(dd_manager, tmp2);
+
+  for(i=0;i<np;i++)
+      bdd_and_accumulate(dd_manager, &result, constrs[players[i]-1]);
 
   /* NEW_CODE */
   /* Here is an optimisation:  (E p.G) != 0 <=> G != 0 and

@@ -435,14 +435,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
     if (list != (node_ptr*) NULL) {
       char str[50];
 
-//       if(spec->type==ATLREACHTARGET) {
-//         //iter = cdr(iter);
-//         spec = car(iter);
-//       }
-
-      node_ptr spec_body;
-
-      spec_body = cdr(spec);
+      node_ptr spec_body = cdr(spec);
 
       if(spec->type==ATLREACHTARGET) {
 
@@ -463,14 +456,11 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
       }
       else sprintf(str, "PLAYER_%d", NODE_TO_INT(car(spec)));
 
+      spec = find_node(nodemgr, GAME_SPEC_WRAPPER,
+                       sym_intern(env, str),
+                       spec_body);
 
-        spec = find_node(nodemgr, GAME_SPEC_WRAPPER,
-                         sym_intern(env, str),
-                         spec_body);
-
-        *list = cons(nodemgr, spec, *list);
-
-
+      *list = cons(nodemgr, spec, *list);
 
     }
   } /* for */
