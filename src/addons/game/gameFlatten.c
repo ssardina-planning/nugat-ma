@@ -375,7 +375,7 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
   /* Check that the first player correctly used the second player
      variables. */
    /*NEW_CODE_START*/
-   SymbLayerIter iter2;
+   SymbLayerIter iter2; // TODO :  use players and opponents
    SymbLayer_gen_iter(model_layers[1], &iter2, STT_VAR);
    game_check_first_player(env,
                            symbol_table,

@@ -412,10 +412,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   FILE* outstream = StreamMgr_get_output_stream(streams);
   FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    int i, old_n_players;
-
-    old_n_players = n_players;
-    n_players = 2;
+    int i;
 
   PROP_GAME_CHECK_INSTANCE(prop);
   nusmv_assert(PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
@@ -449,16 +446,13 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
   boolean isFixedpointReached = false;
   int pathLength = 0;
 
-    for(i=0;i<n_players;i++)
+    for(i=0;i<n_players;i++) {
       /* prepare the initial states (obtain them and add the invariants) */
       inits[i] = GameBddFsm_get_init(fsm,i);
-
-    for(i=0;i<n_players;i++)
       invars[i] = GameBddFsm_get_invars(fsm,i);
 
-    for(i=0;i<n_players;i++)
       bdd_and_accumulate(dd_manager, &inits[i], invars[i]);
-
+    }
   /* initialize the original target states (reachability or avoidance target) */
   if (PropGame_ReachTarget == Prop_get_type(PROP(prop)) ||
       PropGame_AvoidTarget == Prop_get_type(PROP(prop))) {
@@ -752,8 +746,6 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     bdd_free(dd_manager, invars[i]);
   }
 
-    n_players = old_n_players;
-
   return
     ( PropGame_ReachTarget == Prop_get_type(PROP(prop))
       || PropGame_ReachDeadlock == Prop_get_type(PROP(prop))
@@ -781,7 +773,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     FILE* outstream = StreamMgr_get_output_stream(streams);
     FILE* errstream = StreamMgr_get_error_stream(streams);
 
-    int i,j;
+    int i,j, *players, *opponents, found;
 
     PROP_GAME_CHECK_INSTANCE(prop);
     nusmv_assert(PropGame_AtlReachTarget == Prop_get_type(PROP(prop)) ||
@@ -794,7 +786,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     bool avoidTarget = false;
     char str[50];
 
-    char  *tmp;
+    char  tmp[50];
 
     strcpy(tmp,PropGame_get_player(prop)->text); // contain multiple players "PLAYER_1 PLAYER_2 ..."
     int k,count=0;
@@ -814,14 +806,13 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
         p = strtok (NULL, " ");
     }
 
-    int players[count], opponents[n_players-count];
-
-    int found;
+    players = (int*)malloc(sizeof(int)*count);
+    opponents = (int*)malloc(sizeof(int)*(n_players-count));
 
     for(i=0;i<n_players;i++) {
         found = 0;
         sprintf(str,"PLAYER_%d",i+1);
-        for(j=0;j<count;j++)
+        for(j=0;j<count&&!found;j++)
             if(UStringMgr_find_string(strings,str) == playersProp[j])
                 found = 1;
 
@@ -874,10 +865,10 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
     if (PropGame_AtlAvoidTarget == Prop_get_type(PROP(prop)) ||
         PropGame_AtlAvoidDeadlock == Prop_get_type(PROP(prop))) {
 
-        int *tmp;
-        *tmp = *players;
+        int *tmp2;
+        *tmp2 = *players;
         *players = *opponents;
-        *opponents = *tmp;
+        *opponents = *tmp2;
         avoidTarget = true;
 
         quantifiers = quantifiers == 'N' ? 'N'  /* 'N' does not change */
@@ -1040,7 +1031,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                    removed by GameBddFsm_get_move.  They will be added later
                    in a separate field.
                 */
-                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), players[0]);
+                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), players[0]); // TODO : change in players
                 bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
 
                 bdd_or_accumulate(dd_manager, &trans, move);
@@ -1073,7 +1064,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             *strategy =
                     GameStrategy_construct(env,
                                            fsm,
-                                           players[0],
+                                           players[0], // TODO : use players
                             /* initial quantifiers have been
                                reversed => reverse */
                                            (quantifiers !=
@@ -1117,7 +1108,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             *strategy =
                     GameStrategy_construct(env,
                                            fsm,
-                                           opponents[0], // TODO : remove 0 and find a solution
+                                           opponents[0], // TODO : change in opponents
                             /*initial quantifiers have been reversed
                               => keep them */
                                            (quantifiers ==

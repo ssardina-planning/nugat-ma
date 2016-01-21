@@ -317,7 +317,7 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
       *property = new_node(nodemgr,AVOIDDEADLOCK, NODE_FROM_INT(2), Nil);
       success = true;
     }
-    /* Check if this is a reachability game. */
+    /* Check if this is a reachability game. */ // TODO : create for ATL reach game
     if ((!success) &&
         (Nil == reqs[0] && Nil != reqs[1] && OP_FUTURE == node_get_type(reqs[1]) &&
          PURE_PROPOSITIONAL == game_get_expression_kind(car(reqs[1])))) {

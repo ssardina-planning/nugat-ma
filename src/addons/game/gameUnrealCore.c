@@ -2251,10 +2251,12 @@ static void game_compute_core_using_parameters(NuSMVEnv_ptr env,
                                                fsm->bdd,
                                                winningCore);
     bdd_free(self->dd_manager, winningCore);
-    bdd_free(self->dd_manager, invar[1]);
-    bdd_free(self->dd_manager, invar[0]);
-    bdd_free(self->dd_manager, inits[1]);
-    bdd_free(self->dd_manager, inits[0]);
+
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd_manager, invar[i]);
+
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd_manager, inits[i]);
   }
   bdd_free(self->dd_manager, winningStates);
 
@@ -2676,10 +2678,11 @@ static boolean game_minimize_players_constraints(
     }
     free_opposite_list(nodemgr,bdd_inits);
 
-    bdd_free(self->dd_manager, invars[1]);
-    bdd_free(self->dd_manager, invars[0]);
-    bdd_free(self->dd_manager, inits[1]);
-    bdd_free(self->dd_manager, inits[0]);
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd_manager, invars[i]);
+
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd_manager, inits[i]);
 
     if (just_check && somethingChanged) return true;
   }

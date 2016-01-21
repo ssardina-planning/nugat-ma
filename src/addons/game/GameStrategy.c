@@ -480,7 +480,6 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
     for(i=0;i<n_players;i++) {
 
       inits[i] = GameBddFsm_get_init(fsm,i);
-
       invars[i] = GameBddFsm_get_invars(fsm,i);
 
       bdd_and_accumulate(self->dd_manager, &inits[i], invars[i]);
@@ -780,8 +779,8 @@ GameStrategy_ptr GameStrategy_construct(NuSMVEnv_ptr env,
     bdd_free(self->dd_manager, nextGoal);
   }/* end of SECOND PLAYER */
 
-  bdd_free(self->dd_manager, inits[0]);
-  bdd_free(self->dd_manager, inits[1]);
+  for(i=0;i<n_players;i++)
+    bdd_free(self->dd_manager, inits[i]);
 
   return self;
 }

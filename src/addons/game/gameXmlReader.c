@@ -406,7 +406,7 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
                         &transs,
                         &property);
 
-    node_ptr lst;
+    node_ptr tmp[n_players];
     for(i=0;i<n_players;i++){
 
       if (Nil != parseResult->varss[i]) {
@@ -431,14 +431,16 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
                                   Nil),
                          modules[i]);
 
+        if(i==n_players-1)
+          tmp[i] = cons(nodemgr,modules[i],Nil) ;
+        else
+          tmp[i] = cons(nodemgr,modules[i],tmp[i+1]) ;
     }
 
     /* Create a GAME structure as the NuGaT parser does it. */
     parsed_tree = new_node(nodemgr,GAME,
                            cons(nodemgr,property, Nil),
-                           cons(nodemgr,modules[0],
-                                cons(nodemgr,modules[1],
-                                     Nil /*modules list is empty*/)));
+                           tmp[0]);
 
 //     /* debugging printing */
    fprintf(errstream, "PARSED XML FILE:\nGAME\n\n");
@@ -1416,9 +1418,6 @@ static void gameXmlReader_XmlParseResult_destroy_parser(XmlParseResult_ptr self)
 static void gameXmlReader_XmlParseResult_destroy(XmlParseResult_ptr self)
 {
   int i;
-
-  self->varss = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
-  self->exps = (node_ptr*)malloc(sizeof(node_ptr)*n_players);
 
   for(i=0;i<n_players;i++) {
     self->varss[i] = Nil;

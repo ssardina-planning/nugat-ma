@@ -415,8 +415,8 @@ void Smgame_BatchMain(NuSMVEnv_ptr env)
        containing game specifications.
     */
 
-    PropDb_verify_all_type(prop_db, PropGame_ReachTarget);
     PropDb_verify_all_type(prop_db, PropGame_AtlReachTarget);
+    PropDb_verify_all_type(prop_db, PropGame_ReachTarget);
     PropDb_verify_all_type(prop_db, PropGame_AvoidTarget);
     PropDb_verify_all_type(prop_db, PropGame_ReachDeadlock);
     PropDb_verify_all_type(prop_db, PropGame_AvoidDeadlock);
