@@ -486,14 +486,14 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
                               invarspec,
                               pslspec,
                               compute,
-                              reachtarget,
-                              atlreachtarget,
-                              avoidtarget,
-                              reachdeadlock,
-                              avoiddeadlock,
-                              buchigame,
-                              ltlgame,
-                              genreactivity);
+                              reverse(reachtarget),
+                              reverse(atlreachtarget),
+                              reverse(avoidtarget),
+                              reverse(reachdeadlock),
+                              reverse(avoiddeadlock),
+                              reverse(buchigame),
+                              reverse(ltlgame),
+                              reverse(genreactivity));
 }
 
 /**Function********************************************************************
