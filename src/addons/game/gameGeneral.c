@@ -378,7 +378,8 @@ const char* Game_Who_to_string(const Game_Who w)
 
       for (i = 0; i < n_players; i++) {
         if(w==i+1) {
-          char str[50];
+          char *str;
+          str = (char*)malloc(sizeof(char)*50);
           sprintf(str,"%d",i+1);
           return str;
         }
