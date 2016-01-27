@@ -449,8 +449,9 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
           if(NODE_TO_INT(car(spec))<1000) {
 
             sprintf(str2, "PLAYER_%d ", NODE_TO_INT(car(spec)));
-            strcat(str,str2);
+            strcat(str2,str);
           }
+          strcpy(str,str2);
         }
 
       }
