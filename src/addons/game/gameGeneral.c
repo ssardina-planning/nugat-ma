@@ -339,7 +339,7 @@ Game_Who Game_Who_from_string(const char* s)
   }
 
   for(i=0;i<n_players;i++) {
-    char *str;
+    char str[50];
     sprintf(str, "%d", i + 1);
 
     if (strcmp(s, str) == 0) {
@@ -378,8 +378,7 @@ const char* Game_Who_to_string(const Game_Who w)
 
       for (i = 0; i < n_players; i++) {
         if(w==i+1) {
-          char *str;
-          str = (char*)malloc(sizeof(char)*10);
+          char str[50];
           sprintf(str,"%d",i+1);
           return str;
         }

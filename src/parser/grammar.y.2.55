@@ -186,7 +186,7 @@ players :   {$$=Nil;}
 //                printf("\n %d %d %d, ",$1->type,$1->lineno,node_get_int($1)); // DEBUG
 
                 int index=node_get_int($1)-1;
-                char* str;
+                char str[50];
 
 //                printf("\n%d",n_players); // DEBUG
 
