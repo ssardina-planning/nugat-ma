@@ -1031,9 +1031,10 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
                    removed by GameBddFsm_get_move.  They will be added later
                    in a separate field.
                 */
-                move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), players[0]); // TODO : change in players
-                bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
-
+                for(i=0;i<np;i++) {
+                    move = GameBddFsm_get_move(fsm, (bdd_ptr)car(targ), players[i]);
+                    bdd_and_accumulate(dd_manager, &move, (bdd_ptr)car(diff));
+                }
                 bdd_or_accumulate(dd_manager, &trans, move);
 
                 bdd_free(dd_manager, move);
@@ -1062,9 +1063,9 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
             /* construct the strategy */
             *strategy =
-                    GameStrategy_construct(env,
+                    AtlGameStrategy_construct(env,
                                            fsm,
-                                           players[0], // TODO : use players
+                                           players, np, opponents, avoidTarget,
                             /* initial quantifiers have been
                                reversed => reverse */
                                            (quantifiers !=
@@ -1106,9 +1107,9 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
             /* construct the strategy */
             *strategy =
-                    GameStrategy_construct(env,
+                    AtlGameStrategy_construct(env,
                                            fsm,
-                                           opponents[0], // TODO : change in opponents
+                                           opponents, np, players, !avoidTarget,
                             /*initial quantifiers have been reversed
                               => keep them */
                                            (quantifiers ==

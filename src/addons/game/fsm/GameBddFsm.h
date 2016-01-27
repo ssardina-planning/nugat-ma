@@ -152,6 +152,8 @@ EXTERN BddStates GameBddFsm_with_successor_states ARGS((GameBddFsm_ptr self,
 
 EXTERN BddStates GameBddFsm_without_successor_states ARGS((GameBddFsm_ptr self,
                                                            int player));
+EXTERN BddStates AtlGameBddFsm_without_successor_states ARGS((GameBddFsm_ptr self,
+                                                                  int *players, bool opponentsPlay));
 
 EXTERN BddStates
 GameBddFsm_get_strong_backward_image ARGS((const GameBddFsm_ptr self,

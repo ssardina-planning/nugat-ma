@@ -95,7 +95,7 @@ typedef struct GameStrategy_TAG* GameStrategy_ptr;
 /*---------------------------------------------------------------------------*/
 
 EXTERN GameStrategy_ptr GameStrategy_create ARGS((BddEnc_ptr bdd_enc,
-                                             int player,
+                                             int *players,
                                              boolean reverseInitialQuantifiers,
                                              bdd_ptr init_goal,
                                              bdd_ptr init_opponent_deadlock,
@@ -113,10 +113,16 @@ EXTERN GameStrategy_ptr GameStrategy_construct ARGS((NuSMVEnv_ptr env,
                                              bdd_ptr goal,
                                              bdd_ptr winningStates,
                                              bdd_ptr trans));
+EXTERN GameStrategy_ptr AtlGameStrategy_construct ARGS((NuSMVEnv_ptr env,GameBddFsm_ptr fsm,
+                                                            int *player, int np, int *opponents, bool opponentsPlay,
+                                                            boolean reverseInitialQuantifiers,
+                                                            bdd_ptr goal,
+                                                            bdd_ptr winningStates,
+                                                            bdd_ptr trans));
 
 EXTERN BddEnc_ptr GameStrategy_get_bdd_enc ARGS((GameStrategy_ptr self));
 
-EXTERN int GameStrategy_get_player ARGS((GameStrategy_ptr self));
+EXTERN int *GameStrategy_get_players ARGS((GameStrategy_ptr self));
 
 EXTERN bdd_ptr GameStrategy_get_init_goal ARGS((GameStrategy_ptr self));
 

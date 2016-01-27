@@ -488,6 +488,68 @@ BddStates GameBddFsm_with_successor_states(GameBddFsm_ptr self,
   return *withSuccessors;
 }
 
+BddStates AtlGameBddFsm_with_successor_states(GameBddFsm_ptr self,
+                                           int *players, int opponentsPlay)
+{
+  BddStates* withSuccessors;
+  BddStates* withoutSuccessors;
+  int i;
+
+  GAME_BDD_FSM_CHECK_INSTANCE(self);
+
+  withSuccessors = &self->withSuccessorss[players[0]-1];
+  withoutSuccessors = &self->woSuccessorss[players[0]-1];
+
+  /* check the cache. Compute if result has not been computed before */
+  if (BDD_STATES(NULL) == *withSuccessors) {
+    bdd_ptr constrs[n_players], with, without;
+
+    /* with and without successor states are computed here only */
+    nusmv_assert((bdd_ptr) NULL == *withoutSuccessors);
+
+    for(i=0;i<n_players;i++)
+      constrs[i] = GameBddFsm_get_invars(self,i);
+
+    /* ALL PLAYER */
+    bdd_ptr tmp;
+    tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[players[0]-1]);
+    with = BddTrans_get_backward_image_state(GameBddFsm_get_trans(self,players[0]-1),
+                                             tmp);
+    without = bdd_not(self->dd, with);
+    bdd_free(self->dd, tmp);
+
+
+    if (!opponentsPlay ) // TODO : use players and opponents
+    { /* OTHER PLAYERS */
+      bdd_ptr trans;
+
+      tmp = BddEnc_state_var_to_next_state_var(self->enc, constrs[0]);
+      bdd_and_accumulate(self->dd, &with, tmp);
+      bdd_and_accumulate(self->dd, &without, tmp);
+      bdd_free(self->dd, tmp);
+
+      trans = BddFsm_get_monolithic_trans_bdd(self->players[0]);
+      bdd_and_accumulate(self->dd, &with, trans);
+      bdd_and_accumulate(self->dd, &without, trans);
+      bdd_free(self->dd, trans);
+    }
+
+    for(i=0;i<n_players;i++) {
+
+      bdd_and_accumulate(self->dd, &with, constrs[i]);
+      bdd_and_accumulate(self->dd, &without, constrs[i]);
+    }
+
+    *withSuccessors = with;
+    *withoutSuccessors = without;
+
+    for(i=n_players-1;i>=0;i--)
+      bdd_free(self->dd, constrs[i]);
+  }
+
+  return *withSuccessors;
+}
+
 /**Function********************************************************************
 
   Synopsis    [ Returns the set of states without successors. ]
@@ -534,6 +596,25 @@ BddStates GameBddFsm_without_successor_states(GameBddFsm_ptr self,
   /* Check the cache. Compute if result has not been computed before. */
   if (BDD_STATES(NULL) == *withoutSuccessors) {
     GameBddFsm_with_successor_states(self, player);
+  }
+  nusmv_assert( (bdd_ptr)NULL != *withoutSuccessors);
+
+  return *withoutSuccessors;
+}
+
+BddStates AtlGameBddFsm_without_successor_states(GameBddFsm_ptr self,
+                                              int *players, bool opponentsPlay)
+{
+  BddStates* withoutSuccessors;
+
+  GAME_BDD_FSM_CHECK_INSTANCE(self);
+
+  withoutSuccessors = !opponentsPlay
+                      ? &self->woSuccessorss[0] : &self->woSuccessorss[1];
+
+  /* Check the cache. Compute if result has not been computed before. */
+  if (BDD_STATES(NULL) == *withoutSuccessors) {
+    AtlGameBddFsm_with_successor_states(self, players,opponentsPlay);
   }
   nusmv_assert( (bdd_ptr)NULL != *withoutSuccessors);
 
