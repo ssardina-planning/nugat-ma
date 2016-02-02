@@ -1243,7 +1243,7 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
 
   for(i=0;i<n_players-np;i++)
     if(i==0) tmp2 = bdd_dup(constrs[opponents[i]-1]);
-    else bdd_or_accumulate(dd_manager, &tmp2, bdd_dup(constrs[opponents[i]-1]));
+    else bdd_and_accumulate(dd_manager, &tmp2, bdd_dup(constrs[opponents[i]-1]));
 
   bdd_and_accumulate(dd_manager, &result, tmp2);
   bdd_free(dd_manager, tmp2);

@@ -16,13 +16,11 @@ TRANS
 VAR
   x2: boolean;
 TRANS
-  x1 = x3 = x4 -> next(x2)
+  (x1 = x3 & x3 = x4) -> next(x2)
 
 3
 VAR
     x3: boolean;
-INIT
-    x3
 TRANS
     x3 -> next(x3)
 

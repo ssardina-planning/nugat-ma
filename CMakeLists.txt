@@ -6,10 +6,15 @@ set(PROJECT_VERSION "0.6.5")
 
 set(NUGAT_SOURCE_DIR .)
 
+# USER NEEDS TO FIRST SET 2 ENV VARIABLES FOR NUSMV:
+#  export NUSMV_SOURCE_DIR=~/src/NuSMV/NuSMV-2.6.0/NuSMV/
+#  export NUSMV_BUILD_DIR=/opt/NuSMV-2.6.0/
+
 #set(NUSMV_SOURCE_DIR "/home/ssardina/src/NuSMV/NuSMV-2.6.0/NuSMV"
 #    CACHE PATH "Source directory of NuSMV")
 #set(NUSMV_BUILD_DIR "/opt/NuSMV-2.6.0/"
 #    CACHE PATH "Build directory of NuSMV")
+
 
 # User has to set up environment variables NUSMV_SOURCE_DIR and NUSMV_BUILD_DIR
 if(NOT EXISTS "$ENV{NUSMV_SOURCE_DIR}")
