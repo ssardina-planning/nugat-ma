@@ -1,0 +1,50 @@
+MODULE b1
+
+GAME
+
+1 -- sunny/cloudy
+VAR
+  x1: boolean;
+TRANS
+  x1 <-> !next(x1) -- invert state at each step
+
+2 -- wind/no wind
+VAR
+  x2: boolean;
+TRANS
+  x2 <-> !next(x2) -- invert state at each step
+
+3 -- solar panel
+VAR
+  x3: boolean;
+TRANS
+  x1 -> next(x3) -- IF sunny THEN solar panel works
+
+4 -- wind turbine
+VAR
+  x4: boolean;
+TRANS
+  x2 -> next(x4) -- IF windy then THEN turbine works
+
+5 -- battery charging/not charg.
+VAR
+   x5: boolean;
+TRANS
+   ( x1 = x3 | x2 = x4 ) -> next(x5) -- IF sunny -> solar panel works | windy -> wind turbine works THEN battery charging
+
+
+ATLREACHTARGET (1)       x5 -- unrealizable
+ATLREACHTARGET (2)       x5 -- unrealizable
+ATLREACHTARGET (3)       x5 -- unrealizable
+ATLREACHTARGET (4)       x5 -- unrealizable
+ATLREACHTARGET (1,2)     x5 -- unrealizable
+ATLREACHTARGET (1,3)     x5 -- realizable
+ATLREACHTARGET (1,4)     x5 -- unrealizable
+ATLREACHTARGET (2,3)     x5 -- unrealizable
+ATLREACHTARGET (2,4)     x5 -- realizable
+ATLREACHTARGET (3,4)     x5 -- unrealizable
+ATLREACHTARGET (1,2,3)   x5 -- realizable
+ATLREACHTARGET (1,2,4)   x5 -- realizable
+ATLREACHTARGET (1,3,4)   x5 -- realizable
+ATLREACHTARGET (2,3,4)   x5 -- realizable
+ATLREACHTARGET (1,2,3,4) x5 -- realizable
