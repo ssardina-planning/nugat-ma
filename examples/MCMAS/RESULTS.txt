@@ -8,9 +8,9 @@
 =======================================================================
                        MCMAS v1.2.2 
 =======================================================================
-Command line: ./mcmas-linux64-1.2.2 examples-nitin/OK-simple_card_game.ispl
+Command line: ./mcmas-linux64-1.2.2 OK-simple_card_game.ispl
 
-examples-nitin/OK-simple_card_game.ispl has been parsed successfully.
+OK-simple_card_game.ispl has been parsed successfully.
 Global syntax checking...
 Done
 Encoding BDD parameters...
@@ -106,9 +106,9 @@ Successful termination
 =======================================================================
                        MCMAS v1.2.2 
 =======================================================================
-Command line: ./mcmas-linux64-1.2.2 examples-nitin/OK-Tianji_horse_racing_game.ispl
+Command line: ./mcmas-linux64-1.2.2 OK-Tianji_horse_racing_game.ispl
 
-examples-nitin/OK-Tianji_horse_racing_game.ispl has been parsed successfully.
+OK-Tianji_horse_racing_game.ispl has been parsed successfully.
 Global syntax checking...
 Done
 Encoding BDD parameters...
