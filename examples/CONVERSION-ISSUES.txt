@@ -1,16 +1,32 @@
+========================================
+        m : mcmas-1.2.2
+        n : nugat-0.6.5
+========================================
+m : Obsvars ... end Obsvars
+n : VARS ... -- (for environmental agent)
 
-mcmas : a=b if c=d
-nugat : c=d -> next(a)=b
+m : Vars: ... end Vars
+n : VAR ...
 
-mcmas : Protocol
-nugat :
-    case
-      a=b : next(x) in {t}
+m : Actions : {cont1,cont2}
+n : VAR actions1 : {cont1,cont2}
+
+m : Protocol ... end Protocol
+n : case
+        a=b : next(actions1) in {cont1}
     esac
 
-mcmas : -- min 1 chars
-VAR
-    var1 : {1}
-nugat : -- min 2 chars
-VAR
-    var1 : {123}
+m : Evolution ... end Evolution
+n : split into each agent with TRANS
+
+m : a=b if c=d
+n : c=d -> next(a=b)
+
+m : InitStates ... end InitStates
+n : split into each agent with INIT
+
+m : VAR var1 : {A}  -- at least 1 chars
+n : VAR var1 : {AB} -- at least 2 chars
+
+m : Groups ... end Groups
+n : not used
