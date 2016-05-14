@@ -793,7 +793,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 
     bdd_and_accumulate(self->dd, &result, tmp);
 
-    /* add the second player constraints and move to the next state */
+    /* add the enemies constraints and move to the next state */
     gameBddFsm_andInvar2TotalTime += util_cpu_time() - time;
     time = util_cpu_time();
     tmp = BddEnc_state_var_to_next_state_var(self->enc, result);
@@ -817,7 +817,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
     gameBddFsm_notTrans2TotalTime += util_cpu_time() - time;
     time = util_cpu_time();
 
-
+  /* add the coalition constraints moved to the next state */
     gameBddFsm_moveInvar1TotalTime += util_cpu_time() - time;
     time = util_cpu_time();
 
@@ -831,9 +831,8 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
     bdd_and_accumulate(self->dd, &result, tmp);
     bdd_free(self->dd, tmp);
 
-  /* add the first player constraints moved to the next state */
+  /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
     for(i=0;i<np;i++)
-        /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
         if(i==0) tmp = bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, players[i] - 1),result));
         else bdd_and_accumulate(self->dd, &tmp, bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, players[i] - 1),result)));
 

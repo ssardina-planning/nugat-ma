@@ -6,27 +6,32 @@ GAME
 VAR
   x1: boolean;
 TRANS
-  x2 -> !next(x1) -- IF available plane THEN van is busy on next state because boarded
+  x2 -> !next(x1)
+  -- IF available ship THEN van is busy on next state because boarded
 TRANS
-  x3 -> !next(x1) -- IF available ship THEN van is busy on next state because boarded
+  x3 -> !next(x1)
+  -- IF available plane THEN van is busy on next state because boarded
 
-2 -- one plane
+2 -- one ship
 VAR
   x2: boolean;
 TRANS
-  x1 -> !next(x2) -- IF available van THEN plane is busy on next state
+  x1 -> !next(x2)
+  -- IF available van THEN ship is busy on next state
 
-3 -- one ship
+3 -- one plane
 VAR
   x3: boolean;
 TRANS
-  x1 -> !next(x3) -- IF available van THEN ship is busy on next state
+  x1 -> !next(x3)
+  -- IF available van THEN plane is busy on next state
 
 4 -- delivery service between two islands
 VAR
   x4: boolean;
 TRANS
-  x1 = ( x2 | x3 )   -> next(x4) -- IF available van with a plane or a ship THEN delivery is possible between two islands
+  x1 = ( x2 | x3 ) -> next(x4)
+  -- IF available van with a ship or a plane THEN delivery is possible between two islands
 
 ATLREACHTARGET (1)       x4 -- unrealizable
 ATLREACHTARGET (2)       x4 -- unrealizable

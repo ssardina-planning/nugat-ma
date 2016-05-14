@@ -1,0 +1,16 @@
+
+mcmas : a=b if c=d
+nugat : c=d -> next(a)=b
+
+mcmas : Protocol
+nugat :
+    case
+      a=b : next(x) in {t}
+    esac
+
+mcmas : -- min 1 chars
+VAR
+    var1 : {1}
+nugat : -- min 2 chars
+VAR
+    var1 : {123}

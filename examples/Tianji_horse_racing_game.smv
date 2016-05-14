@@ -1,0 +1,104 @@
+MODULE b1
+
+GAME
+
+1 -- Tianji
+VAR
+  state1   : {HML, HM, ML, HL, Honly, Monly, Lonly, none};
+  actions1 : {Honly, Monly, Lonly, none};
+INIT
+  state1=HML;
+TRANS
+  case
+    state1=HML: next(actions1) in {Honly, Monly, Lonly};
+    state1=HM: next(actions1) in {Honly, Monly};
+    state1=ML: next(actions1) in {Monly, Lonly};
+    state1=HL: next(actions1) in {Honly, Lonly};
+    state1=Honly: next(actions1) in {Honly};
+    state1=Monly: next(actions1) in {Monly};
+    state1=Lonly: next(actions1) in {Lonly};
+    state1=none: next(actions1) in {none};
+  esac
+TRANS
+  state1=HML & actions1=Lonly -> next(state1=HM);
+TRANS
+  state1=HML & actions1=Honly -> next(state1=ML);
+TRANS
+  state1=HML & actions1=Monly -> next(state1=HL);
+TRANS
+  state1=HM & actions1=Monly -> next(state1=Honly);
+TRANS
+  state1=HM & actions1=Honly -> next(state1=Monly);
+TRANS
+  state1=HL & actions1=Lonly -> next(state1=Honly);
+TRANS
+  state1=HL & actions1=Honly -> next(state1=Lonly);
+TRANS
+  state1=ML & actions1=Lonly -> next(state1=Monly);
+TRANS
+  state1=ML & actions1=Monly -> next(state1=Lonly);
+TRANS
+  (state1=Honly & actions1=Honly) | (state1=Monly & actions1=Monly) | (state1=Lonly & actions1=Lonly) -> next(state1=none);
+-- TRANS
+  --state1=none -> next(state1=HML);
+
+
+2 -- King
+VAR
+  state2   : {HML, ML, Lonly, none};
+  actions2 : {Honly, Monly, Lonly, none};
+INIT
+  state2=HML;
+TRANS
+  case
+    state2=HML: next(actions2) in {Honly};
+    state2=ML: next(actions2) in {Monly};
+    state2=Lonly: next(actions2) in {Lonly};
+    state2=none: next(actions2) in {none};
+  esac
+TRANS
+  state2=HML & actions2=Honly -> state2=ML;
+TRANS
+  state2=ML & actions2=Monly -> state2=Lonly;
+TRANS
+  state2=Lonly & actions2=Lonly -> state2=none;
+--TRANS
+  --state2=none -> state2=HML;
+
+3 -- Environment (complete)
+VAR
+  a: 0..3;
+  b: 0..3;
+  Tianjiwin : boolean;
+  Kingwin : boolean;
+  Tianjinotwin : boolean;
+INIT
+  a=0;
+INIT
+  b=0;
+TRANS
+   (actions1=Honly & actions2=Honly) |
+    		(actions1=Monly & actions2=Monly) |
+    		(actions1=Lonly & actions2=Lonly) |
+    		(actions1=Honly & actions2=Monly) |
+    		(actions1=Monly & actions2=Lonly) |
+    		(actions1=Honly & actions2=Lonly) -> next(a=a+1);
+TRANS
+    (actions1=Honly & actions2=Honly) |
+    		(actions1=Monly & actions2=Monly) |
+    		(actions1=Lonly & actions2=Lonly) |
+    		(actions1=Monly & actions2=Honly) |
+    		(actions1=Lonly & actions2=Monly) |
+    		(actions1=Lonly & actions2=Honly) -> next(b=b+1);
+    	--a=0 & b=0 if actions1=none & actions2=none;
+TRANS
+  a>b & (a+b)=3 -> next(Tianjiwin);
+TRANS
+  a<b & (a+b)=3 -> next(Kingwin);
+TRANS
+  a<=b -> next(Tianjinotwin);
+
+ATLREACHTARGET (1)     Tianjiwin -- realizable
+ATLREACHTARGET (1)     Kingwin   -- realizable
+ATLREACHTARGET (2)     Tianjiwin -- unrealizable
+ATLREACHTARGET (2)     Kingwin   -- unrealizable

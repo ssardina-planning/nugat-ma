@@ -1,0 +1,41 @@
+MODULE b
+
+GAME
+
+1  -- Broken Car
+VAR
+  x1: boolean;
+INIT
+  !x1
+TRANS
+  !x1 -> next(!x1)
+
+2 -- Owner
+VAR
+  x2: boolean;
+INIT
+  x2
+TRANS
+  x2 -> !next(x2)
+
+3 -- Mechanic
+VAR
+  x3: boolean;
+INIT
+  !x3
+TRANS
+  !x3 <-> next(x3)
+
+4 -- Repair Service
+VAR
+  x4: boolean;
+TRANS
+  (x1 = x2 & x2 = x3) -> next(x4)
+
+ATLREACHTARGET (1)       x4 -- unrealizable
+ATLREACHTARGET (2)       x4 -- unrealizable
+ATLREACHTARGET (3)       x4 -- unrealizable
+ATLREACHTARGET (1,2)     x4 -- unrealizable
+ATLREACHTARGET (1,3)     x4 -- unrealizable
+ATLREACHTARGET (2,3)     x4 -- unrealizable
+ATLREACHTARGET (1,2,3)   x4 -- unrealizable
