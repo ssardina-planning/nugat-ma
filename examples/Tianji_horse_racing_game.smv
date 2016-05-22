@@ -67,8 +67,8 @@ TRANS
 
 3 -- Environment (complete)
 VAR
-  a: 0..3;
-  b: 0..3;
+  a: 0..1000;
+  b: 0..1000;
   Tianjiwin : boolean;
   Kingwin : boolean;
   Tianjinotwin : boolean;

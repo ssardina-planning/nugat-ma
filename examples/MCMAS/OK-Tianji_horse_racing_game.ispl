@@ -12,8 +12,8 @@
 
 Agent Environment
     Obsvars:
-    	a: 0..3;
-    	b: 0..3;
+    	a: 0..1000;
+    	b: 0..1000;
     end Obsvars
     Actions = {none};
     Protocol:
@@ -21,10 +21,10 @@ Agent Environment
     end Protocol
     Evolution:
     	a=a+1 if (Tianji.Action=H and King.Action=H) or
-    		(Tianji.Action=M and King.Action=M) or 
+    		(Tianji.Action=M and King.Action=M) or
     		(Tianji.Action=L and King.Action=L) or
     		(Tianji.Action=H and King.Action=M) or
-    		(Tianji.Action=M and King.Action=L) or 
+    		(Tianji.Action=M and King.Action=L) or
     		(Tianji.Action=H and King.Action=L);
     	b=b+1 if (Tianji.Action=H and King.Action=H) or
     		(Tianji.Action=M and King.Action=M) or

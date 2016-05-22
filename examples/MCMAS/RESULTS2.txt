@@ -1,0 +1,127 @@
+************************************************************************
+************************************************************************
+************************************************************************
+                               EXAMPLE1
+************************************************************************
+************************************************************************
+************************************************************************
+=======================================================================
+                       MCMAS v1.2.2 
+=======================================================================
+Command line: ./mcmas-linux64-1.2.2 OK-simple_card_game.ispl
+
+OK-simple_card_game.ispl has been parsed successfully.
+Global syntax checking...
+Done
+Encoding BDD parameters...
+Building partial transition relation...
+Building BDD for initial states...
+Building reachable state space...
+Checking formulae...
+Verifying properties...
+  Formula number 1: (<g1>F p1win), is TRUE in the model
+  Formula number 2: (<g2>F p1win), is FALSE in the model
+done, 2 formulae successfully read and checked
+_____execution time = 0.0(08-02) -- 0.002 more frequent
+number of reachable states = 12
+BDD memory in use = 9015920
+=======================================================================
+*** This is NuGaT 0.6.0 (compiled on Wed Jan 27 05:06:38 UTC 2016)
+=======================================================================
+The sexp model has been built from file examples/Tianji_horse_racing_game.smv.
+
+The model has been built from file examples/Tianji_horse_racing_game.smv.
+computing   AtlReachTarget PLAYER_1  Tianjiwin
+
+-----------------------------
+Reach-target algorithm: iteration 0
+
+-----------------------------
+Reach-target algorithm: iteration 1
+The number of iterations for strategy computation is 2.
+--   AtlReachTarget PLAYER_1  Tianjiwin  : the strategy has been found
+
+computing   AtlReachTarget PLAYER_1  Kingwin
+
+-----------------------------
+Reach-target algorithm: iteration 0
+
+-----------------------------
+Reach-target algorithm: iteration 1
+The number of iterations for strategy computation is 2.
+--   AtlReachTarget PLAYER_1  Kingwin  : the strategy has been found
+
+computing   AtlReachTarget PLAYER_2  Tianjiwin
+
+-----------------------------
+Reach-target algorithm: iteration 0
+
+-----------------------------
+Reach-target algorithm: iteration 1
+The number of iterations for strategy computation is 2.
+--   AtlReachTarget PLAYER_2  Tianjiwin  : no strategy exists
+
+computing   AtlReachTarget PLAYER_2  Kingwin
+
+-----------------------------
+Reach-target algorithm: iteration 0
+
+-----------------------------
+Reach-target algorithm: iteration 1
+The number of iterations for strategy computation is 2.
+--   AtlReachTarget PLAYER_2  Kingwin  : no strategy exists
+
+######################################################################
+Runtime Statistics
+------------------
+Machine name: lorenzo-GL552JX
+User time    0.742 seconds
+System time  0.004 seconds
+
+Average resident text size       =     0K
+Average resident data+stack size =     0K
+Maximum resident size            =  9220K
+
+Virtual text size                =  6673K
+Virtual data size                = 25970K
+    data size initialized        =  3078K
+    data size uninitialized      =    78K
+    data size sbrk               = 22814K
+Virtual memory limit             = -2147483648K (-2147483648K)
+
+Major page faults = 0
+Minor page faults = 1808
+Swaps = 0
+Input blocks = 96
+Output blocks = 0
+Context switch (voluntary) = 2
+Context switch (involuntary) = 208
+######################################################################
+BDD statistics
+--------------------
+BDD nodes allocated: 21130
+--------------------
+Statistics on Game BDD FSM.
+Statistics on player 0 :
+Statistics on BDD FSM machine.
+BDD nodes representing init set of states: 4
+BDD nodes representing state constraints: 1
+BDD nodes representing input constraints: 1
+Forward Partitioning Schedule BDD cluster size (#nodes):
+cluster 1       :       size 92
+Backward Partitioning Schedule BDD cluster size (#nodes):
+cluster 1       :       size 92
+Statistics on player 1 :
+Statistics on BDD FSM machine.
+BDD nodes representing init set of states: 3
+BDD nodes representing state constraints: 1
+BDD nodes representing input constraints: 1
+Forward Partitioning Schedule BDD cluster size (#nodes):
+cluster 1       :       size 14
+Backward Partitioning Schedule BDD cluster size (#nodes):
+cluster 1       :       size 14
+Quitting the Game package... 
+Quitting the BMC package... 
+Done 
+
+Successful termination
