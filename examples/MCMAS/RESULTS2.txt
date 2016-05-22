@@ -8,9 +8,9 @@
 =======================================================================
                        MCMAS v1.2.2 
 =======================================================================
-Command line: ./mcmas-linux64-1.2.2 OK-simple_card_game.ispl
+Command line: ./examples/MCMAS/mcmas-linux64-1.2.2 examples/MCMAS/OK-Tianji_horse_racing_game.ispl
 
-OK-simple_card_game.ispl has been parsed successfully.
+examples/MCMAS/OK-Tianji_horse_racing_game.ispl has been parsed successfully.
 Global syntax checking...
 Done
 Encoding BDD parameters...
@@ -19,12 +19,14 @@ Building BDD for initial states...
 Building reachable state space...
 Checking formulae...
 Verifying properties...
-  Formula number 1: (<g1>F p1win), is TRUE in the model
-  Formula number 2: (<g2>F p1win), is FALSE in the model
-done, 2 formulae successfully read and checked
-_____execution time = 0.0(08-02) -- 0.002 more frequent
-number of reachable states = 12
-BDD memory in use = 9015920
+  Formula number 1: (<g1>F Tianjiwin), is TRUE in the model
+  Formula number 2: (<g1>F Kingwin), is TRUE in the model
+  Formula number 3: (<g2>F Tianjiwin), is FALSE in the model
+  Formula number 4: (<g2>F Kingwin), is FALSE in the model
+done, 4 formulae successfully read and checked
+execution time = 0.484
+number of reachable states = 16
+BDD memory in use = 11460064
 =======================================================================
 *** This is NuGaT 0.6.0 (compiled on Wed Jan 27 05:06:38 UTC 2016)
 =======================================================================
