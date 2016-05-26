@@ -1,0 +1,983 @@
+-- Software development example in the paper Towards verifying contract regulated service composition in ICWS 2008
+MODULE b1
+
+GAME
+
+1 -- HardwareSupplier
+VAR
+    stateHS : { HardwareSupplier_0, HardwareSupplier_1, HardwareSupplier_2, HardwareSupplier_3, HardwareSupplier_4, HardwareSupplier_5, HardwareSupplier_6, HardwareSupplier_7, HardwareSupplier_8, HardwareSupplier_9, HardwareSupplier_10, HardwareSupplier_11, HardwareSupplier_12, HardwareSupplier_13, HardwareSupplier_14 };
+    failCountHS : 0..3;
+    actionsHS : {HardwareSupplier_receiveC, HardwareSupplier_Pick1__0, HardwareSupplier_Pick1__1, HardwareSupplier_toClient, HardwareSupplier_Invoke2, HardwareSupplier_fromClient1, HardwareSupplier_fromPSPSPE, HardwareSupplier_While1, HardwareSupplier_Pick2__0, HardwareSupplier_Pick2__1, HardwareSupplier_Pick2__2, HardwareSupplier_DeployPassed, HardwareSupplier_Assign1, HardwareSupplier_DeplyFailed, HardwareSupplier_Assign2, HardwareSupplier_Invoke1, nothing };
+
+INIT
+    stateHS = HardwareSupplier_0
+INIT
+    failCountHS = 0
+
+TRANS
+    case
+        stateHS = HardwareSupplier_0: next(actionsHS) in { HardwareSupplier_receiveC };
+        stateHS = HardwareSupplier_1: next(actionsHS) in { HardwareSupplier_Pick1__0, HardwareSupplier_Pick1__1 };
+        stateHS = HardwareSupplier_2: next(actionsHS) in { HardwareSupplier_toClient };
+        stateHS = HardwareSupplier_3: next(actionsHS) in { HardwareSupplier_Invoke2 };
+        stateHS = HardwareSupplier_4: next(actionsHS) in { nothing };
+        stateHS = HardwareSupplier_5: next(actionsHS) in { HardwareSupplier_fromClient1 };
+        stateHS = HardwareSupplier_6: next(actionsHS) in { HardwareSupplier_fromPSPSPE, HardwareSupplier_While1 };
+        stateHS = HardwareSupplier_7: next(actionsHS) in { HardwareSupplier_Pick2__0, HardwareSupplier_Pick2__1, HardwareSupplier_Pick2__2 };
+        stateHS = HardwareSupplier_8: next(actionsHS) in { HardwareSupplier_DeployPassed };
+        stateHS = HardwareSupplier_9: next(actionsHS) in { HardwareSupplier_Assign1 };
+        stateHS = HardwareSupplier_10: next(actionsHS) in { HardwareSupplier_DeplyFailed };
+        stateHS = HardwareSupplier_11: next(actionsHS) in { HardwareSupplier_Assign2 };
+        stateHS = HardwareSupplier_12: next(actionsHS) in { HardwareSupplier_Invoke1 };
+        stateHS = HardwareSupplier_13: next(actionsHS) in { nothing };
+        stateHS = HardwareSupplier_14: next(actionsHS) in { nothing };
+    esac
+
+TRANS
+    ( stateHS = HardwareSupplier_0 ) & ( actionsHS = HardwareSupplier_receiveC ) & ( actionsC = Client_buyHardware ) -> next( stateHS = HardwareSupplier_1 );
+TRANS
+    ( stateHS = HardwareSupplier_1 ) & ( actionsHS = HardwareSupplier_Pick1__0 ) -> next( stateHS = HardwareSupplier_2 );
+TRANS
+    ( stateHS = HardwareSupplier_1 ) & ( actionsHS = HardwareSupplier_Pick1__1 ) -> next( stateHS = HardwareSupplier_3 );
+TRANS
+    ( stateHS = HardwareSupplier_3 ) & ( actionsHS = HardwareSupplier_Invoke2 ) & ( actionsC = Client_Pick45__1 ) -> next( stateHS = HardwareSupplier_4 );
+TRANS
+    ( stateHS = HardwareSupplier_2 ) & ( actionsHS = HardwareSupplier_toClient ) & ( actionsC = Client_Pick45__0 ) -> next( stateHS = HardwareSupplier_5 );
+TRANS
+    ( stateHS = HardwareSupplier_5 ) & ( actionsHS = HardwareSupplier_fromClient1 ) & ( actionsC = Client_sendDeployment ) -> next( stateHS = HardwareSupplier_6 );
+TRANS
+    ( stateHS = HardwareSupplier_9 ) & ( actionsHS = HardwareSupplier_Assign1 ) -> next( ( stateHS = HardwareSupplier_6 ) & ( failCountHS = 2 ) );
+TRANS
+    ( stateHS = HardwareSupplier_11 ) & ( actionsHS = HardwareSupplier_Assign2 ) -> next( ( stateHS = HardwareSupplier_6 ) & ( failCountHS = failCountHS + 1 ) );
+TRANS
+    ( stateHS = HardwareSupplier_6 ) & ( failCountHS < 2 ) & ( actionsHS = HardwareSupplier_fromPSPSPE ) & ( actionsE = Expert_toHardware ) & ( actionsSP = ServiceProvider_sendDeploying ) & ( actionsPSP = PSP_sendDeploying ) -> next( stateHS = HardwareSupplier_7 );
+TRANS
+    ( stateHS = HardwareSupplier_7 ) & ( actionsHS = HardwareSupplier_Pick2__0 ) -> next( stateHS = HardwareSupplier_8 );
+TRANS
+    ( stateHS = HardwareSupplier_8 ) & ( actionsHS = HardwareSupplier_DeployPassed ) & ( actionsE = Expert_Pick1__0 ) & ( actionsC = Client_Pick44__0 ) & ( actionsSP = ServiceProvider_getresult__0 ) & ( actionsPSP = PSP_Pick231__0 ) -> next( stateHS = HardwareSupplier_9 );
+TRANS
+    ( stateHS = HardwareSupplier_7 ) & ( actionsHS = HardwareSupplier_Pick2__1 ) -> next( stateHS = HardwareSupplier_10 );
+TRANS
+    ( stateHS = HardwareSupplier_10 ) & ( actionsHS = HardwareSupplier_DeplyFailed ) & ( actionsE = Expert_Pick1__2 ) & ( actionsC = Client_Pick44__2 ) & ( actionsSP = ServiceProvider_getresult__2 ) & ( actionsPSP = PSP_Pick231__2 ) -> next( stateHS = HardwareSupplier_11 );
+TRANS
+    ( stateHS = HardwareSupplier_7 ) & ( actionsHS = HardwareSupplier_Pick2__2 ) -> next( stateHS = HardwareSupplier_12 );
+TRANS
+    ( stateHS = HardwareSupplier_12 ) & ( actionsHS = HardwareSupplier_Invoke1 ) & ( actionsE = Expert_Pick1__1 ) & ( actionsC = Client_Pick44__1 ) & ( actionsSP = ServiceProvider_getresult__1 ) & ( actionsPSP = PSP_Pick231__1 ) -> next( stateHS = HardwareSupplier_13 );
+TRANS
+    ( stateHS = HardwareSupplier_6 ) & (  ! (failCountHS < 2) ) & ( actionsHS = HardwareSupplier_While1 ) -> next( stateHS = HardwareSupplier_14 );
+
+
+2 -- TestingCompany
+VAR
+    stateTC : { TestingCompany_0, TestingCompany_1, TestingCompany_2, TestingCompany_3, TestingCompany_4, TestingCompany_5, TestingCompany_6, TestingCompany_7, TestingCompany_8, TestingCompany_9 };
+    failCounterTC : 0..3;
+    actionsTC : {TestingCompany_fromClient, TestingCompany_fromPSPSP, TestingCompany_While1, TestingCompany_Pick1__0, TestingCompany_Pick1__1, TestingCompany_Pick1__2, TestingCompany_TestPassed, TestingCompany_Assign1, TestingCompany_TestFailed, TestingCompany_Assign2, TestingCompany_Invoke1, nothing };
+
+INIT
+    stateTC = TestingCompany_0
+INIT
+    failCounterTC = 0
+
+TRANS
+    case
+        stateTC = TestingCompany_0: next(actionsTC) in { TestingCompany_fromClient };
+        stateTC = TestingCompany_1: next(actionsTC) in { TestingCompany_fromPSPSP, TestingCompany_While1 };
+        stateTC = TestingCompany_2: next(actionsTC) in { TestingCompany_Pick1__0, TestingCompany_Pick1__1, TestingCompany_Pick1__2 };
+        stateTC = TestingCompany_3: next(actionsTC) in { TestingCompany_TestPassed };
+        stateTC = TestingCompany_4: next(actionsTC) in { TestingCompany_Assign1 };
+        stateTC = TestingCompany_5: next(actionsTC) in { TestingCompany_TestFailed };
+        stateTC = TestingCompany_6: next(actionsTC) in { TestingCompany_Assign2 };
+        stateTC = TestingCompany_7: next(actionsTC) in { TestingCompany_Invoke1 };
+        stateTC = TestingCompany_8: next(actionsTC) in { nothing };
+        stateTC = TestingCompany_9: next(actionsTC) in { nothing };
+    esac
+
+TRANS
+    ( stateTC = TestingCompany_0 ) & ( actionsTC = TestingCompany_fromClient ) & ( actionsC = Client_sendTesting ) -> next( stateTC = TestingCompany_1 );
+TRANS
+    ( stateTC = TestingCompany_4 ) & ( actionsTC = TestingCompany_Assign1 ) -> next( ( stateTC = TestingCompany_1 ) & ( failCounterTC = 2 ) );
+TRANS
+    ( stateTC = TestingCompany_6 ) & ( actionsTC = TestingCompany_Assign2 ) -> next( ( stateTC = TestingCompany_1 ) & ( failCounterTC = failCounterTC + 1 ) );
+TRANS
+    ( stateTC = TestingCompany_1 ) & ( failCounterTC < 2 ) & ( actionsTC = TestingCompany_fromPSPSP ) & ( actionsSP = ServiceProvider_sendTesting ) & ( actionsPSP = PSP_sendTesting ) -> next( stateTC = TestingCompany_2 );
+TRANS
+    ( stateTC = TestingCompany_2 ) & ( actionsTC = TestingCompany_Pick1__0 ) -> next( stateTC = TestingCompany_3 );
+TRANS
+    ( stateTC = TestingCompany_3 ) & ( actionsTC = TestingCompany_TestPassed ) & ( actionsC = Client_Pick441__0 ) & ( actionsSP = ServiceProvider_Pick63__0 ) & ( actionsPSP = PSP_Pick23__0 ) -> next( stateTC = TestingCompany_4 );
+TRANS
+    ( stateTC = TestingCompany_2 ) & ( actionsTC = TestingCompany_Pick1__1 ) -> next( stateTC = TestingCompany_5 );
+TRANS
+    ( stateTC = TestingCompany_5 ) & ( actionsTC = TestingCompany_TestFailed ) & ( actionsC = Client_Pick441__2 ) & ( actionsSP = ServiceProvider_Pick63__2 ) & ( actionsPSP = PSP_Pick23__2 ) -> next( stateTC = TestingCompany_6 );
+TRANS
+    ( stateTC = TestingCompany_2 ) & ( actionsTC = TestingCompany_Pick1__2 ) -> next( stateTC = TestingCompany_7 );
+TRANS
+    ( stateTC = TestingCompany_7 ) & ( actionsTC = TestingCompany_Invoke1 ) & ( actionsC = Client_Pick441__1 ) & ( actionsSP = ServiceProvider_Pick63__1 ) & ( actionsPSP = PSP_Pick23__1 ) -> next( stateTC = TestingCompany_8 );
+TRANS
+    ( stateTC = TestingCompany_1 ) & (  !(failCounterTC < 2) ) & ( actionsTC = TestingCompany_While1 ) -> next( stateTC = TestingCompany_9 );
+
+3 -- Expert
+VAR
+    stateE : { Expert_0, Expert_1, Expert_2, Expert_3, Expert_4, Expert_5, Expert_6, Expert_7, Expert_8 };
+    failCountE : 0..3;
+    actionsE : {Expert_fromClient, Expert_Pick2__0, Expert_Pick2__1, Expert_While1, Expert_toHardware, Expert_Pick1__0, Expert_Pick1__1, Expert_Pick1__2, Expert_Assign2, Expert_Assign4, nothing };
+INIT
+    stateE = Expert_0
+INIT
+    failCountE  = 0
+
+TRANS
+    case
+        stateE = Expert_0: next(actionsE) in { Expert_fromClient };
+        stateE = Expert_1: next(actionsE) in { Expert_Pick2__0, Expert_Pick2__1, Expert_While1 };
+        stateE = Expert_2: next(actionsE) in { Expert_toHardware };
+        stateE = Expert_3: next(actionsE) in { Expert_Pick1__0, Expert_Pick1__1, Expert_Pick1__2 };
+        stateE = Expert_4: next(actionsE) in { Expert_Assign2 };
+        stateE = Expert_5: next(actionsE) in { nothing };
+        stateE = Expert_6: next(actionsE) in { Expert_Assign4 };
+        stateE = Expert_7: next(actionsE) in { nothing };
+        stateE = Expert_8: next(actionsE) in { nothing };
+    esac
+
+TRANS
+    ( stateE = Expert_0 ) & ( actionsE = Expert_fromClient ) & ( actionsC = Client_askExpert ) -> next( stateE = Expert_1 );
+TRANS
+    ( stateE = Expert_4 ) & ( actionsE = Expert_Assign2 ) -> next( ( stateE = Expert_1 ) & ( failCountE = 2 ) );
+TRANS
+    ( stateE = Expert_6 ) & ( actionsE = Expert_Assign4 ) -> next( ( stateE = Expert_1 ) & ( failCountE = failCountE + 1 ) );
+TRANS
+    ( stateE = Expert_1 ) & ( failCountE < 2 ) & ( actionsE = Expert_Pick2__0 ) -> next( stateE = Expert_2 );
+TRANS
+    ( stateE = Expert_2 ) & ( actionsE = Expert_toHardware ) & ( actionsHS = HardwareSupplier_fromPSPSPE ) -> next( stateE = Expert_3 );
+TRANS
+    ( stateE = Expert_3 ) & ( actionsE = Expert_Pick1__0 ) & ( actionsHS = HardwareSupplier_DeployPassed ) -> next( stateE = Expert_4 );
+TRANS
+    ( stateE = Expert_3 ) & ( actionsE = Expert_Pick1__1 ) & ( actionsHS = HardwareSupplier_Invoke1 ) -> next( stateE = Expert_5 );
+TRANS
+    ( stateE = Expert_3 ) & ( actionsE = Expert_Pick1__2 ) & ( actionsHS = HardwareSupplier_DeplyFailed ) -> next( stateE = Expert_6 );
+TRANS
+    ( stateE = Expert_1 ) & ( failCountE < 2 ) & ( actionsE = Expert_Pick2__1 ) -> next( stateE = Expert_7 );
+TRANS
+    ( stateE = Expert_1 ) & (  ! (failCountE < 2) ) & ( actionsE = Expert_While1 ) -> next( stateE = Expert_8 );
+
+
+4 -- InsuranceCompany
+VAR
+    stateIC : { InsuranceCompany_0, InsuranceCompany_1, InsuranceCompany_2, InsuranceCompany_3, InsuranceCompany_4, InsuranceCompany_5, InsuranceCompany_6 };
+    actionsIC : {InsuranceCompany_fromClient, InsuranceCompany_fromClient1, InsuranceCompany_Pick1__0, InsuranceCompany_Pick1__1, InsuranceCompany_toClient, InsuranceCompany_Invoke1, nothing };
+INIT
+    stateIC = InsuranceCompany_0
+
+TRANS
+    case
+        stateIC = InsuranceCompany_0: next(actionsIC) in { InsuranceCompany_fromClient };
+        stateIC = InsuranceCompany_1: next(actionsIC) in { InsuranceCompany_fromClient1 };
+        stateIC = InsuranceCompany_2: next(actionsIC) in { InsuranceCompany_Pick1__0, InsuranceCompany_Pick1__1 };
+        stateIC = InsuranceCompany_3: next(actionsIC) in { InsuranceCompany_toClient };
+        stateIC = InsuranceCompany_4: next(actionsIC) in { InsuranceCompany_Invoke1 };
+        stateIC = InsuranceCompany_5: next(actionsIC) in { nothing };
+        stateIC = InsuranceCompany_6: next(actionsIC) in { nothing };
+    esac
+
+TRANS
+    ( stateIC = InsuranceCompany_0 ) & ( actionsIC = InsuranceCompany_fromClient ) & ( actionsC = Client_buyInsurance ) -> next( stateIC = InsuranceCompany_1 );
+TRANS
+    ( stateIC = InsuranceCompany_1 ) & ( actionsIC = InsuranceCompany_fromClient1 ) & ( actionsC = Client_askCompensation ) -> next( stateIC = InsuranceCompany_2 );
+TRANS
+    ( stateIC = InsuranceCompany_2 ) & ( actionsIC = InsuranceCompany_Pick1__0 ) -> next( stateIC = InsuranceCompany_3 );
+TRANS
+    ( stateIC = InsuranceCompany_2 ) & ( actionsIC = InsuranceCompany_Pick1__1 ) -> next( stateIC = InsuranceCompany_4 );
+TRANS
+    ( stateIC = InsuranceCompany_4 ) & ( actionsIC = InsuranceCompany_Invoke1 ) & ( actionsC = Client_Pick46__1 ) -> next( stateIC = InsuranceCompany_5 );
+TRANS
+    ( stateIC = InsuranceCompany_3 ) & ( actionsIC = InsuranceCompany_toClient ) & ( actionsC = Client_Pick46__0 ) -> next( stateIC = InsuranceCompany_6 );
+
+
+5 -- Client
+VAR
+    stateC : { Client_0, Client_1, Client_2, Client_3, Client_4, Client_5, Client_6, Client_7, Client_8, Client_9, Client_10, Client_11, Client_12, Client_13, Client_14, Client_15, Client_16, Client_17, Client_18, Client_19, Client_20, Client_21, Client_22, Client_23, Client_24, Client_25, Client_26, Client_27, Client_28, Client_29, Client_30, Client_31, Client_32, Client_33, Client_34, Client_35, Client_36, Client_37, Client_38, Client_39, Client_40, Client_41, Client_42, Client_43, Client_44, Client_45, Client_46, Client_47, Client_48, Client_49, Client_50, Client_51 };
+    passed1C : boolean;
+    passedC : boolean;
+    failCountC : 0..3;
+    actionsC : {Client_Update1__0, Client_Update1__1, Client_Update1__2, Client_While1, Client_Empty1, Client_receiveUpdate1, Client_Update11__0, Client_Update11__1, Client_Update11__2, Client_Empty12, Client_receiveUpdate121, Client_Payment1__0, Client_Payment1__1, Client_payPSP, Client_Invoke1, Client_ChangePSP1__0, Client_ChangePSP1__1, Client_Change2__0, Client_Change2__1, Client_changePSP, Client_Invoke2, Client_ChangeSP1__0, Client_ChangeSP1__1, Client_changeSP, Client_Invoke3, Client_Invoke4, Client_AskSecondChange, Client_Pick442__0, Client_Pick442__1, Client_PayPenaltyPSPSP, Client_SendSecondChange, Client_WithdrawPSPSP, Client_Assign375, Client_Assign376, Client_sendTesting, Client_Pick441__0, Client_Pick441__1, Client_Pick441__2, Client_Testing, Client_Assign35, Client_Assign36, Client_If43, Client_buyInsurance, Client_buyHardware, Client_Pick45__0, Client_Pick45__1, Client_Empty14, Client_sendDeployment, Client_askExpert, Client_Pick44__0, Client_Pick44__1, Client_Pick44__2, Client_Deploying, Client_Assign351, Client_Pick444__0, Client_Pick444__1, Client_sendFInalPayment, Client_Invoke5, Client_Assign361, Client_askCompensation, Client_If41, Client_Pick46__0, Client_Pick46__1, Client_Empty16, nothing };
+INIT
+    stateC = Client_0
+INIT
+    passed1C  = FALSE
+INIT
+    passedC  = FALSE
+INIT
+    failCountC = 0
+
+TRANS
+    case
+        stateC = Client_0: next(actionsC) in { Client_Update1__0, Client_Update1__1, Client_Update1__2, Client_While1 };
+        stateC = Client_1: next(actionsC) in { Client_Empty1 };
+        stateC = Client_2: next(actionsC) in { Client_receiveUpdate1 };
+        stateC = Client_3: next(actionsC) in { nothing };
+        stateC = Client_4: next(actionsC) in { Client_Update11__0, Client_Update11__1, Client_Update11__2 };
+        stateC = Client_5: next(actionsC) in { Client_Empty12 };
+        stateC = Client_6: next(actionsC) in { Client_receiveUpdate121 };
+        stateC = Client_7: next(actionsC) in { nothing };
+        stateC = Client_8: next(actionsC) in { Client_Payment1__0, Client_Payment1__1 };
+        stateC = Client_9: next(actionsC) in { Client_payPSP };
+        stateC = Client_10: next(actionsC) in { Client_Invoke1 };
+        stateC = Client_11: next(actionsC) in { nothing };
+        stateC = Client_12: next(actionsC) in { Client_ChangePSP1__0, Client_ChangePSP1__1, Client_Change2__0, Client_Change2__1 };
+        stateC = Client_13: next(actionsC) in { Client_changePSP };
+        stateC = Client_14: next(actionsC) in { Client_Invoke2 };
+        stateC = Client_15: next(actionsC) in { Client_ChangeSP1__0, Client_ChangeSP1__1 };
+        stateC = Client_16: next(actionsC) in { Client_changeSP };
+        stateC = Client_17: next(actionsC) in { Client_Invoke3 };
+        stateC = Client_18: next(actionsC) in { Client_Invoke4 };
+        stateC = Client_19: next(actionsC) in { Client_AskSecondChange };
+        stateC = Client_20: next(actionsC) in { Client_Pick442__0, Client_Pick442__1 };
+        stateC = Client_21: next(actionsC) in { Client_PayPenaltyPSPSP };
+        stateC = Client_22: next(actionsC) in { Client_SendSecondChange };
+        stateC = Client_23: next(actionsC) in { Client_WithdrawPSPSP };
+        stateC = Client_24: next(actionsC) in { Client_Assign375 };
+        stateC = Client_25: next(actionsC) in { Client_Assign376 };
+        stateC = Client_26: next(actionsC) in { Client_sendTesting };
+        stateC = Client_27: next(actionsC) in { Client_Pick441__0, Client_Pick441__1, Client_Pick441__2, Client_Testing };
+        stateC = Client_28: next(actionsC) in { Client_Assign35 };
+        stateC = Client_29: next(actionsC) in { nothing };
+        stateC = Client_30: next(actionsC) in { Client_Assign36 };
+        stateC = Client_31: next(actionsC) in { Client_If43 };
+        stateC = Client_32: next(actionsC) in { Client_buyInsurance };
+        stateC = Client_33: next(actionsC) in { Client_buyHardware };
+        stateC = Client_34: next(actionsC) in { Client_Pick45__0, Client_Pick45__1 };
+        stateC = Client_35: next(actionsC) in { Client_Empty14 };
+        stateC = Client_36: next(actionsC) in { nothing };
+        stateC = Client_37: next(actionsC) in { Client_sendDeployment };
+        stateC = Client_38: next(actionsC) in { Client_askExpert };
+        stateC = Client_39: next(actionsC) in { Client_Pick44__0, Client_Pick44__1, Client_Pick44__2, Client_Deploying };
+        stateC = Client_40: next(actionsC) in { Client_Assign351 };
+        stateC = Client_41: next(actionsC) in { Client_Pick444__0, Client_Pick444__1 };
+        stateC = Client_42: next(actionsC) in { Client_sendFInalPayment };
+        stateC = Client_43: next(actionsC) in { Client_Invoke5 };
+        stateC = Client_44: next(actionsC) in { nothing };
+        stateC = Client_45: next(actionsC) in { nothing };
+        stateC = Client_46: next(actionsC) in { Client_Assign361 };
+        stateC = Client_47: next(actionsC) in { Client_askCompensation, Client_If41 };
+        stateC = Client_48: next(actionsC) in { Client_Pick46__0, Client_Pick46__1 };
+        stateC = Client_49: next(actionsC) in { Client_Empty16 };
+        stateC = Client_50: next(actionsC) in { nothing };
+        stateC = Client_51: next(actionsC) in { nothing };
+    esac
+
+TRANS
+    ( stateC = Client_24 ) & ( actionsC = Client_Assign375 ) -> next( ( stateC = Client_0 ) & ( failCountC = failCountC + 1 ) );
+TRANS
+    ( stateC = Client_0 ) & ( failCountC < 2 ) & ( actionsC = Client_Update1__0 ) & ( actionsPSP = PSP_updateClient ) -> next( stateC = Client_1 );
+TRANS
+    ( stateC = Client_0 ) & ( failCountC < 2 ) & ( actionsC = Client_Update1__1 ) & ( actionsPSP = PSP_payPenaltyClient ) -> next( stateC = Client_2 );
+TRANS
+    ( stateC = Client_0 ) & ( failCountC < 2 ) & ( actionsC = Client_Update1__2 ) & ( actionsPSP = PSP_Invoke1 ) -> next( stateC = Client_3 );
+TRANS
+    ( stateC = Client_1 ) & ( actionsC = Client_Empty1 ) -> next( stateC = Client_4 );
+TRANS
+    ( stateC = Client_2 ) & ( actionsC = Client_receiveUpdate1 ) & ( actionsPSP = PSP_updateClient1 ) -> next( stateC = Client_4 );
+TRANS
+    ( stateC = Client_4 ) & ( actionsC = Client_Update11__0 ) & ( actionsSP = ServiceProvider_updateC ) -> next( stateC = Client_5 );
+TRANS
+    ( stateC = Client_4 ) & ( actionsC = Client_Update11__1 ) & ( actionsSP = ServiceProvider_payClientPenalty ) -> next( stateC = Client_6 );
+TRANS
+    ( stateC = Client_4 ) & ( actionsC = Client_Update11__2 ) & ( actionsSP = ServiceProvider_Invoke2 ) -> next( stateC = Client_7 );
+TRANS
+    ( stateC = Client_5 ) & ( actionsC = Client_Empty12 ) -> next( stateC = Client_8 );
+TRANS
+    ( stateC = Client_6 ) & ( actionsC = Client_receiveUpdate121 ) & ( actionsSP = ServiceProvider_updateClient1 ) -> next( stateC = Client_8 );
+TRANS
+    ( stateC = Client_8 ) & ( actionsC = Client_Payment1__0 ) -> next( stateC = Client_9 );
+TRANS
+    ( stateC = Client_8 ) & ( actionsC = Client_Payment1__1 ) -> next( stateC = Client_10 );
+TRANS
+    ( stateC = Client_10 ) & ( actionsC = Client_Invoke1 ) & ( actionsPSP = PSP_firstPayment__1 ) -> next( stateC = Client_11 );
+TRANS
+    ( stateC = Client_9 ) & ( actionsC = Client_payPSP ) & ( actionsPSP = PSP_firstPayment__0 ) -> next( stateC = Client_12 );
+TRANS
+    ( stateC = Client_12 ) & ( failCountC = 0 ) & ( actionsC = Client_ChangePSP1__0 ) -> next( stateC = Client_13 );
+TRANS
+    ( stateC = Client_12 ) & ( failCountC = 0 ) & ( actionsC = Client_ChangePSP1__1 ) -> next( stateC = Client_14 );
+TRANS
+    ( stateC = Client_13 ) & ( actionsC = Client_changePSP ) & ( actionsPSP = PSP_Change1__0 ) -> next( stateC = Client_15 );
+TRANS
+    ( stateC = Client_14 ) & ( actionsC = Client_Invoke2 ) & ( actionsPSP = PSP_Change1__1 ) -> next( stateC = Client_15 );
+TRANS
+    ( stateC = Client_15 ) & ( actionsC = Client_ChangeSP1__0 ) -> next( stateC = Client_16 );
+TRANS
+    ( stateC = Client_15 ) & ( actionsC = Client_ChangeSP1__1 ) -> next( stateC = Client_17 );
+TRANS
+    ( stateC = Client_12 ) & (  ! (failCountC = 0) ) & ( actionsC = Client_Change2__0 ) -> next( stateC = Client_18 );
+TRANS
+    ( stateC = Client_12 ) & (  ! (failCountC = 0) ) & ( actionsC = Client_Change2__1 ) -> next( stateC = Client_19 );
+TRANS
+    ( stateC = Client_19 ) & ( actionsC = Client_AskSecondChange ) & ( actionsSP = ServiceProvider_Change2__0 ) & ( actionsPSP = PSP_Change2__0 ) -> next( stateC = Client_20 );
+TRANS
+    ( stateC = Client_20 ) & ( actionsC = Client_Pick442__0 ) -> next( stateC = Client_21 );
+TRANS
+    ( stateC = Client_21 ) & ( actionsC = Client_PayPenaltyPSPSP ) & ( actionsSP = ServiceProvider_Pick62__0 ) & ( actionsPSP = PSP_Pick22__0 ) -> next( stateC = Client_22 );
+TRANS
+    ( stateC = Client_20 ) & ( actionsC = Client_Pick442__1 ) -> next( stateC = Client_23 );
+TRANS
+    ( stateC = Client_16 ) & ( actionsC = Client_changeSP ) & ( actionsSP = ServiceProvider_Change1__0 ) -> next( stateC = Client_24 );
+TRANS
+    ( stateC = Client_17 ) & ( actionsC = Client_Invoke3 ) & ( actionsSP = ServiceProvider_Change1__1 ) -> next( stateC = Client_24 );
+TRANS
+    ( stateC = Client_18 ) & ( actionsC = Client_Invoke4 ) & ( actionsSP = ServiceProvider_Change2__1 ) & ( actionsPSP = PSP_Change2__1 ) -> next( stateC = Client_24 );
+TRANS
+    ( stateC = Client_22 ) & ( actionsC = Client_SendSecondChange ) & ( actionsSP = ServiceProvider_receiveSecondChange ) & ( actionsPSP = PSP_receiveChange2 ) -> next( stateC = Client_24 );
+TRANS
+    ( stateC = Client_23 ) & ( actionsC = Client_WithdrawPSPSP ) & ( actionsSP = ServiceProvider_Pick62__1 ) & ( actionsPSP = PSP_Pick22__1 ) -> next( stateC = Client_24 );
+TRANS
+    ( stateC = Client_0 ) & (  ! (failCountC < 2) ) & ( actionsC = Client_While1 ) -> next( stateC = Client_25 );
+TRANS
+    ( stateC = Client_25 ) & ( actionsC = Client_Assign376 ) -> next( ( stateC = Client_26 ) & ( failCountC = 0 ) );
+TRANS
+    ( stateC = Client_26 ) & ( actionsC = Client_sendTesting ) & ( actionsTC = TestingCompany_fromClient ) -> next( stateC = Client_27 );
+TRANS
+    ( stateC = Client_28 ) & ( actionsC = Client_Assign35 ) -> next( ( stateC = Client_27 ) & ( failCountC = 2 ) & ( passedC = TRUE ) );
+TRANS
+    ( stateC = Client_30 ) & ( actionsC = Client_Assign36 ) -> next( ( stateC = Client_27 ) & ( failCountC = failCountC + 1 ) );
+TRANS
+    ( stateC = Client_27 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick441__0 ) & ( actionsTC = TestingCompany_TestPassed ) -> next( stateC = Client_28 );
+TRANS
+    ( stateC = Client_27 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick441__1 ) & ( actionsTC = TestingCompany_Invoke1 ) -> next( stateC = Client_29 );
+TRANS
+    ( stateC = Client_27 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick441__2 ) & ( actionsTC = TestingCompany_TestFailed ) -> next( stateC = Client_30 );
+TRANS
+    ( stateC = Client_27 ) & (  ! (failCountC < 2) ) & ( actionsC = Client_Testing ) -> next( stateC = Client_31 );
+TRANS
+    ( stateC = Client_31 ) & ( passedC = TRUE ) & ( actionsC = Client_If43 ) -> next( stateC = Client_32 );
+TRANS
+    ( stateC = Client_32 ) & ( actionsC = Client_buyInsurance ) & ( actionsIC = InsuranceCompany_fromClient ) -> next( stateC = Client_33 );
+TRANS
+    ( stateC = Client_33 ) & ( actionsC = Client_buyHardware ) & ( actionsHS = HardwareSupplier_receiveC ) -> next( stateC = Client_34 );
+TRANS
+    ( stateC = Client_34 ) & ( actionsC = Client_Pick45__0 ) & ( actionsHS = HardwareSupplier_toClient ) -> next( stateC = Client_35 );
+TRANS
+    ( stateC = Client_34 ) & ( actionsC = Client_Pick45__1 ) & ( actionsHS = HardwareSupplier_Invoke2 ) -> next( stateC = Client_36 );
+TRANS
+    ( stateC = Client_35 ) & ( actionsC = Client_Empty14 ) -> next( stateC = Client_37 );
+TRANS
+    ( stateC = Client_37 ) & ( actionsC = Client_sendDeployment ) & ( actionsHS = HardwareSupplier_fromClient1 ) -> next( stateC = Client_38 );
+TRANS
+    ( stateC = Client_38 ) & ( actionsC = Client_askExpert ) & ( actionsE = Expert_fromClient ) -> next( stateC = Client_39 );
+TRANS
+    ( stateC = Client_42 ) & ( actionsC = Client_sendFInalPayment ) & ( actionsPSP = PSP_Pick232__0 ) -> next( stateC = Client_39 );
+TRANS
+    ( stateC = Client_46 ) & ( actionsC = Client_Assign361 ) -> next( ( stateC = Client_39 ) & ( failCountC = failCountC + 1 ) );
+TRANS
+    ( stateC = Client_39 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick44__0 ) & ( actionsHS = HardwareSupplier_DeployPassed ) -> next( stateC = Client_40 );
+TRANS
+    ( stateC = Client_40 ) & ( actionsC = Client_Assign351 ) -> next( ( stateC = Client_41 ) & ( failCountC = 0 ) & ( passed1C = TRUE ) );
+TRANS
+    ( stateC = Client_41 ) & ( actionsC = Client_Pick444__0 ) -> next( stateC = Client_42 );
+TRANS
+    ( stateC = Client_41 ) & ( actionsC = Client_Pick444__1 ) -> next( stateC = Client_43 );
+TRANS
+    ( stateC = Client_43 ) & ( actionsC = Client_Invoke5 ) & ( actionsPSP = PSP_Pick232__1 ) -> next( stateC = Client_44 );
+TRANS
+    ( stateC = Client_39 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick44__1 ) & ( actionsHS = HardwareSupplier_Invoke1 ) -> next( stateC = Client_45 );
+TRANS
+    ( stateC = Client_39 ) & ( failCountC < 2 ) & ( actionsC = Client_Pick44__2 ) & ( actionsHS = HardwareSupplier_DeplyFailed ) -> next( stateC = Client_46 );
+TRANS
+    ( stateC = Client_39 ) & (  ! (failCountC < 2) ) & ( actionsC = Client_Deploying ) -> next( stateC = Client_47 );
+TRANS
+    ( stateC = Client_47 ) & ( passed1C = FALSE ) & ( actionsC = Client_askCompensation ) & ( actionsIC = InsuranceCompany_fromClient1 ) -> next( stateC = Client_48 );
+TRANS
+    ( stateC = Client_48 ) & ( actionsC = Client_Pick46__0 ) & ( actionsIC = InsuranceCompany_toClient ) -> next( stateC = Client_49 );
+TRANS
+    ( stateC = Client_48 ) & ( actionsC = Client_Pick46__1 ) & ( actionsIC = InsuranceCompany_Invoke1 ) -> next( stateC = Client_50 );
+TRANS
+    ( stateC = Client_49 ) & ( actionsC = Client_Empty16 ) -> next( stateC = Client_51 );
+TRANS
+    ( stateC = Client_47 ) & ( passed1C = FALSE ) & ( actionsC = Client_If41 ) -> next( stateC = Client_51 );
+
+
+6 -- ServiceProvider
+VAR
+    stateSP : { ServiceProvider_0, ServiceProvider_1, ServiceProvider_2, ServiceProvider_3, ServiceProvider_4, ServiceProvider_5, ServiceProvider_6, ServiceProvider_7, ServiceProvider_8, ServiceProvider_9, ServiceProvider_10, ServiceProvider_11, ServiceProvider_12, ServiceProvider_13, ServiceProvider_14, ServiceProvider_15, ServiceProvider_16, ServiceProvider_17, ServiceProvider_18, ServiceProvider_19, ServiceProvider_20, ServiceProvider_21, ServiceProvider_22, ServiceProvider_23, ServiceProvider_24, ServiceProvider_25, ServiceProvider_26, ServiceProvider_27, ServiceProvider_28, ServiceProvider_29, ServiceProvider_30, ServiceProvider_31, ServiceProvider_32, ServiceProvider_33, ServiceProvider_34, ServiceProvider_35, ServiceProvider_36, ServiceProvider_37, ServiceProvider_38, ServiceProvider_39, ServiceProvider_40, ServiceProvider_41, ServiceProvider_42, ServiceProvider_43, ServiceProvider_44, ServiceProvider_45, ServiceProvider_46, ServiceProvider_47, ServiceProvider_48, ServiceProvider_49 };
+    PassedSP : boolean;
+    failCountSP : 0..3;
+    actionsSP : {ServiceProvider_Pick1__0, ServiceProvider_Pick1__1, ServiceProvider_While1, ServiceProvider_updateC, ServiceProvider_Pick5__0, ServiceProvider_Pick5__1, ServiceProvider_payClientPenalty, ServiceProvider_updateClient1, ServiceProvider_Invoke2, ServiceProvider_Pick2__0, ServiceProvider_Pick2__1, ServiceProvider_updatePSP, ServiceProvider_Pick4__0, ServiceProvider_Pick4__1, ServiceProvider_payPSPPenalty, ServiceProvider_updatePSP1, ServiceProvider_Invoke1, ServiceProvider_Pick3__0, ServiceProvider_Pick3__1, ServiceProvider_Pick3__2, ServiceProvider_Empty1, ServiceProvider_receivePSPUpdate, ServiceProvider_receivePayment1__0, ServiceProvider_receivePayment1__1, ServiceProvider_Empty2, ServiceProvider_Change1__0, ServiceProvider_Change1__1, ServiceProvider_Change2__0, ServiceProvider_Change2__1, ServiceProvider_Empty12, ServiceProvider_Empty13, ServiceProvider_Pick62__0, ServiceProvider_Pick62__1, ServiceProvider_receiveSecondChange, ServiceProvider_Empty15, ServiceProvider_Empty14, ServiceProvider_Assign46, ServiceProvider_Assign47, ServiceProvider_receiveRequest, ServiceProvider_SendComponent__0, ServiceProvider_SendComponent__1, ServiceProvider_sendComponent, ServiceProvider_Invoke3, ServiceProvider_sendTesting, ServiceProvider_Testing, ServiceProvider_Pick63__0, ServiceProvider_Pick63__1, ServiceProvider_Pick63__2, ServiceProvider_passed, ServiceProvider_Assign42, ServiceProvider_Assign48, ServiceProvider_sendDeploying, ServiceProvider_deploying, ServiceProvider_getresult__0, ServiceProvider_getresult__1, ServiceProvider_getresult__2, ServiceProvider_passed1, ServiceProvider_Pick64__0, ServiceProvider_Pick64__1, ServiceProvider_Empty16, ServiceProvider_onceagain, nothing };
+INIT
+    stateSP = ServiceProvider_0
+INIT
+    PassedSP = FALSE
+INIT
+    failCountSP = 0
+
+TRANS
+    case
+        stateSP = ServiceProvider_0: next(actionsSP) in { ServiceProvider_Pick1__0, ServiceProvider_Pick1__1, ServiceProvider_While1 };
+        stateSP = ServiceProvider_1: next(actionsSP) in { ServiceProvider_updateC };
+        stateSP = ServiceProvider_2: next(actionsSP) in { ServiceProvider_Pick5__0, ServiceProvider_Pick5__1 };
+        stateSP = ServiceProvider_3: next(actionsSP) in { ServiceProvider_payClientPenalty };
+        stateSP = ServiceProvider_4: next(actionsSP) in { ServiceProvider_updateClient1 };
+        stateSP = ServiceProvider_5: next(actionsSP) in { ServiceProvider_Invoke2 };
+        stateSP = ServiceProvider_6: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_7: next(actionsSP) in { ServiceProvider_Pick2__0, ServiceProvider_Pick2__1 };
+        stateSP = ServiceProvider_8: next(actionsSP) in { ServiceProvider_updatePSP };
+        stateSP = ServiceProvider_9: next(actionsSP) in { ServiceProvider_Pick4__0, ServiceProvider_Pick4__1 };
+        stateSP = ServiceProvider_10: next(actionsSP) in { ServiceProvider_payPSPPenalty };
+        stateSP = ServiceProvider_11: next(actionsSP) in { ServiceProvider_updatePSP1 };
+        stateSP = ServiceProvider_12: next(actionsSP) in { ServiceProvider_Invoke1 };
+        stateSP = ServiceProvider_13: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_14: next(actionsSP) in { ServiceProvider_Pick3__0, ServiceProvider_Pick3__1, ServiceProvider_Pick3__2 };
+        stateSP = ServiceProvider_15: next(actionsSP) in { ServiceProvider_Empty1 };
+        stateSP = ServiceProvider_16: next(actionsSP) in { ServiceProvider_receivePSPUpdate };
+        stateSP = ServiceProvider_17: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_18: next(actionsSP) in { ServiceProvider_receivePayment1__0, ServiceProvider_receivePayment1__1 };
+        stateSP = ServiceProvider_19: next(actionsSP) in { ServiceProvider_Empty2 };
+        stateSP = ServiceProvider_20: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_21: next(actionsSP) in { ServiceProvider_Change1__0, ServiceProvider_Change1__1, ServiceProvider_Change2__0, ServiceProvider_Change2__1 };
+        stateSP = ServiceProvider_22: next(actionsSP) in { ServiceProvider_Empty12 };
+        stateSP = ServiceProvider_23: next(actionsSP) in { ServiceProvider_Empty13 };
+        stateSP = ServiceProvider_24: next(actionsSP) in { ServiceProvider_Pick62__0, ServiceProvider_Pick62__1 };
+        stateSP = ServiceProvider_25: next(actionsSP) in { ServiceProvider_receiveSecondChange };
+        stateSP = ServiceProvider_26: next(actionsSP) in { ServiceProvider_Empty15 };
+        stateSP = ServiceProvider_27: next(actionsSP) in { ServiceProvider_Empty14 };
+        stateSP = ServiceProvider_28: next(actionsSP) in { ServiceProvider_Assign46 };
+        stateSP = ServiceProvider_29: next(actionsSP) in { ServiceProvider_Assign47 };
+        stateSP = ServiceProvider_30: next(actionsSP) in { ServiceProvider_receiveRequest };
+        stateSP = ServiceProvider_31: next(actionsSP) in { ServiceProvider_SendComponent__0, ServiceProvider_SendComponent__1 };
+        stateSP = ServiceProvider_32: next(actionsSP) in { ServiceProvider_sendComponent };
+        stateSP = ServiceProvider_33: next(actionsSP) in { ServiceProvider_Invoke3 };
+        stateSP = ServiceProvider_34: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_35: next(actionsSP) in { ServiceProvider_sendTesting, ServiceProvider_Testing };
+        stateSP = ServiceProvider_36: next(actionsSP) in { ServiceProvider_Pick63__0, ServiceProvider_Pick63__1, ServiceProvider_Pick63__2 };
+        stateSP = ServiceProvider_37: next(actionsSP) in { ServiceProvider_passed };
+        stateSP = ServiceProvider_38: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_39: next(actionsSP) in { ServiceProvider_Assign42 };
+        stateSP = ServiceProvider_40: next(actionsSP) in { ServiceProvider_Assign48 };
+        stateSP = ServiceProvider_41: next(actionsSP) in { ServiceProvider_sendDeploying, ServiceProvider_deploying };
+        stateSP = ServiceProvider_42: next(actionsSP) in { ServiceProvider_getresult__0, ServiceProvider_getresult__1, ServiceProvider_getresult__2 };
+        stateSP = ServiceProvider_43: next(actionsSP) in { ServiceProvider_passed1 };
+        stateSP = ServiceProvider_44: next(actionsSP) in { ServiceProvider_Pick64__0, ServiceProvider_Pick64__1 };
+        stateSP = ServiceProvider_45: next(actionsSP) in { ServiceProvider_Empty16 };
+        stateSP = ServiceProvider_46: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_47: next(actionsSP) in { nothing };
+        stateSP = ServiceProvider_48: next(actionsSP) in { ServiceProvider_onceagain };
+        stateSP = ServiceProvider_49: next(actionsSP) in { nothing };
+    esac
+
+TRANS
+    ( stateSP = ServiceProvider_28 ) & ( actionsSP = ServiceProvider_Assign46 ) -> next( ( stateSP = ServiceProvider_0 ) & ( failCountSP  = failCountSP  + 1 ) );
+TRANS
+    ( stateSP = ServiceProvider_0 ) & ( failCountSP  < 2 ) & ( actionsSP = ServiceProvider_Pick1__0 ) -> next( stateSP = ServiceProvider_1 );
+TRANS
+    ( stateSP = ServiceProvider_0 ) & ( failCountSP  < 2 ) & ( actionsSP = ServiceProvider_Pick1__1 ) -> next( stateSP = ServiceProvider_2 );
+TRANS
+    ( stateSP = ServiceProvider_2 ) & ( actionsSP = ServiceProvider_Pick5__0 ) -> next( stateSP = ServiceProvider_3 );
+TRANS
+    ( stateSP = ServiceProvider_3 ) & ( actionsSP = ServiceProvider_payClientPenalty ) & ( actionsC = Client_Update11__1 ) -> next( stateSP = ServiceProvider_4 );
+TRANS
+    ( stateSP = ServiceProvider_2 ) & ( actionsSP = ServiceProvider_Pick5__1 ) -> next( stateSP = ServiceProvider_5 );
+TRANS
+    ( stateSP = ServiceProvider_5 ) & ( actionsSP = ServiceProvider_Invoke2 ) & ( actionsC = Client_Update11__2 ) -> next( stateSP = ServiceProvider_6 );
+TRANS
+    ( stateSP = ServiceProvider_1 ) & ( actionsSP = ServiceProvider_updateC ) & ( actionsC = Client_Update11__0 ) -> next( stateSP = ServiceProvider_7 );
+TRANS
+    ( stateSP = ServiceProvider_4 ) & ( actionsSP = ServiceProvider_updateClient1 ) & ( actionsC = Client_receiveUpdate121 ) -> next( stateSP = ServiceProvider_7 );
+TRANS
+    ( stateSP = ServiceProvider_7 ) & ( actionsSP = ServiceProvider_Pick2__0 ) -> next( stateSP = ServiceProvider_8 );
+TRANS
+    ( stateSP = ServiceProvider_7 ) & ( actionsSP = ServiceProvider_Pick2__1 ) -> next( stateSP = ServiceProvider_9 );
+TRANS
+    ( stateSP = ServiceProvider_9 ) & ( actionsSP = ServiceProvider_Pick4__0 ) -> next( stateSP = ServiceProvider_10 );
+TRANS
+    ( stateSP = ServiceProvider_10 ) & ( actionsSP = ServiceProvider_payPSPPenalty ) & ( actionsPSP = PSP_fromSP__1 ) -> next( stateSP = ServiceProvider_11 );
+TRANS
+    ( stateSP = ServiceProvider_9 ) & ( actionsSP = ServiceProvider_Pick4__1 ) -> next( stateSP = ServiceProvider_12 );
+TRANS
+    ( stateSP = ServiceProvider_12 ) & ( actionsSP = ServiceProvider_Invoke1 ) & ( actionsPSP = PSP_fromSP__2 ) -> next( stateSP = ServiceProvider_13 );
+TRANS
+    ( stateSP = ServiceProvider_8 ) & ( actionsSP = ServiceProvider_updatePSP ) & ( actionsPSP = PSP_fromSP__0 ) -> next( stateSP = ServiceProvider_14 );
+TRANS
+    ( stateSP = ServiceProvider_11 ) & ( actionsSP = ServiceProvider_updatePSP1 ) & ( actionsPSP = PSP_receiveUpdateSP ) -> next( stateSP = ServiceProvider_14 );
+TRANS
+    ( stateSP = ServiceProvider_14 ) & ( actionsSP = ServiceProvider_Pick3__0 ) & ( actionsPSP = PSP_updateSP ) -> next( stateSP = ServiceProvider_15 );
+TRANS
+    ( stateSP = ServiceProvider_14 ) & ( actionsSP = ServiceProvider_Pick3__1 ) & ( actionsPSP = PSP_payPenaltySP ) -> next( stateSP = ServiceProvider_16 );
+TRANS
+    ( stateSP = ServiceProvider_14 ) & ( actionsSP = ServiceProvider_Pick3__2 ) & ( actionsPSP = PSP_Invoke2 ) -> next( stateSP = ServiceProvider_17 );
+TRANS
+    ( stateSP = ServiceProvider_15 ) & ( actionsSP = ServiceProvider_Empty1 ) -> next( stateSP = ServiceProvider_18 );
+TRANS
+    ( stateSP = ServiceProvider_16 ) & ( actionsSP = ServiceProvider_receivePSPUpdate ) & ( actionsPSP = PSP_updateSP1 ) -> next( stateSP = ServiceProvider_18 );
+TRANS
+    ( stateSP = ServiceProvider_18 ) & ( actionsSP = ServiceProvider_receivePayment1__0 ) & ( actionsPSP = PSP_paySP ) -> next( stateSP = ServiceProvider_19 );
+TRANS
+    ( stateSP = ServiceProvider_18 ) & ( actionsSP = ServiceProvider_receivePayment1__1 ) & ( actionsPSP = PSP_Invoke3 ) -> next( stateSP = ServiceProvider_20 );
+TRANS
+    ( stateSP = ServiceProvider_19 ) & ( actionsSP = ServiceProvider_Empty2 ) -> next( stateSP = ServiceProvider_21 );
+TRANS
+    ( stateSP = ServiceProvider_21 ) & ( failCountSP  = 0 ) & ( actionsSP = ServiceProvider_Change1__0 ) & ( actionsC = Client_changeSP ) -> next( stateSP = ServiceProvider_22 );
+TRANS
+    ( stateSP = ServiceProvider_21 ) & ( failCountSP  = 0 ) & ( actionsSP = ServiceProvider_Change1__1 ) & ( actionsC = Client_Invoke3 ) -> next( stateSP = ServiceProvider_23 );
+TRANS
+    ( stateSP = ServiceProvider_21 ) & (  ! (failCountSP  = 0) ) & ( actionsSP = ServiceProvider_Change2__0 ) & ( actionsC = Client_AskSecondChange ) -> next( stateSP = ServiceProvider_24 );
+TRANS
+    ( stateSP = ServiceProvider_24 ) & ( actionsSP = ServiceProvider_Pick62__0 ) & ( actionsC = Client_PayPenaltyPSPSP ) -> next( stateSP = ServiceProvider_25 );
+TRANS
+    ( stateSP = ServiceProvider_24 ) & ( actionsSP = ServiceProvider_Pick62__1 ) & ( actionsC = Client_WithdrawPSPSP ) -> next( stateSP = ServiceProvider_26 );
+TRANS
+    ( stateSP = ServiceProvider_21 ) & (  ! (failCountSP  = 0) ) & ( actionsSP = ServiceProvider_Change2__1 ) & ( actionsC = Client_Invoke4 ) -> next( stateSP = ServiceProvider_27 );
+TRANS
+    ( stateSP = ServiceProvider_22 ) & ( actionsSP = ServiceProvider_Empty12 ) -> next( stateSP = ServiceProvider_28 );
+TRANS
+    ( stateSP = ServiceProvider_23 ) & ( actionsSP = ServiceProvider_Empty13 ) -> next( stateSP = ServiceProvider_28 );
+TRANS
+    ( stateSP = ServiceProvider_25 ) & ( actionsSP = ServiceProvider_receiveSecondChange ) & ( actionsC = Client_SendSecondChange ) -> next( stateSP = ServiceProvider_28 );
+TRANS
+    ( stateSP = ServiceProvider_26 ) & ( actionsSP = ServiceProvider_Empty15 ) -> next( stateSP = ServiceProvider_28 );
+TRANS
+    ( stateSP = ServiceProvider_27 ) & ( actionsSP = ServiceProvider_Empty14 ) -> next( stateSP = ServiceProvider_28 );
+TRANS
+    ( stateSP = ServiceProvider_0 ) & (  ! (failCountSP  < 2) ) & ( actionsSP = ServiceProvider_While1 ) -> next( stateSP = ServiceProvider_29 );
+TRANS
+    ( stateSP = ServiceProvider_29 ) & ( actionsSP = ServiceProvider_Assign47 ) -> next( ( stateSP = ServiceProvider_30 ) & ( failCountSP  = 0 ) );
+TRANS
+    ( stateSP = ServiceProvider_30 ) & ( actionsSP = ServiceProvider_receiveRequest ) & ( actionsPSP = PSP_sendRequest ) -> next( stateSP = ServiceProvider_31 );
+TRANS
+    ( stateSP = ServiceProvider_31 ) & ( actionsSP = ServiceProvider_SendComponent__0 ) -> next( stateSP = ServiceProvider_32 );
+TRANS
+    ( stateSP = ServiceProvider_31 ) & ( actionsSP = ServiceProvider_SendComponent__1 ) -> next( stateSP = ServiceProvider_33 );
+TRANS
+    ( stateSP = ServiceProvider_33 ) & ( actionsSP = ServiceProvider_Invoke3 ) & ( actionsPSP = PSP_receiveComponent__1 ) -> next( stateSP = ServiceProvider_34 );
+TRANS
+    ( stateSP = ServiceProvider_32 ) & ( actionsSP = ServiceProvider_sendComponent ) & ( actionsPSP = PSP_receiveComponent__0 ) -> next( stateSP = ServiceProvider_35 );
+TRANS
+    ( stateSP = ServiceProvider_37 ) & ( actionsSP = ServiceProvider_passed ) -> next( ( stateSP = ServiceProvider_35 ) & ( failCountSP  = 2 ) & ( PassedSP = TRUE ) );
+TRANS
+    ( stateSP = ServiceProvider_39 ) & ( actionsSP = ServiceProvider_Assign42 ) -> next( ( stateSP = ServiceProvider_35 ) & ( failCountSP  = failCountSP  + 1 ) );
+TRANS
+    ( stateSP = ServiceProvider_35 ) & ( failCountSP  < 2 ) & ( actionsSP = ServiceProvider_sendTesting ) & ( actionsTC = TestingCompany_fromPSPSP ) -> next( stateSP = ServiceProvider_36 );
+TRANS
+    ( stateSP = ServiceProvider_36 ) & ( actionsSP = ServiceProvider_Pick63__0 ) & ( actionsTC = TestingCompany_TestPassed ) -> next( stateSP = ServiceProvider_37 );
+TRANS
+    ( stateSP = ServiceProvider_36 ) & ( actionsSP = ServiceProvider_Pick63__1 ) & ( actionsTC = TestingCompany_Invoke1 ) -> next( stateSP = ServiceProvider_38 );
+TRANS
+    ( stateSP = ServiceProvider_36 ) & ( actionsSP = ServiceProvider_Pick63__2 ) & ( actionsTC = TestingCompany_TestFailed ) -> next( stateSP = ServiceProvider_39 );
+TRANS
+    ( stateSP = ServiceProvider_35 ) & (  ! (failCountSP  < 2) ) & ( actionsSP = ServiceProvider_Testing ) -> next( stateSP = ServiceProvider_40 );
+TRANS
+    ( stateSP = ServiceProvider_40 ) & ( PassedSP = TRUE ) & ( actionsSP = ServiceProvider_Assign48 ) -> next( ( stateSP = ServiceProvider_41 ) & ( PassedSP = FALSE ) & ( failCountSP  = 0 ) );
+TRANS
+    ( stateSP = ServiceProvider_45 ) & ( actionsSP = ServiceProvider_Empty16 ) -> next( stateSP = ServiceProvider_41 );
+TRANS
+    ( stateSP = ServiceProvider_48 ) & ( actionsSP = ServiceProvider_onceagain ) -> next( ( stateSP = ServiceProvider_41 ) & ( failCountSP  = failCountSP  + 1 ) );
+TRANS
+    ( stateSP = ServiceProvider_41 ) & ( failCountSP  < 2 ) & ( actionsSP = ServiceProvider_sendDeploying ) & ( actionsHS = HardwareSupplier_fromPSPSPE ) -> next( stateSP = ServiceProvider_42 );
+TRANS
+    ( stateSP = ServiceProvider_42 ) & ( actionsSP = ServiceProvider_getresult__0 ) & ( actionsHS = HardwareSupplier_DeployPassed ) -> next( stateSP = ServiceProvider_43 );
+TRANS
+    ( stateSP = ServiceProvider_43 ) & ( actionsSP = ServiceProvider_passed1 ) -> next( ( stateSP = ServiceProvider_44 ) & ( failCountSP  = 2 ) & ( PassedSP = TRUE ) );
+TRANS
+    ( stateSP = ServiceProvider_44 ) & ( actionsSP = ServiceProvider_Pick64__0 ) & ( actionsPSP = PSP_sendFinalPaymentSP ) -> next( stateSP = ServiceProvider_45 );
+TRANS
+    ( stateSP = ServiceProvider_44 ) & ( actionsSP = ServiceProvider_Pick64__1 ) & ( actionsPSP = PSP_Invoke4 ) -> next( stateSP = ServiceProvider_46 );
+TRANS
+    ( stateSP = ServiceProvider_42 ) & ( actionsSP = ServiceProvider_getresult__1 ) & ( actionsHS = HardwareSupplier_Invoke1 ) -> next( stateSP = ServiceProvider_47 );
+TRANS
+    ( stateSP = ServiceProvider_42 ) & ( actionsSP = ServiceProvider_getresult__2 ) & ( actionsHS = HardwareSupplier_DeplyFailed ) -> next( stateSP = ServiceProvider_48 );
+TRANS
+    ( stateSP = ServiceProvider_41 ) & (  !(failCountSP  < 2) ) & ( actionsSP = ServiceProvider_deploying ) -> next( stateSP = ServiceProvider_49 );
+
+
+7 -- PSP
+VAR
+    statePSP : { PSP_0, PSP_1, PSP_2, PSP_3, PSP_4, PSP_5, PSP_6, PSP_7, PSP_8, PSP_9, PSP_10, PSP_11, PSP_12, PSP_13, PSP_14, PSP_15, PSP_16, PSP_17, PSP_18, PSP_19, PSP_20, PSP_21, PSP_22, PSP_23, PSP_24, PSP_25, PSP_26, PSP_27, PSP_28, PSP_29, PSP_30, PSP_31, PSP_32, PSP_33, PSP_34, PSP_35, PSP_36, PSP_37, PSP_38, PSP_39, PSP_40, PSP_41, PSP_42, PSP_43, PSP_44, PSP_45, PSP_46, PSP_47, PSP_48, PSP_49, PSP_50, PSP_51, PSP_52, PSP_53, PSP_54, PSP_55 };
+    passedPSP : boolean;
+    failCountPSP : 0..3;
+    actionsPSP : {PSP_toC__0, PSP_toC__1, PSP_While1, PSP_updateClient, PSP_Pick1__0, PSP_Pick1__1, PSP_payPenaltyClient, PSP_updateClient1, PSP_Invoke1, PSP_fromSP__0, PSP_fromSP__1, PSP_fromSP__2, PSP_Empty1, PSP_receiveUpdateSP, PSP_toSP__0, PSP_toSP__1, PSP_updateSP, PSP_Pick2__0, PSP_Pick2__1, PSP_payPenaltySP, PSP_updateSP1, PSP_Invoke2, PSP_firstPayment__0, PSP_firstPayment__1, PSP_Empty12, PSP_paymentSP__0, PSP_paymentSP__1, PSP_paySP, PSP_Invoke3, PSP_Change1__0, PSP_Change1__1, PSP_Change2__0, PSP_Change2__1, PSP_Empty2, PSP_Empty3, PSP_Pick22__0, PSP_Pick22__1, PSP_receiveChange2, PSP_Empty32, PSP_Empty34, PSP_Assign4322, PSP_Assign4323, PSP_sendRequest, PSP_receiveComponent__0, PSP_receiveComponent__1, PSP_Empty33, PSP_sendTesting, PSP_Testing, PSP_Pick23__0, PSP_Pick23__1, PSP_Pick23__2, PSP_passed, PSP_notPassed, PSP_Assign4324, PSP_sendDeploying, PSP_Deploying, PSP_Pick231__0, PSP_Pick231__1, PSP_Pick231__2, PSP_passed1, PSP_Pick232__0, PSP_Pick232__1, PSP_Pick233__0, PSP_Pick233__1, PSP_sendFinalPaymentSP, PSP_Invoke4, PSP_notPassed1, nothing };
+INIT
+    statePSP = PSP_0
+INIT
+    passedPSP = FALSE
+INIT
+    failCountPSP = 0
+TRANS
+    case
+        statePSP = PSP_0: next(actionsPSP) in { PSP_toC__0, PSP_toC__1, PSP_While1 };
+        statePSP = PSP_1: next(actionsPSP) in { PSP_updateClient };
+        statePSP = PSP_2: next(actionsPSP) in { PSP_Pick1__0, PSP_Pick1__1 };
+        statePSP = PSP_3: next(actionsPSP) in { PSP_payPenaltyClient };
+        statePSP = PSP_4: next(actionsPSP) in { PSP_updateClient1 };
+        statePSP = PSP_5: next(actionsPSP) in { PSP_Invoke1 };
+        statePSP = PSP_6: next(actionsPSP) in { nothing };
+        statePSP = PSP_7: next(actionsPSP) in { PSP_fromSP__0, PSP_fromSP__1, PSP_fromSP__2 };
+        statePSP = PSP_8: next(actionsPSP) in { PSP_Empty1 };
+        statePSP = PSP_9: next(actionsPSP) in { PSP_receiveUpdateSP };
+        statePSP = PSP_10: next(actionsPSP) in { nothing };
+        statePSP = PSP_11: next(actionsPSP) in { PSP_toSP__0, PSP_toSP__1 };
+        statePSP = PSP_12: next(actionsPSP) in { PSP_updateSP };
+        statePSP = PSP_13: next(actionsPSP) in { PSP_Pick2__0, PSP_Pick2__1 };
+        statePSP = PSP_14: next(actionsPSP) in { PSP_payPenaltySP };
+        statePSP = PSP_15: next(actionsPSP) in { PSP_updateSP1 };
+        statePSP = PSP_16: next(actionsPSP) in { PSP_Invoke2 };
+        statePSP = PSP_17: next(actionsPSP) in { nothing };
+        statePSP = PSP_18: next(actionsPSP) in { PSP_firstPayment__0, PSP_firstPayment__1 };
+        statePSP = PSP_19: next(actionsPSP) in { PSP_Empty12 };
+        statePSP = PSP_20: next(actionsPSP) in { nothing };
+        statePSP = PSP_21: next(actionsPSP) in { PSP_paymentSP__0, PSP_paymentSP__1 };
+        statePSP = PSP_22: next(actionsPSP) in { PSP_paySP };
+        statePSP = PSP_23: next(actionsPSP) in { PSP_Invoke3 };
+        statePSP = PSP_24: next(actionsPSP) in { nothing };
+        statePSP = PSP_25: next(actionsPSP) in { PSP_Change1__0, PSP_Change1__1, PSP_Change2__0, PSP_Change2__1 };
+        statePSP = PSP_26: next(actionsPSP) in { PSP_Empty2 };
+        statePSP = PSP_27: next(actionsPSP) in { PSP_Empty3 };
+        statePSP = PSP_28: next(actionsPSP) in { PSP_Pick22__0, PSP_Pick22__1 };
+        statePSP = PSP_29: next(actionsPSP) in { PSP_receiveChange2 };
+        statePSP = PSP_30: next(actionsPSP) in { PSP_Empty32 };
+        statePSP = PSP_31: next(actionsPSP) in { PSP_Empty34 };
+        statePSP = PSP_32: next(actionsPSP) in { PSP_Assign4322 };
+        statePSP = PSP_33: next(actionsPSP) in { PSP_Assign4323 };
+        statePSP = PSP_34: next(actionsPSP) in { PSP_sendRequest };
+        statePSP = PSP_35: next(actionsPSP) in { PSP_receiveComponent__0, PSP_receiveComponent__1 };
+        statePSP = PSP_36: next(actionsPSP) in { PSP_Empty33 };
+        statePSP = PSP_37: next(actionsPSP) in { nothing };
+        statePSP = PSP_38: next(actionsPSP) in { PSP_sendTesting, PSP_Testing };
+        statePSP = PSP_39: next(actionsPSP) in { PSP_Pick23__0, PSP_Pick23__1, PSP_Pick23__2 };
+        statePSP = PSP_40: next(actionsPSP) in { PSP_passed };
+        statePSP = PSP_41: next(actionsPSP) in { nothing };
+        statePSP = PSP_42: next(actionsPSP) in { PSP_notPassed };
+        statePSP = PSP_43: next(actionsPSP) in { PSP_Assign4324 };
+        statePSP = PSP_44: next(actionsPSP) in { PSP_sendDeploying, PSP_Deploying };
+        statePSP = PSP_45: next(actionsPSP) in { PSP_Pick231__0, PSP_Pick231__1, PSP_Pick231__2 };
+        statePSP = PSP_46: next(actionsPSP) in { PSP_passed1 };
+        statePSP = PSP_47: next(actionsPSP) in { PSP_Pick232__0, PSP_Pick232__1 };
+        statePSP = PSP_48: next(actionsPSP) in { PSP_Pick233__0, PSP_Pick233__1 };
+        statePSP = PSP_49: next(actionsPSP) in { PSP_sendFinalPaymentSP };
+        statePSP = PSP_50: next(actionsPSP) in { PSP_Invoke4 };
+        statePSP = PSP_51: next(actionsPSP) in { nothing };
+        statePSP = PSP_52: next(actionsPSP) in { nothing };
+        statePSP = PSP_53: next(actionsPSP) in { nothing };
+        statePSP = PSP_54: next(actionsPSP) in { PSP_notPassed1 };
+        statePSP = PSP_55: next(actionsPSP) in { nothing };
+    esac
+
+TRANS
+    ( statePSP = PSP_32 ) & ( actionsPSP = PSP_Assign4322 ) -> next( ( statePSP = PSP_0 ) & ( failCountPSP = failCountPSP + 1 ) );
+TRANS
+    ( statePSP = PSP_0 ) & ( failCountPSP < 2 ) & ( actionsPSP = PSP_toC__0 ) -> next( statePSP = PSP_1 );
+TRANS
+    ( statePSP = PSP_0 ) & ( failCountPSP < 2 ) & ( actionsPSP = PSP_toC__1 ) -> next( statePSP = PSP_2 );
+TRANS
+    ( statePSP = PSP_2 ) & ( actionsPSP = PSP_Pick1__0 ) -> next( statePSP = PSP_3 );
+TRANS
+    ( statePSP = PSP_3 ) & ( actionsPSP = PSP_payPenaltyClient ) & ( actionsC = Client_Update1__1 ) -> next( statePSP = PSP_4 );
+TRANS
+    ( statePSP = PSP_2 ) & ( actionsPSP = PSP_Pick1__1 ) -> next( statePSP = PSP_5 );
+TRANS
+    ( statePSP = PSP_5 ) & ( actionsPSP = PSP_Invoke1 ) & ( actionsC = Client_Update1__2 ) -> next( statePSP = PSP_6 );
+TRANS
+    ( statePSP = PSP_1 ) & ( actionsPSP = PSP_updateClient ) & ( actionsC = Client_Update1__0 ) -> next( statePSP = PSP_7 );
+TRANS
+    ( statePSP = PSP_4 ) & ( actionsPSP = PSP_updateClient1 ) & ( actionsC = Client_receiveUpdate1 ) -> next( statePSP = PSP_7 );
+TRANS
+    ( statePSP = PSP_7 ) & ( actionsPSP = PSP_fromSP__0 ) & ( actionsSP = ServiceProvider_updatePSP ) -> next( statePSP = PSP_8 );
+TRANS
+    ( statePSP = PSP_7 ) & ( actionsPSP = PSP_fromSP__1 ) & ( actionsSP = ServiceProvider_payPSPPenalty ) -> next( statePSP = PSP_9 );
+TRANS
+    ( statePSP = PSP_7 ) & ( actionsPSP = PSP_fromSP__2 ) & ( actionsSP = ServiceProvider_Invoke1 ) -> next( statePSP = PSP_10 );
+TRANS
+    ( statePSP = PSP_8 ) & ( actionsPSP = PSP_Empty1 ) -> next( statePSP = PSP_11 );
+TRANS
+    ( statePSP = PSP_9 ) & ( actionsPSP = PSP_receiveUpdateSP ) & ( actionsSP = ServiceProvider_updatePSP1 ) -> next( statePSP = PSP_11 );
+TRANS
+    ( statePSP = PSP_11 ) & ( actionsPSP = PSP_toSP__0 ) -> next( statePSP = PSP_12 );
+TRANS
+    ( statePSP = PSP_11 ) & ( actionsPSP = PSP_toSP__1 ) -> next( statePSP = PSP_13 );
+TRANS
+    ( statePSP = PSP_13 ) & ( actionsPSP = PSP_Pick2__0 ) -> next( statePSP = PSP_14 );
+TRANS
+    ( statePSP = PSP_14 ) & ( actionsPSP = PSP_payPenaltySP ) & ( actionsSP = ServiceProvider_Pick3__1 ) -> next( statePSP = PSP_15 );
+TRANS
+    ( statePSP = PSP_13 ) & ( actionsPSP = PSP_Pick2__1 ) -> next( statePSP = PSP_16 );
+TRANS
+    ( statePSP = PSP_16 ) & ( actionsPSP = PSP_Invoke2 ) & ( actionsSP = ServiceProvider_Pick3__2 ) -> next( statePSP = PSP_17 );
+TRANS
+    ( statePSP = PSP_12 ) & ( actionsPSP = PSP_updateSP ) & ( actionsSP = ServiceProvider_Pick3__0 ) -> next( statePSP = PSP_18 );
+TRANS
+    ( statePSP = PSP_15 ) & ( actionsPSP = PSP_updateSP1 ) & ( actionsSP = ServiceProvider_receivePSPUpdate ) -> next( statePSP = PSP_18 );
+TRANS
+    ( statePSP = PSP_18 ) & ( actionsPSP = PSP_firstPayment__0 ) & ( actionsC = Client_payPSP ) -> next( statePSP = PSP_19 );
+TRANS
+    ( statePSP = PSP_18 ) & ( actionsPSP = PSP_firstPayment__1 ) & ( actionsC = Client_Invoke1 ) -> next( statePSP = PSP_20 );
+TRANS
+    ( statePSP = PSP_19 ) & ( actionsPSP = PSP_Empty12 ) -> next( statePSP = PSP_21 );
+TRANS
+    ( statePSP = PSP_21 ) & ( actionsPSP = PSP_paymentSP__0 ) -> next( statePSP = PSP_22 );
+TRANS
+    ( statePSP = PSP_21 ) & ( actionsPSP = PSP_paymentSP__1 ) -> next( statePSP = PSP_23 );
+TRANS
+    ( statePSP = PSP_23 ) & ( actionsPSP = PSP_Invoke3 ) & ( actionsSP = ServiceProvider_receivePayment1__1 ) -> next( statePSP = PSP_24 );
+TRANS
+    ( statePSP = PSP_22 ) & ( actionsPSP = PSP_paySP ) & ( actionsSP = ServiceProvider_receivePayment1__0 ) -> next( statePSP = PSP_25 );
+TRANS
+    ( statePSP = PSP_25 ) & ( failCountPSP = 0 ) & ( actionsPSP = PSP_Change1__0 ) & ( actionsC = Client_changePSP ) -> next( statePSP = PSP_26 );
+TRANS
+    ( statePSP = PSP_25 ) & ( failCountPSP = 0 ) & ( actionsPSP = PSP_Change1__1 ) & ( actionsC = Client_Invoke2 ) -> next( statePSP = PSP_27 );
+TRANS
+    ( statePSP = PSP_25 ) & (  ! (failCountPSP = 0) ) & ( actionsPSP = PSP_Change2__0 ) & ( actionsC = Client_AskSecondChange ) -> next( statePSP = PSP_28 );
+TRANS
+    ( statePSP = PSP_28 ) & ( actionsPSP = PSP_Pick22__0 ) & ( actionsC = Client_PayPenaltyPSPSP ) -> next( statePSP = PSP_29 );
+TRANS
+    ( statePSP = PSP_28 ) & ( actionsPSP = PSP_Pick22__1 ) & ( actionsC = Client_WithdrawPSPSP ) -> next( statePSP = PSP_30 );
+TRANS
+    ( statePSP = PSP_25 ) & (  ! (failCountPSP = 0) ) & ( actionsPSP = PSP_Change2__1 ) & ( actionsC = Client_Invoke4 ) -> next( statePSP = PSP_31 );
+TRANS
+    ( statePSP = PSP_26 ) & ( actionsPSP = PSP_Empty2 ) -> next( statePSP = PSP_32 );
+TRANS
+    ( statePSP = PSP_27 ) & ( actionsPSP = PSP_Empty3 ) -> next( statePSP = PSP_32 );
+TRANS
+    ( statePSP = PSP_29 ) & ( actionsPSP = PSP_receiveChange2 ) & ( actionsC = Client_SendSecondChange ) -> next( statePSP = PSP_32 );
+TRANS
+    ( statePSP = PSP_30 ) & ( actionsPSP = PSP_Empty32 ) -> next( statePSP = PSP_32 );
+TRANS
+    ( statePSP = PSP_31 ) & ( actionsPSP = PSP_Empty34 ) -> next( statePSP = PSP_32 );
+TRANS
+    ( statePSP = PSP_0 ) & (  ! (failCountPSP < 2) ) & ( actionsPSP = PSP_While1 ) -> next( statePSP = PSP_33 );
+TRANS
+    ( statePSP = PSP_33 ) & ( actionsPSP = PSP_Assign4323 ) -> next( ( statePSP = PSP_34 ) & ( failCountPSP = 0 ) );
+TRANS
+    ( statePSP = PSP_34 ) & ( actionsPSP = PSP_sendRequest ) & ( actionsSP = ServiceProvider_receiveRequest ) -> next( statePSP = PSP_35 );
+TRANS
+    ( statePSP = PSP_35 ) & ( actionsPSP = PSP_receiveComponent__0 ) & ( actionsSP = ServiceProvider_sendComponent ) -> next( statePSP = PSP_36 );
+TRANS
+    ( statePSP = PSP_35 ) & ( actionsPSP = PSP_receiveComponent__1 ) & ( actionsSP = ServiceProvider_Invoke3 ) -> next( statePSP = PSP_37 );
+TRANS
+    ( statePSP = PSP_36 ) & ( actionsPSP = PSP_Empty33 ) -> next( statePSP = PSP_38 );
+TRANS
+    ( statePSP = PSP_40 ) & ( actionsPSP = PSP_passed ) -> next( ( statePSP = PSP_38 ) & ( passedPSP = TRUE ) & ( failCountPSP = 2 ) );
+TRANS
+    ( statePSP = PSP_42 ) & ( actionsPSP = PSP_notPassed ) -> next( ( statePSP = PSP_38 ) & ( failCountPSP = failCountPSP + 1 ) );
+TRANS
+    ( statePSP = PSP_38 ) & ( failCountPSP < 2 ) & ( actionsPSP = PSP_sendTesting ) & ( actionsTC = TestingCompany_fromPSPSP ) -> next( statePSP = PSP_39 );
+TRANS
+    ( statePSP = PSP_39 ) & ( actionsPSP = PSP_Pick23__0 ) & ( actionsTC = TestingCompany_TestPassed ) -> next( statePSP = PSP_40 );
+TRANS
+    ( statePSP = PSP_39 ) & ( actionsPSP = PSP_Pick23__1 ) & ( actionsTC = TestingCompany_Invoke1 ) -> next( statePSP = PSP_41 );
+TRANS
+    ( statePSP = PSP_39 ) & ( actionsPSP = PSP_Pick23__2 ) & ( actionsTC = TestingCompany_TestFailed ) -> next( statePSP = PSP_42 );
+TRANS
+    ( statePSP = PSP_38 ) & (  ! (failCountPSP < 2) ) & ( actionsPSP = PSP_Testing ) -> next( statePSP = PSP_43 );
+TRANS
+    ( statePSP = PSP_43 ) & ( passedPSP = TRUE ) & ( actionsPSP = PSP_Assign4324 ) -> next( ( statePSP = PSP_44 ) & ( failCountPSP = 0 ) & ( passedPSP = FALSE ) );
+TRANS
+    ( statePSP = PSP_49 ) & ( actionsPSP = PSP_sendFinalPaymentSP ) & ( actionsSP = ServiceProvider_Pick64__0 ) -> next( statePSP = PSP_44 );
+TRANS
+    ( statePSP = PSP_54 ) & ( actionsPSP = PSP_notPassed1 ) -> next( ( statePSP = PSP_44 ) & ( failCountPSP = failCountPSP + 1 ) );
+TRANS
+    ( statePSP = PSP_44 ) & ( failCountPSP < 2 ) & ( actionsPSP = PSP_sendDeploying ) & ( actionsHS = HardwareSupplier_fromPSPSPE ) -> next( statePSP = PSP_45 );
+TRANS
+    ( statePSP = PSP_45 ) & ( actionsPSP = PSP_Pick231__0 ) & ( actionsHS = HardwareSupplier_DeployPassed ) -> next( statePSP = PSP_46 );
+TRANS
+    ( statePSP = PSP_46 ) & ( actionsPSP = PSP_passed1 ) -> next( ( statePSP = PSP_47 ) & ( passedPSP = TRUE ) & ( failCountPSP = 2 ) );
+TRANS
+    ( statePSP = PSP_47 ) & ( actionsPSP = PSP_Pick232__0 ) & ( actionsC = Client_sendFInalPayment ) -> next( statePSP = PSP_48 );
+TRANS
+    ( statePSP = PSP_48 ) & ( actionsPSP = PSP_Pick233__0 ) -> next( statePSP = PSP_49 );
+TRANS
+    ( statePSP = PSP_48 ) & ( actionsPSP = PSP_Pick233__1 ) -> next( statePSP = PSP_50 );
+TRANS
+    ( statePSP = PSP_50 ) & ( actionsPSP = PSP_Invoke4 ) & ( actionsSP = ServiceProvider_Pick64__1 ) -> next( statePSP = PSP_51 );
+TRANS
+    ( statePSP = PSP_47 ) & ( actionsPSP = PSP_Pick232__1 ) & ( actionsC = Client_Invoke5 ) -> next( statePSP = PSP_52 );
+TRANS
+    ( statePSP = PSP_45 ) & ( actionsPSP = PSP_Pick231__1 ) & ( actionsHS = HardwareSupplier_Invoke1 ) -> next( statePSP = PSP_53 );
+TRANS
+    ( statePSP = PSP_45 ) & ( actionsPSP = PSP_Pick231__2 ) & ( actionsHS = HardwareSupplier_DeplyFailed ) -> next( statePSP = PSP_54 );
+TRANS
+    ( statePSP = PSP_44 ) & (  !(failCountPSP < 2) ) & ( actionsPSP = PSP_Deploying ) -> next( statePSP = PSP_55 );
+
+
+8 -- Environment
+VAR
+    HardwareSupplier_green : boolean;
+    HardwareSupplier_end : boolean;
+    HardwareSupplier_red0 : boolean;
+    HardwareSupplier_red1 : boolean;
+    TestingCompany_green : boolean;
+    TestingCompany_end : boolean;
+    TestingCompany_red0 : boolean;
+    Expert_green : boolean;
+    Expert_end : boolean;
+    Expert_red0 : boolean;
+    InsuranceCompany_green : boolean;
+    InsuranceCompany_end : boolean;
+    InsuranceCompany_red0 : boolean;
+    Client_green : boolean;
+    Client_end : boolean;
+    Client_red0 : boolean;
+    Client_red1 : boolean;
+    ServiceProvider_green : boolean;
+    ServiceProvider_end : boolean;
+    ServiceProvider_red0 : boolean;
+    ServiceProvider_red1 : boolean;
+    ServiceProvider_red2 : boolean;
+    PSP_green : boolean;
+    PSP_end : boolean;
+    PSP_red0 : boolean;
+    PSP_red1 : boolean;
+    PSP_red2 : boolean;
+    PSP_red3 : boolean;
+
+
+TRANS
+    stateHS = HardwareSupplier_0 | stateHS = HardwareSupplier_1 | stateHS = HardwareSupplier_2 | stateHS = HardwareSupplier_5 |
+                              stateHS = HardwareSupplier_6 | stateHS = HardwareSupplier_7 | stateHS = HardwareSupplier_8 | stateHS = HardwareSupplier_9 |
+                              stateHS = HardwareSupplier_10 | stateHS = HardwareSupplier_11 | stateHS = HardwareSupplier_14 -> next(HardwareSupplier_green);
+TRANS
+    stateHS = HardwareSupplier_14 -> next(HardwareSupplier_end);
+TRANS
+    stateHS = HardwareSupplier_4 -> next(HardwareSupplier_red0);
+TRANS
+    stateHS = HardwareSupplier_13 -> next(HardwareSupplier_red1);
+    
+TRANS
+    ( stateTC = TestingCompany_0 ) | ( stateTC = TestingCompany_1 ) | ( stateTC = TestingCompany_2 ) | ( stateTC = TestingCompany_3 ) | (
+                            stateTC = TestingCompany_4 ) | ( stateTC = TestingCompany_5 |stateTC = TestingCompany_6 ) | ( stateTC = TestingCompany_9 )
+                            -> next(TestingCompany_green);
+TRANS
+    stateTC = TestingCompany_9 -> next(TestingCompany_end);
+TRANS
+    stateTC = TestingCompany_8 -> next(TestingCompany_red0);
+
+TRANS
+    ( stateE = Expert_0 ) | ( stateE = Expert_1 ) | (
+                    stateE = Expert_2 ) | ( stateE = Expert_3 ) | (
+                    stateE = Expert_4 ) | ( stateE = Expert_5 ) | (
+                    stateE = Expert_6 ) | ( stateE = Expert_8 ) -> next(Expert_green);
+TRANS
+    stateE = Expert_8 -> next(Expert_end);
+TRANS
+    stateE = Expert_7 -> next(Expert_red0);
+
+TRANS
+    ( stateIC = InsuranceCompany_0 ) | ( stateIC = InsuranceCompany_1 ) | ( stateIC = InsuranceCompany_2 ) | ( stateIC = InsuranceCompany_3 ) | (
+                              stateIC = InsuranceCompany_6 ) -> next(InsuranceCompany_green);
+TRANS
+    stateIC = InsuranceCompany_6 -> next(InsuranceCompany_end);
+TRANS
+    stateIC = InsuranceCompany_5 -> next(InsuranceCompany_red0);
+
+TRANS
+    ( stateC = Client_0 ) | ( stateC = Client_1 ) | (
+        stateC = Client_2 ) | ( stateC = Client_3 ) | (
+        stateC = Client_4 ) | ( stateC = Client_5 ) | (
+        stateC = Client_6 ) | ( stateC = Client_7 ) | (
+        stateC = Client_8 ) | ( stateC = Client_9 ) | (
+        stateC = Client_12 ) | ( stateC = Client_13 ) | (
+        stateC = Client_14 ) | ( stateC = Client_15 ) | (
+        stateC = Client_16 ) | ( stateC = Client_17 ) | (
+        stateC = Client_18 ) | ( stateC = Client_19 ) | (
+        stateC = Client_20 ) | ( stateC = Client_21 ) | (
+        stateC = Client_22 ) | ( stateC = Client_23 ) | (
+        stateC = Client_24 ) | ( stateC = Client_25 ) | (
+        stateC = Client_26 ) | ( stateC = Client_27 ) | (
+        stateC = Client_28 ) | ( stateC = Client_29 ) | (
+        stateC = Client_30 ) | ( stateC = Client_31 ) | (
+        stateC = Client_32 ) | ( stateC = Client_33 ) | (
+        stateC = Client_34 ) | ( stateC = Client_35 ) | (
+        stateC = Client_36 ) | ( stateC = Client_37 ) | (
+        stateC = Client_38 ) | ( stateC = Client_39 ) | (
+        stateC = Client_40 ) | ( stateC = Client_41 ) | (
+        stateC = Client_42 ) | ( stateC = Client_45 ) | (
+        stateC = Client_46 ) | ( stateC = Client_47 ) | (
+        stateC = Client_48 ) | ( stateC = Client_49 ) | (
+        stateC = Client_50 ) | ( stateC = Client_51 ) -> next(Client_green);
+TRANS
+    stateC = Client_51 -> next(Client_end);
+TRANS
+    stateC = Client_11 -> next(Client_red0);
+TRANS
+    stateC = Client_44 -> next(Client_red1);
+
+TRANS
+    ( stateSP = ServiceProvider_0 ) | ( stateSP = ServiceProvider_1 ) | (
+         stateSP = ServiceProvider_2 ) | ( stateSP = ServiceProvider_3 ) | (
+         stateSP = ServiceProvider_4 ) | ( stateSP = ServiceProvider_7 ) | (
+         stateSP = ServiceProvider_8 ) | ( stateSP = ServiceProvider_9 ) | (
+         stateSP = ServiceProvider_10 ) | ( stateSP = ServiceProvider_11 ) | (
+         stateSP = ServiceProvider_14 ) | ( stateSP = ServiceProvider_15 ) | (
+         stateSP = ServiceProvider_16 ) | ( stateSP = ServiceProvider_17 ) | (
+         stateSP = ServiceProvider_18 ) | ( stateSP = ServiceProvider_19 ) | (
+         stateSP = ServiceProvider_20 ) | ( stateSP = ServiceProvider_21 ) | (
+         stateSP = ServiceProvider_22 ) | ( stateSP = ServiceProvider_23 ) | (
+         stateSP = ServiceProvider_24 ) | ( stateSP = ServiceProvider_25 ) | (
+         stateSP = ServiceProvider_26 ) | ( stateSP = ServiceProvider_27 ) | (
+         stateSP = ServiceProvider_28 ) | ( stateSP = ServiceProvider_29 ) | (
+         stateSP = ServiceProvider_30 ) | ( stateSP = ServiceProvider_31 ) | (
+         stateSP = ServiceProvider_32 ) | ( stateSP = ServiceProvider_35 ) | (
+         stateSP = ServiceProvider_36 ) | ( stateSP = ServiceProvider_37 ) | (
+         stateSP = ServiceProvider_38 ) | ( stateSP = ServiceProvider_39 ) | (
+         stateSP = ServiceProvider_40 ) | ( stateSP = ServiceProvider_41 ) | (
+         stateSP = ServiceProvider_42 ) | ( stateSP = ServiceProvider_43 ) | (
+         stateSP = ServiceProvider_44 ) | ( stateSP = ServiceProvider_45 ) | (
+         stateSP = ServiceProvider_46 ) | ( stateSP = ServiceProvider_47 ) | (
+         stateSP = ServiceProvider_48 ) | ( stateSP = ServiceProvider_49 ) -> next(ServiceProvider_green);
+TRANS
+    stateSP = ServiceProvider_49 -> next(ServiceProvider_end);
+TRANS
+    stateSP = ServiceProvider_6 -> next(ServiceProvider_red0);
+TRANS
+    stateSP = ServiceProvider_13 -> next(ServiceProvider_red1);
+TRANS
+    stateSP = ServiceProvider_34 -> next(ServiceProvider_red2);
+
+TRANS
+    ( statePSP = PSP_0 ) | ( statePSP = PSP_1 ) | (
+         statePSP = PSP_2 ) | ( statePSP = PSP_3 ) | (
+         statePSP = PSP_4 ) | ( statePSP = PSP_7 ) | (
+         statePSP = PSP_8 ) | ( statePSP = PSP_9 ) | (
+         statePSP = PSP_10 ) | ( statePSP = PSP_11 ) | (
+         statePSP = PSP_12 ) | ( statePSP = PSP_13 ) | (
+         statePSP = PSP_14 ) | ( statePSP = PSP_15 ) | (
+         statePSP = PSP_18 ) | ( statePSP = PSP_19 ) | (
+         statePSP = PSP_20 ) | ( statePSP = PSP_21 ) | (
+         statePSP = PSP_22 ) | ( statePSP = PSP_25 ) | (
+         statePSP = PSP_26 ) | ( statePSP = PSP_27 ) | (
+         statePSP = PSP_28 ) | ( statePSP = PSP_29 ) | (
+         statePSP = PSP_30 ) | ( statePSP = PSP_31 ) | (
+         statePSP = PSP_32 ) | ( statePSP = PSP_33 ) | (
+         statePSP = PSP_34 ) | ( statePSP = PSP_35 ) | (
+         statePSP = PSP_36 ) | ( statePSP = PSP_37 ) | (
+         statePSP = PSP_38 ) | ( statePSP = PSP_39 ) | (
+         statePSP = PSP_40 ) | ( statePSP = PSP_41 ) | (
+         statePSP = PSP_42 ) | ( statePSP = PSP_43 ) | (
+         statePSP = PSP_44 ) | ( statePSP = PSP_45 ) | (
+         statePSP = PSP_46 ) | ( statePSP = PSP_47 ) | (
+         statePSP = PSP_48 ) | ( statePSP = PSP_49 ) | (
+         statePSP = PSP_52 ) | ( statePSP = PSP_53 ) | (
+         statePSP = PSP_54 ) | ( statePSP = PSP_55 ) -> next(PSP_green);
+TRANS
+    statePSP = PSP_55 -> next(PSP_end);
+TRANS
+    statePSP = PSP_6 -> next(PSP_red0);
+TRANS
+    statePSP = PSP_17 -> next(PSP_red1);
+TRANS
+    statePSP = PSP_24 -> next(PSP_red2);
+TRANS
+    statePSP = PSP_51 -> next(PSP_red3);
+
+
+-- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_end; -- FALSE
+-- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_green; -- TRUE
+-- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red0; -- FALSE/TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red1; -- FALSE
+--ATLREACHTARGET (1,2,3,4,5,6,7) TestingCompany_red0; -- FALSE/TRUE
+--ATLREACHTARGET (1,2,3,4,5,6,7) Expert_red0; -- FALSE
+-- ATLREACHTARGET (1,2,3,5,6,7) InsuranceCompany_red0;
+-- ATLREACHTARGET (1,2,3,5,6,7) Client_red0;
+-- ATLREACHTARGET (1,2,3,5,6,7) Client_red1;
+-- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red0;
+-- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red1;
+-- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red2;
+-- ATLREACHTARGET (1,2,3,5,6,7) PSP_red0;
+-- ATLREACHTARGET (1,2,3,5,6,7) PSP_red1;
+-- ATLREACHTARGET (1,2,3,5,6,7) PSP_red2;
+-- ATLREACHTARGET (1,2,3,5,6,7) PSP_red3;
+
