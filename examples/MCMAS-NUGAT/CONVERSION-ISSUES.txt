@@ -1,0 +1,52 @@
+========================================
+        m : mcmas-1.2.2
+        n : nugat-0.6.5
+========================================
+m : Obsvars
+n : VAR -- (for environmental agent)
+
+m : Vars:
+n : VAR
+
+m : Actions : {cont1,cont2}
+n : VAR actions1 : {cont1,cont2}
+
+m : Protocol
+n : TRANS
+        case
+            a=b : next(actions1) in {cont1}
+        esac
+
+m : Evolution
+n : split with TRANS
+
+m : a=b if c=d   -- regex      \S(.*) if (.*);      with       $2 -> next( s$1 );
+n : c=d -> next(a=b)
+
+m : InitStates
+n : split into each agent with INIT
+
+m : var1 : {A}  -- value with at least 1 chars
+n : var1 : {AB} -- value with at least 2 chars
+
+m : Vars : vrn -- name with at least 3 chars
+n : VAR vrnm -- name with at least 4 chars
+
+m : Groups
+n : ( idPlayer, ... )
+
+m : boolean values/operators : true/false , and , or
+n : TRUE/FALSE , & , |
+
+remove all
+    - "Agent "  regexp from  ^DC(.*)$  to  $1 -- DC$1
+    - Lobvars rows
+    - end Protocol, end Agent, end Evolution, end InitStates, end Obsvars, end Lobsvars, end Vars
+
+RegExp Useful
+
+s : (.\|)\n
+r :  )$1 ( \n
+
+--replace all agents vars starts with DC#
+regexp DC(.*?)\.(.*?)= WITH $2$1=

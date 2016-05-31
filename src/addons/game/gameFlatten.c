@@ -433,13 +433,13 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
        child is the body of spec.
     */
     if (list != (node_ptr*) NULL) {
-      char str[50];
+      char str[5000]; // 500 agents player
 
       node_ptr spec_body = cdr(spec);
 
       if(spec->type==ATLREACHTARGET) {
 
-        char str2[50];
+        char str2[5000];
 
         strcpy(str,"");
         for (iterloop = car(spec); iterloop != Nil; iterloop = cdr(iterloop)) {

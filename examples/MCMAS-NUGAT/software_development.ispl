@@ -674,34 +674,39 @@ InitStates
 end InitStates
 
 Groups
-    g1={HardwareSupplier,TestingCompany,Expert,Client,ServiceProvider,PSP};
+    --g1={HardwareSupplier,TestingCompany,                         Client,ServiceProvider,PSP};
+    g1={HardwareSupplier,TestingCompany,Expert,InsuranceCompany,Client,ServiceProvider,PSP};
 end Groups
 
 Fairness
 end Fairness
 
 Formulae
-	-- A ( HardwareSupplier_green U HardwareSupplier_end );
-    -- E ( HardwareSupplier_green U HardwareSupplier_end );
-    -- E ( TestingCompany_green U TestingCompany_end );
-    -- E ( Expert_green U Expert_end );
-    -- E ( InsuranceCompany_green U InsuranceCompany_end );
-    -- E ( Client_green U Client_end );
-    -- E ( ServiceProvider_green U ServiceProvider_end );
-    -- E ( PSP_green U PSP_end );
-    <g1>F HardwareSupplier_red0;
-    -- <g1>F HardwareSupplier_red1;
-    -- <g1>F TestingCompany_red0;
-    -- <g1>F Expert_red0;
-    -- <g1>F InsuranceCompany_red0;
-    -- <g1>F Client_red0;
-    -- <g1>F Client_red1;
-    -- <g1>F ServiceProvider_red0;
-    -- <g1>F ServiceProvider_red1;
-    -- <g1>F ServiceProvider_red2;
-    -- <g1>F PSP_red0;
-    -- <g1>F PSP_red1;
-    -- <g1>F PSP_red2;
-    -- <g1>F PSP_red3;
+	--A ( HardwareSupplier_green U HardwareSupplier_end );
+    --E ( HardwareSupplier_green U HardwareSupplier_end );
+    --E ( TestingCompany_green U TestingCompany_end );
+    --E ( Expert_green U Expert_end );
+    --E ( InsuranceCompany_green U InsuranceCompany_end );
+    --E ( Client_green U Client_end );
+    --E ( ServiceProvider_green U ServiceProvider_end );
+    --E ( PSP_green U PSP_end );
+
+    <g1>F HardwareSupplier_green; -- TRUE
+    <g1>F HardwareSupplier_end; -- FALSE
+    <g1>F HardwareSupplier_red0; -- TRUE
+    <g1>F HardwareSupplier_red1; -- FALSE
+
+    <g1>F TestingCompany_red0;
+    <g1>F Expert_red0; -- FALSE
+    <g1>F InsuranceCompany_red0;
+    <g1>F Client_red0;
+    <g1>F Client_red1;
+    <g1>F ServiceProvider_red0;
+    <g1>F ServiceProvider_red1;
+    <g1>F ServiceProvider_red2;
+    <g1>F PSP_red0;
+    <g1>F PSP_red1;
+    <g1>F PSP_red2;
+    <g1>F PSP_red3;
 end Formulae
 

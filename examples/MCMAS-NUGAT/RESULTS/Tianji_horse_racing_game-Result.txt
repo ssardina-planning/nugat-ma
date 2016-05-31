@@ -6,7 +6,7 @@
 ************************************************************************
 ************************************************************************
 =======================================================================
-                       MCMAS v1.2.2 
+                       MCMAS v1.2.2
 =======================================================================
 Command line: ./examples/MCMAS/mcmas-linux64-1.2.2 examples/MCMAS/OK-Tianji_horse_racing_game.ispl
 
@@ -122,8 +122,8 @@ Forward Partitioning Schedule BDD cluster size (#nodes):
 cluster 1       :       size 14
 Backward Partitioning Schedule BDD cluster size (#nodes):
 cluster 1       :       size 14
-Quitting the Game package... 
-Quitting the BMC package... 
-Done 
+Quitting the Game package...
+Quitting the BMC package...
+Done
 
 Successful termination

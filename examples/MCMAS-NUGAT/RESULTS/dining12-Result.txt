@@ -1,0 +1,80 @@
+1. ONLY ONE ROW WITH FALSE
+-----------------------------------MCMAS-----------------------------------
+Formula number 1: ((<g1>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+execution time = 0.719
+-----------------------------------NUGAT-----------------------------------
+--   AtlReachTarget PLAYER_1  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+User time    0.828 seconds
+System time  0.048 seconds
+
+2.
+-----------------------------------MCMAS-----------------------------------
+Formula number 1: ((<g1>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+execution time = 0.488
+-----------------------------------NUGAT-----------------------------------
+AtlReachTarget PLAYER_1  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+User time    0.834 seconds
+System time  0.060 seconds
+
+3. 12 ROWS WITH FALSE
+-----------------------------------MCMAS-----------------------------------
+Formula number 1: ((<g1>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 2: ((<g2>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 3: ((<g3>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 4: ((<g4>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 5: ((<g5>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 6: ((<g6>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 7: ((<g7>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 8: ((<g8>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 9: ((<g9>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 10: ((<g10>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 11: ((<g11>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+Formula number 12: ((<g12>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is FALSE in the model
+execution time = 1.471
+-----------------------------------NUGAT-----------------------------------
+AtlReachTarget PLAYER_1  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_2  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_3  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_4  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_5  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_6  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_7  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_8  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_9  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_10  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_11  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+AtlReachTarget PLAYER_12  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : no strategy exists
+User time    0.894 seconds
+System time  0.084 seconds
+
+4. 12 ROWS WITH TRUE
+-----------------------------------MCMAS-----------------------------------
+Formula number 1: ((<g1>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 2: ((<g2>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 3: ((<g3>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 4: ((<g4>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 5: ((<g5>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 6: ((<g6>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 7: ((<g7>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 8: ((<g8>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 9: ((<g9>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 10: ((<g10>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 11: ((<g11>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+Formula number 12: ((<g12>F (odd && (! c1paid))) -> ((((((((((c2paid || c3paid) || c4paid) || c5paid) || c6paid) || c7paid) || c8paid) || c9paid) || c10paid) || c11paid) || c12paid)), is TRUE in the model
+execution time = 0.513
+
+-----------------------------------NUGAT-----------------------------------
+--   AtlReachTarget PLAYER_1  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_2  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_3  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_4  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_5  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_6  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_7  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_8  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_9  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_10  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_11  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+--   AtlReachTarget PLAYER_12  ((odde & !c1paid) -> ((((((((((c2paid | c3paid) | c4paid) | c5paid) | c6paid) | c7paid) | c8paid) | c9paid) | c10paid) | c11paid) | c12paid))  : the strategy has been found
+User time    0.929 seconds
+System time  0.056 seconds

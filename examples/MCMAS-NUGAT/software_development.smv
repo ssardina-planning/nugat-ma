@@ -7,12 +7,11 @@ GAME
 VAR
     stateHS : { HardwareSupplier_0, HardwareSupplier_1, HardwareSupplier_2, HardwareSupplier_3, HardwareSupplier_4, HardwareSupplier_5, HardwareSupplier_6, HardwareSupplier_7, HardwareSupplier_8, HardwareSupplier_9, HardwareSupplier_10, HardwareSupplier_11, HardwareSupplier_12, HardwareSupplier_13, HardwareSupplier_14 };
     failCountHS : 0..3;
+
     actionsHS : {HardwareSupplier_receiveC, HardwareSupplier_Pick1__0, HardwareSupplier_Pick1__1, HardwareSupplier_toClient, HardwareSupplier_Invoke2, HardwareSupplier_fromClient1, HardwareSupplier_fromPSPSPE, HardwareSupplier_While1, HardwareSupplier_Pick2__0, HardwareSupplier_Pick2__1, HardwareSupplier_Pick2__2, HardwareSupplier_DeployPassed, HardwareSupplier_Assign1, HardwareSupplier_DeplyFailed, HardwareSupplier_Assign2, HardwareSupplier_Invoke1, nothing };
 
 INIT
-    stateHS = HardwareSupplier_0
-INIT
-    failCountHS = 0
+    stateHS = HardwareSupplier_0 & failCountHS = 0
 
 TRANS
     case
@@ -71,12 +70,11 @@ TRANS
 VAR
     stateTC : { TestingCompany_0, TestingCompany_1, TestingCompany_2, TestingCompany_3, TestingCompany_4, TestingCompany_5, TestingCompany_6, TestingCompany_7, TestingCompany_8, TestingCompany_9 };
     failCounterTC : 0..3;
+
     actionsTC : {TestingCompany_fromClient, TestingCompany_fromPSPSP, TestingCompany_While1, TestingCompany_Pick1__0, TestingCompany_Pick1__1, TestingCompany_Pick1__2, TestingCompany_TestPassed, TestingCompany_Assign1, TestingCompany_TestFailed, TestingCompany_Assign2, TestingCompany_Invoke1, nothing };
 
 INIT
-    stateTC = TestingCompany_0
-INIT
-    failCounterTC = 0
+    stateTC = TestingCompany_0 & failCounterTC = 0
 
 TRANS
     case
@@ -119,11 +117,10 @@ TRANS
 VAR
     stateE : { Expert_0, Expert_1, Expert_2, Expert_3, Expert_4, Expert_5, Expert_6, Expert_7, Expert_8 };
     failCountE : 0..3;
+
     actionsE : {Expert_fromClient, Expert_Pick2__0, Expert_Pick2__1, Expert_While1, Expert_toHardware, Expert_Pick1__0, Expert_Pick1__1, Expert_Pick1__2, Expert_Assign2, Expert_Assign4, nothing };
 INIT
-    stateE = Expert_0
-INIT
-    failCountE  = 0
+    stateE = Expert_0 & failCountE  = 0
 
 TRANS
     case
@@ -163,6 +160,7 @@ TRANS
 4 -- InsuranceCompany
 VAR
     stateIC : { InsuranceCompany_0, InsuranceCompany_1, InsuranceCompany_2, InsuranceCompany_3, InsuranceCompany_4, InsuranceCompany_5, InsuranceCompany_6 };
+
     actionsIC : {InsuranceCompany_fromClient, InsuranceCompany_fromClient1, InsuranceCompany_Pick1__0, InsuranceCompany_Pick1__1, InsuranceCompany_toClient, InsuranceCompany_Invoke1, nothing };
 INIT
     stateIC = InsuranceCompany_0
@@ -198,15 +196,10 @@ VAR
     passed1C : boolean;
     passedC : boolean;
     failCountC : 0..3;
+
     actionsC : {Client_Update1__0, Client_Update1__1, Client_Update1__2, Client_While1, Client_Empty1, Client_receiveUpdate1, Client_Update11__0, Client_Update11__1, Client_Update11__2, Client_Empty12, Client_receiveUpdate121, Client_Payment1__0, Client_Payment1__1, Client_payPSP, Client_Invoke1, Client_ChangePSP1__0, Client_ChangePSP1__1, Client_Change2__0, Client_Change2__1, Client_changePSP, Client_Invoke2, Client_ChangeSP1__0, Client_ChangeSP1__1, Client_changeSP, Client_Invoke3, Client_Invoke4, Client_AskSecondChange, Client_Pick442__0, Client_Pick442__1, Client_PayPenaltyPSPSP, Client_SendSecondChange, Client_WithdrawPSPSP, Client_Assign375, Client_Assign376, Client_sendTesting, Client_Pick441__0, Client_Pick441__1, Client_Pick441__2, Client_Testing, Client_Assign35, Client_Assign36, Client_If43, Client_buyInsurance, Client_buyHardware, Client_Pick45__0, Client_Pick45__1, Client_Empty14, Client_sendDeployment, Client_askExpert, Client_Pick44__0, Client_Pick44__1, Client_Pick44__2, Client_Deploying, Client_Assign351, Client_Pick444__0, Client_Pick444__1, Client_sendFInalPayment, Client_Invoke5, Client_Assign361, Client_askCompensation, Client_If41, Client_Pick46__0, Client_Pick46__1, Client_Empty16, nothing };
 INIT
-    stateC = Client_0
-INIT
-    passed1C  = FALSE
-INIT
-    passedC  = FALSE
-INIT
-    failCountC = 0
+    stateC = Client_0 & passed1C  = FALSE & passedC  = FALSE & failCountC = 0
 
 TRANS
     case
@@ -399,13 +392,10 @@ VAR
     stateSP : { ServiceProvider_0, ServiceProvider_1, ServiceProvider_2, ServiceProvider_3, ServiceProvider_4, ServiceProvider_5, ServiceProvider_6, ServiceProvider_7, ServiceProvider_8, ServiceProvider_9, ServiceProvider_10, ServiceProvider_11, ServiceProvider_12, ServiceProvider_13, ServiceProvider_14, ServiceProvider_15, ServiceProvider_16, ServiceProvider_17, ServiceProvider_18, ServiceProvider_19, ServiceProvider_20, ServiceProvider_21, ServiceProvider_22, ServiceProvider_23, ServiceProvider_24, ServiceProvider_25, ServiceProvider_26, ServiceProvider_27, ServiceProvider_28, ServiceProvider_29, ServiceProvider_30, ServiceProvider_31, ServiceProvider_32, ServiceProvider_33, ServiceProvider_34, ServiceProvider_35, ServiceProvider_36, ServiceProvider_37, ServiceProvider_38, ServiceProvider_39, ServiceProvider_40, ServiceProvider_41, ServiceProvider_42, ServiceProvider_43, ServiceProvider_44, ServiceProvider_45, ServiceProvider_46, ServiceProvider_47, ServiceProvider_48, ServiceProvider_49 };
     PassedSP : boolean;
     failCountSP : 0..3;
+
     actionsSP : {ServiceProvider_Pick1__0, ServiceProvider_Pick1__1, ServiceProvider_While1, ServiceProvider_updateC, ServiceProvider_Pick5__0, ServiceProvider_Pick5__1, ServiceProvider_payClientPenalty, ServiceProvider_updateClient1, ServiceProvider_Invoke2, ServiceProvider_Pick2__0, ServiceProvider_Pick2__1, ServiceProvider_updatePSP, ServiceProvider_Pick4__0, ServiceProvider_Pick4__1, ServiceProvider_payPSPPenalty, ServiceProvider_updatePSP1, ServiceProvider_Invoke1, ServiceProvider_Pick3__0, ServiceProvider_Pick3__1, ServiceProvider_Pick3__2, ServiceProvider_Empty1, ServiceProvider_receivePSPUpdate, ServiceProvider_receivePayment1__0, ServiceProvider_receivePayment1__1, ServiceProvider_Empty2, ServiceProvider_Change1__0, ServiceProvider_Change1__1, ServiceProvider_Change2__0, ServiceProvider_Change2__1, ServiceProvider_Empty12, ServiceProvider_Empty13, ServiceProvider_Pick62__0, ServiceProvider_Pick62__1, ServiceProvider_receiveSecondChange, ServiceProvider_Empty15, ServiceProvider_Empty14, ServiceProvider_Assign46, ServiceProvider_Assign47, ServiceProvider_receiveRequest, ServiceProvider_SendComponent__0, ServiceProvider_SendComponent__1, ServiceProvider_sendComponent, ServiceProvider_Invoke3, ServiceProvider_sendTesting, ServiceProvider_Testing, ServiceProvider_Pick63__0, ServiceProvider_Pick63__1, ServiceProvider_Pick63__2, ServiceProvider_passed, ServiceProvider_Assign42, ServiceProvider_Assign48, ServiceProvider_sendDeploying, ServiceProvider_deploying, ServiceProvider_getresult__0, ServiceProvider_getresult__1, ServiceProvider_getresult__2, ServiceProvider_passed1, ServiceProvider_Pick64__0, ServiceProvider_Pick64__1, ServiceProvider_Empty16, ServiceProvider_onceagain, nothing };
 INIT
-    stateSP = ServiceProvider_0
-INIT
-    PassedSP = FALSE
-INIT
-    failCountSP = 0
+    stateSP = ServiceProvider_0 & PassedSP = FALSE & failCountSP = 0
 
 TRANS
     case
@@ -590,13 +580,10 @@ VAR
     statePSP : { PSP_0, PSP_1, PSP_2, PSP_3, PSP_4, PSP_5, PSP_6, PSP_7, PSP_8, PSP_9, PSP_10, PSP_11, PSP_12, PSP_13, PSP_14, PSP_15, PSP_16, PSP_17, PSP_18, PSP_19, PSP_20, PSP_21, PSP_22, PSP_23, PSP_24, PSP_25, PSP_26, PSP_27, PSP_28, PSP_29, PSP_30, PSP_31, PSP_32, PSP_33, PSP_34, PSP_35, PSP_36, PSP_37, PSP_38, PSP_39, PSP_40, PSP_41, PSP_42, PSP_43, PSP_44, PSP_45, PSP_46, PSP_47, PSP_48, PSP_49, PSP_50, PSP_51, PSP_52, PSP_53, PSP_54, PSP_55 };
     passedPSP : boolean;
     failCountPSP : 0..3;
+
     actionsPSP : {PSP_toC__0, PSP_toC__1, PSP_While1, PSP_updateClient, PSP_Pick1__0, PSP_Pick1__1, PSP_payPenaltyClient, PSP_updateClient1, PSP_Invoke1, PSP_fromSP__0, PSP_fromSP__1, PSP_fromSP__2, PSP_Empty1, PSP_receiveUpdateSP, PSP_toSP__0, PSP_toSP__1, PSP_updateSP, PSP_Pick2__0, PSP_Pick2__1, PSP_payPenaltySP, PSP_updateSP1, PSP_Invoke2, PSP_firstPayment__0, PSP_firstPayment__1, PSP_Empty12, PSP_paymentSP__0, PSP_paymentSP__1, PSP_paySP, PSP_Invoke3, PSP_Change1__0, PSP_Change1__1, PSP_Change2__0, PSP_Change2__1, PSP_Empty2, PSP_Empty3, PSP_Pick22__0, PSP_Pick22__1, PSP_receiveChange2, PSP_Empty32, PSP_Empty34, PSP_Assign4322, PSP_Assign4323, PSP_sendRequest, PSP_receiveComponent__0, PSP_receiveComponent__1, PSP_Empty33, PSP_sendTesting, PSP_Testing, PSP_Pick23__0, PSP_Pick23__1, PSP_Pick23__2, PSP_passed, PSP_notPassed, PSP_Assign4324, PSP_sendDeploying, PSP_Deploying, PSP_Pick231__0, PSP_Pick231__1, PSP_Pick231__2, PSP_passed1, PSP_Pick232__0, PSP_Pick232__1, PSP_Pick233__0, PSP_Pick233__1, PSP_sendFinalPaymentSP, PSP_Invoke4, PSP_notPassed1, nothing };
 INIT
-    statePSP = PSP_0
-INIT
-    passedPSP = FALSE
-INIT
-    failCountPSP = 0
+    statePSP = PSP_0 & passedPSP = FALSE & failCountPSP = 0
 TRANS
     case
         statePSP = PSP_0: next(actionsPSP) in { PSP_toC__0, PSP_toC__1, PSP_While1 };
@@ -826,16 +813,16 @@ VAR
 
 
 TRANS
-    stateHS = HardwareSupplier_0 | stateHS = HardwareSupplier_1 | stateHS = HardwareSupplier_2 | stateHS = HardwareSupplier_5 |
+    ( stateHS = HardwareSupplier_0 | stateHS = HardwareSupplier_1 | stateHS = HardwareSupplier_2 | stateHS = HardwareSupplier_5 |
                               stateHS = HardwareSupplier_6 | stateHS = HardwareSupplier_7 | stateHS = HardwareSupplier_8 | stateHS = HardwareSupplier_9 |
-                              stateHS = HardwareSupplier_10 | stateHS = HardwareSupplier_11 | stateHS = HardwareSupplier_14 -> next(HardwareSupplier_green);
+                              stateHS = HardwareSupplier_10 | stateHS = HardwareSupplier_11 | stateHS = HardwareSupplier_14 ) -> next(HardwareSupplier_green);
 TRANS
-    stateHS = HardwareSupplier_14 -> next(HardwareSupplier_end);
+    ( stateHS = HardwareSupplier_14 ) -> next(HardwareSupplier_end);
 TRANS
-    stateHS = HardwareSupplier_4 -> next(HardwareSupplier_red0);
+    ( stateHS = HardwareSupplier_4 ) -> next(HardwareSupplier_red0);
 TRANS
-    stateHS = HardwareSupplier_13 -> next(HardwareSupplier_red1);
-    
+    ( stateHS = HardwareSupplier_13 ) -> next(HardwareSupplier_red1);
+
 TRANS
     ( stateTC = TestingCompany_0 ) | ( stateTC = TestingCompany_1 ) | ( stateTC = TestingCompany_2 ) | ( stateTC = TestingCompany_3 ) | (
                             stateTC = TestingCompany_4 ) | ( stateTC = TestingCompany_5 |stateTC = TestingCompany_6 ) | ( stateTC = TestingCompany_9 )
@@ -964,20 +951,20 @@ TRANS
     statePSP = PSP_51 -> next(PSP_red3);
 
 
--- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_end; -- FALSE
--- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_green; -- TRUE
--- ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red0; -- FALSE/TRUE
-ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red1; -- FALSE
---ATLREACHTARGET (1,2,3,4,5,6,7) TestingCompany_red0; -- FALSE/TRUE
---ATLREACHTARGET (1,2,3,4,5,6,7) Expert_red0; -- FALSE
--- ATLREACHTARGET (1,2,3,5,6,7) InsuranceCompany_red0;
--- ATLREACHTARGET (1,2,3,5,6,7) Client_red0;
--- ATLREACHTARGET (1,2,3,5,6,7) Client_red1;
--- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red0;
--- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red1;
--- ATLREACHTARGET (1,2,3,5,6,7) ServiceProvider_red2;
--- ATLREACHTARGET (1,2,3,5,6,7) PSP_red0;
--- ATLREACHTARGET (1,2,3,5,6,7) PSP_red1;
--- ATLREACHTARGET (1,2,3,5,6,7) PSP_red2;
--- ATLREACHTARGET (1,2,3,5,6,7) PSP_red3;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_green;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_end;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red1;
+ATLREACHTARGET (1,2,3,4,5,6,7) TestingCompany_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) Expert_red0;
+ATLREACHTARGET (1,2,3,4,5,6,7) InsuranceCompany_red0;
+ATLREACHTARGET (1,2,3,4,5,6,7) Client_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) Client_red1;
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red1; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red2; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red1; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red2; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red3;
 
