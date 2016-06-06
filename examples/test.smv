@@ -1,0 +1,64 @@
+-- Example from Jamroga et al: simple card game
+-- rule: a > k, k > q, q > a
+
+0  --  Environment
+    VAR
+    	card1 : {a, q, k};
+    	card2 : {a, q, k};
+        actions0 : { none };
+    TRANS
+     case
+    	Other : {none};
+     esac
+    TRANS
+    	player1.Action = swap -> next(card1=card2 & card2=card1);
+
+1  --  player1
+    VAR
+    	play : boolean;
+        actions1 : {keep,swap,none};  
+    TRANS
+     case
+    	(play=FALSE):{keep,swap};
+		(play=TRUE):{none};
+     esac
+    TRANS
+    	play=FALSE -> next(play=TRUE);
+
+2  --  player2
+    VAR
+        play : boolean;
+        actions2 : {none};  
+    TRANS
+     case
+       Other : {none};
+     esac
+    TRANS
+        play=FALSE -> next(play=TRUE);
+
+
+Evaluation
+	    p1win if ( ( card1=a & card2=k) ) |
+                ( ( card1=k & card2=q) ) |
+                ( ( card1=q & card2=a) );
+
+InitStates
+
+	(player1.play=FALSE) & (player2.play=FALSE) & (
+          ( card1=a & card2=k ) |
+          ( card1=a & card2=q ) |
+          ( card1=q & card2=k ) |
+          ( card1=q & card2=a ) |
+          ( card1=k & card2=a ) |
+          ( card1=k & card2=q ));
+	
+
+Groups
+	g1 = {player1};
+	g2 = {player2}; -- ADDED
+
+
+Formulae
+        --AF(p1win);
+	<g1>F(p1win); -- OLD ->  <g1>X(p1win);
+	<g2>F(p1win); -- ADDED

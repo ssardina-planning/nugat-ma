@@ -3,7 +3,6 @@ MODULE b1
 GAME
 
 1 -- player1
--- Lobsvars={card1};
 VAR
   play1: boolean;
   actions1 : {keep,swap,none}; -- Actions = {keep,swap,none};
@@ -32,8 +31,6 @@ VAR
   card1 : {a, q, k};
   card2 : {a, q, k};
   p1win : boolean;
-  -- Actions = { none };
-  -- Protocol: 	Other : {none}; end Protocol
 INIT
    card1 = a & card2 = k | card1 = a & card2 = q | card1 = q & card2 = k | card1 = q & card2 = a | card1 = k & card2 = a | card1 = k & card2 = q;
 TRANS

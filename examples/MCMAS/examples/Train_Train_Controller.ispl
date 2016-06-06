@@ -1,0 +1,156 @@
+-- The controller is modelled as the environment.
+Agent Environment
+    
+    -- Definition of local variables
+    Vars:
+        -- state is a variable of enumeration type with two values: green and red
+        state: {green, red};
+    end Vars
+    
+    -- List of actions
+    Actions = {enter1, leave1, enter2, leave2};
+    
+    -- Definition of the local protocol
+    Protocol:
+        -- when state is green, actions enter1 and enter2 are allowed to be
+        -- executed.
+        state = green: {enter1, enter2};
+        -- when state is red, actions leave1 and leave2 are allowed to be
+        -- executed.
+        state = red: {leave1, leave2};
+    end Protocol
+    
+    -- Definition of evolution function
+    Evolution:
+        -- when state is red, the environment is executing leave1, and train 1
+        -- is executing leave, state is set to green
+        state = green if state = red and Action=leave1 and
+                (train1.Action=leave_real or train1.Action=leave_break);
+        -- when state is red, the environment is executing leave2, and train 2
+        -- is executing leave, state is set to green.
+        state = green if state = red and Action=leave2 and
+                (train2.Action=leave_real or train2.Action=leave_break);
+        -- when state is green, the environment is executing enter1, and train 1
+        -- is executing enter, state is set to red.
+        state = red if state = green and Action=enter1 and
+                train1.Action=enter;
+        -- when state is green, the environment is executing enter1, and train 1
+        -- is executing enter, state is set to red.
+        state = red if state = green and Action=enter2 and
+                train2.Action=enter;
+    end Evolution
+
+end Agent
+
+-- Train 1
+Agent train1
+    
+    -- Definition of local variables
+    Vars:
+        counter: 0..20;
+        state: { wait, tunnel, away, stuck };
+    end Vars
+    
+    -- List of actions
+    Actions = { enter, leave_real, leave_break, back, break, service, epsilon };
+    
+    -- Definition of the local protocol
+    Protocol:
+        state = wait: { enter, service, epsilon };
+        state = tunnel and counter < 5: { leave_real, epsilon };
+        state = tunnel and counter >= 5 and counter < 19 : { leave_real, leave_break, epsilon };
+        state = tunnel and counter = 19 : { leave_break, epsilon };
+        state = stuck : { break, epsilon };
+        state = away: {back, service, epsilon };
+    end Protocol
+    
+    -- Definition of evolution function
+    Evolution:
+        state = state and counter = counter if Action = epsilon;
+        state = wait and counter = counter + 1 if state = away and Action = back;
+        state = tunnel and counter = counter + 1 if state = wait and Action = enter and Environment.Action=enter1;
+        state = away and counter = counter + 1 if state = tunnel and Action = leave_real and Environment.Action=leave1;
+        state = wait and counter = 0 if state = wait and Action = service;
+        state = away and counter = 0 if state = away and Action = service;
+        state = stuck if state = tunnel and Action = leave_break;
+        state = stuck if state = stuck and Action = break;
+    end Evolution
+
+end Agent
+
+-- Train 2
+Agent train2
+    
+    -- Definition of local variables
+    Vars:
+        counter: 0..20;
+        state: { wait, tunnel, away, stuck };
+    end Vars
+    
+    -- List of actions
+    Actions = { enter, leave_real, leave_break, back, break, service, epsilon };
+    
+    -- Definition of the local protocol
+    Protocol:
+        state = wait: { enter, service, epsilon };
+        state = tunnel and counter < 5: { leave_real, epsilon };
+        state = tunnel and counter >= 5 and counter < 19: { leave_real, leave_break, epsilon };
+        state = tunnel and counter = 19: { leave_break, epsilon };
+        state = stuck: { break, epsilon };
+        state = away: { back, service, epsilon };
+    end Protocol
+    
+    -- Definition of evolution function
+    Evolution:
+        state = state and counter = counter if Action = epsilon;
+        state = wait and counter = counter + 1 if state = away and Action = back;
+        state = tunnel and counter = counter + 1 if state = wait and Action = enter and Environment.Action=enter2;
+        state = away and counter = counter + 1 if state = tunnel and Action = leave_real and Environment.Action=leave2;
+        state = wait and counter = 0 if state = wait and Action = service;
+        state = away and counter = 0 if state = away and Action = service;
+        state = stuck if state = tunnel and Action = leave_break;
+        state = stuck if state = stuck and Action = break;
+    end Evolution
+
+end Agent
+
+-- Definition of atomic propositions
+Evaluation
+
+    -- in_tunnel1 holds in the global states where state in train 1 is equal to tunnel.
+    in_tunnel1 if (train1.state = tunnel or train1.state = stuck);
+    -- in_tunnel2 holds in the global states where state in train 2 is equal to tunnel.
+    in_tunnel2 if (train2.state = tunnel or train2.state = stuck);
+
+end Evaluation
+
+-- Definition of the initial states
+InitStates
+    
+    Environment.state=green and
+    train1.state=away and
+    train2.state=away and
+    train1.counter = 0 and
+    train2.counter = 0;
+
+end InitStates
+
+Formulae
+
+    AG(!in_tunnel1 or !in_tunnel2);
+    --EF(in_tunnel1 & in_tunnel2)
+
+    AG(in_tunnel1 -> K(train1, (!in_tunnel2)));
+    --EF(in_tunnel1 & NK[1](in_tunnel2))
+
+    AG(in_tunnel1 -> AX(!in_tunnel2));
+    --EF(in_tunnel1 & EX(in_tunnel2))
+
+    AG(K(train1, (!in_tunnel1 or !in_tunnel2)));
+    --EF(NK[1](in_tunnel1 & in_tunnel2))
+
+    AG(in_tunnel1 -> K(train1, (AX(!in_tunnel2))));
+    --EF(in_tunnel1 & NK[1](EX(in_tunnel2)))
+
+end Formulae
+

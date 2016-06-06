@@ -1,0 +1,120 @@
+Agent Environment
+    Obsvars:
+   		sch : {nil,S1,S2,ST};     
+    end Obsvars
+    Vars:
+    	lastsch : {nil,S1,S2,ST};
+    end Vars
+    RedStates:
+    end RedStates
+    Actions = {nil,S1,S2,ST};  
+    Protocol:
+  		Other : {S1,S2,ST};
+    end Protocol
+    Evolution:
+    	(lastsch = sch) and (sch = S1) if (Action = S1);  
+        (lastsch = sch) and (sch = S2) if (Action = S2);    
+      	(lastsch = sch) and (sch = ST) if (Action = ST);   
+    end Evolution
+end Agent
+
+Agent S1
+    Vars:
+        stateS1 : {s0,s1,s_err};
+        finalS1 : boolean;
+        opeS1 : {a,b};
+    end Vars
+    RedStates:
+    end RedStates
+    Actions = {a,b};
+    Protocol:
+	    Other : {a,b};
+    end Protocol
+    Evolution:
+        (stateS1=s0) and (finalS1 = true) and (opeS1=a) if (stateS1=s0) and (Action=a) and (Environment.Action=S1);
+    	(stateS1=s1) and (finalS1 = true) and (opeS1=b) if (stateS1=s0) and (Action=b) and (Environment.Action=S1);
+        (stateS1=s1) and (finalS1 = true) and (opeS1=b) if (stateS1=s1) and (Action=b) and (Environment.Action=S1); 
+    	(stateS1=s_err) and (opeS1=a) and (finalS1=false) if (Action=a and !(stateS1=s0)) and (Environment.Action=S1);
+    	(stateS1=s_err) and (opeS1=b) and (finalS1=false) if (Action=b and stateS1=s_err) and (Environment.Action=S1);
+    	(stateS1=stateS1) and (finalS1=finalS1) if !(Environment.Action=S1); 
+	end Evolution
+end Agent
+
+Agent S2
+    Vars:
+        stateS2 : {s0,s1,s2,s_err};
+        finalS2 : boolean;
+        opeS2 : {a,b};
+    end Vars
+    RedStates:
+    end RedStates
+    Actions = {a,b};
+    Protocol:
+	    Other : {a,b};
+    end Protocol
+    Evolution:
+        (stateS2=s1) and (finalS2 = true) and (opeS2=b) if (stateS2=s0) and  (Action=b) and (Environment.Action=S2);
+        (stateS2=s2) and (finalS2 = false)  and (opeS2=a) if (stateS2=s1) and  (Action=a) and (Environment.Action=S2); 
+    	(stateS2=s1) and (finalS2 = true)  and (opeS2=b) if (stateS2=s2) and  (Action=b) and (Environment.Action=S2); 
+    	(stateS2=s_err) and (opeS2=a) and (finalS2=false) if (Action=a and !(stateS2=s1)) and (Environment.Action=S2);
+    	(stateS2=s_err) and (opeS2=b) and (finalS2=false) if (Action=b and (stateS2=s1 or stateS2=s_err)) and (Environment.Action=S2);
+    	(stateS2=stateS2) and (finalS2=finalS2) if !(Environment.Action=S2); 
+	end Evolution
+end Agent
+
+Agent ST
+    Vars:
+        stateST : {s0,s1,s2,s3,s_err};
+        finalST : boolean;
+        opeST : {a,b};
+    end Vars
+    RedStates:
+    end RedStates
+    Actions = {a,b};
+    Protocol:
+	    Other : {a,b};
+    end Protocol
+    Evolution:
+        (stateST=s1) and (finalST = true) and (opeST=a) if  (stateST=s0) and (Action=a) and (Environment.Action=ST);
+    	(stateST=s2) and (finalST = false) and (opeST=a) if  (stateST=s1) and (Action=a) and (Environment.Action=ST);
+        (stateST=s3) and (finalST = true) and (opeST=b) if (stateST=s1) and  (Action=b) and (Environment.Action=ST);
+        (stateST=s1) and (finalST = true) and (opeST=b) if  (stateST=s2) and (Action=b) and (Environment.Action=ST);
+        (stateST=s1) and (finalST = true) and (opeST=b) if  (stateST=s3) and (Action=b) and (Environment.Action=ST);
+    	(stateST=s_err) and (opeST=a) and (finalST=false) if (Action=a and !(stateST=s0 or stateST=s1)) and (Environment.Action=ST);
+    	(stateST=s_err) and (opeST=b) and (finalST=false) if (Action=b and (stateST=s0 or stateST=s_err)) and (Environment.Action=ST);
+    	(stateST=stateST) and (finalST=finalST) and (opeST=opeST) if !(Environment.Action=ST); 
+	end Evolution
+end Agent
+
+Evaluation
+	TargetMoved if (Environment.sch=ST);
+	Replayed if ((!(Environment.sch=S1) or (S1.opeS1=ST.opeST)) and (!(Environment.sch=S2) or (S2.opeS2=ST.opeST)) ) 
+		and (ST.finalST=false or (S1.finalS1=true and S2.finalS2=true));	
+	LastTargetMoved if Environment.lastsch=ST;
+	Init if (Environment.lastsch=nil and Environment.sch=nil);
+	Error if (S1.stateS1=s_err) or (S2.stateS2=s_err);
+	Invalid if ST.stateST=s_err;
+end Evaluation
+
+InitStates
+	(S1.stateS1=s0) and (S2.stateS2=s0) and (ST.stateST=s0) and (Environment.sch=nil) and 
+	(S1.finalS1=true) and (S2.finalS2=true) and (ST.finalST=true) and (Environment.lastsch=nil);	
+end InitStates
+
+Groups
+    PlayersPlusEnv = { S1,S2,Environment } ;
+end Groups
+
+Fairness
+end Fairness
+
+Formulae
+	<PlayersPlusEnv> G(
+		Init or Invalid or
+		(	
+			(!TargetMoved -> (Replayed and !Error and LastTargetMoved))
+			and
+			(TargetMoved -> !LastTargetMoved)
+		)	
+	);
+end Formulae

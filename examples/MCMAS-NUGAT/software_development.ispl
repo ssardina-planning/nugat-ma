@@ -596,27 +596,27 @@ Evaluation
     Client_end if Client.state = Client_51;
     Client_red0 if Client.state = Client_11;
     Client_red1 if Client.state = Client_44;
-    ServiceProvider_green if ServiceProvider.state = ServiceProvider_0 or ServiceProvider.state = ServiceProvider_1 or 
-                             ServiceProvider.state = ServiceProvider_2 or ServiceProvider.state = ServiceProvider_3 or 
-                             ServiceProvider.state = ServiceProvider_4 or ServiceProvider.state = ServiceProvider_7 or 
-                             ServiceProvider.state = ServiceProvider_8 or ServiceProvider.state = ServiceProvider_9 or 
-                             ServiceProvider.state = ServiceProvider_10 or ServiceProvider.state = ServiceProvider_11 or 
-                             ServiceProvider.state = ServiceProvider_14 or ServiceProvider.state = ServiceProvider_15 or 
-                             ServiceProvider.state = ServiceProvider_16 or ServiceProvider.state = ServiceProvider_17 or 
-                             ServiceProvider.state = ServiceProvider_18 or ServiceProvider.state = ServiceProvider_19 or 
-                             ServiceProvider.state = ServiceProvider_20 or ServiceProvider.state = ServiceProvider_21 or 
-                             ServiceProvider.state = ServiceProvider_22 or ServiceProvider.state = ServiceProvider_23 or 
-                             ServiceProvider.state = ServiceProvider_24 or ServiceProvider.state = ServiceProvider_25 or 
-                             ServiceProvider.state = ServiceProvider_26 or ServiceProvider.state = ServiceProvider_27 or 
-                             ServiceProvider.state = ServiceProvider_28 or ServiceProvider.state = ServiceProvider_29 or 
-                             ServiceProvider.state = ServiceProvider_30 or ServiceProvider.state = ServiceProvider_31 or 
-                             ServiceProvider.state = ServiceProvider_32 or ServiceProvider.state = ServiceProvider_35 or 
-                             ServiceProvider.state = ServiceProvider_36 or ServiceProvider.state = ServiceProvider_37 or 
-                             ServiceProvider.state = ServiceProvider_38 or ServiceProvider.state = ServiceProvider_39 or 
-                             ServiceProvider.state = ServiceProvider_40 or ServiceProvider.state = ServiceProvider_41 or 
-                             ServiceProvider.state = ServiceProvider_42 or ServiceProvider.state = ServiceProvider_43 or 
-                             ServiceProvider.state = ServiceProvider_44 or ServiceProvider.state = ServiceProvider_45 or 
-                             ServiceProvider.state = ServiceProvider_46 or ServiceProvider.state = ServiceProvider_47 or 
+    ServiceProvider_green if ServiceProvider.state = ServiceProvider_0 or ServiceProvider.state = ServiceProvider_1 or
+                             ServiceProvider.state = ServiceProvider_2 or ServiceProvider.state = ServiceProvider_3 or
+                             ServiceProvider.state = ServiceProvider_4 or ServiceProvider.state = ServiceProvider_7 or
+                             ServiceProvider.state = ServiceProvider_8 or ServiceProvider.state = ServiceProvider_9 or
+                             ServiceProvider.state = ServiceProvider_10 or ServiceProvider.state = ServiceProvider_11 or
+                             ServiceProvider.state = ServiceProvider_14 or ServiceProvider.state = ServiceProvider_15 or
+                             ServiceProvider.state = ServiceProvider_16 or ServiceProvider.state = ServiceProvider_17 or
+                             ServiceProvider.state = ServiceProvider_18 or ServiceProvider.state = ServiceProvider_19 or
+                             ServiceProvider.state = ServiceProvider_20 or ServiceProvider.state = ServiceProvider_21 or
+                             ServiceProvider.state = ServiceProvider_22 or ServiceProvider.state = ServiceProvider_23 or
+                             ServiceProvider.state = ServiceProvider_24 or ServiceProvider.state = ServiceProvider_25 or
+                             ServiceProvider.state = ServiceProvider_26 or ServiceProvider.state = ServiceProvider_27 or
+                             ServiceProvider.state = ServiceProvider_28 or ServiceProvider.state = ServiceProvider_29 or
+                             ServiceProvider.state = ServiceProvider_30 or ServiceProvider.state = ServiceProvider_31 or
+                             ServiceProvider.state = ServiceProvider_32 or ServiceProvider.state = ServiceProvider_35 or
+                             ServiceProvider.state = ServiceProvider_36 or ServiceProvider.state = ServiceProvider_37 or
+                             ServiceProvider.state = ServiceProvider_38 or ServiceProvider.state = ServiceProvider_39 or
+                             ServiceProvider.state = ServiceProvider_40 or ServiceProvider.state = ServiceProvider_41 or
+                             ServiceProvider.state = ServiceProvider_42 or ServiceProvider.state = ServiceProvider_43 or
+                             ServiceProvider.state = ServiceProvider_44 or ServiceProvider.state = ServiceProvider_45 or
+                             ServiceProvider.state = ServiceProvider_46 or ServiceProvider.state = ServiceProvider_47 or
                              ServiceProvider.state = ServiceProvider_48 or ServiceProvider.state = ServiceProvider_49;
     ServiceProvider_end if ServiceProvider.state = ServiceProvider_49;
     ServiceProvider_red0 if ServiceProvider.state = ServiceProvider_6;
@@ -675,7 +675,7 @@ end InitStates
 
 Groups
     --g1={HardwareSupplier,TestingCompany,                         Client,ServiceProvider,PSP};
-    g1={HardwareSupplier,TestingCompany,Expert,InsuranceCompany,Client,ServiceProvider,PSP};
+    g1={HardwareSupplier,TestingCompany,Client}; -- ,Expert,InsuranceCompany,ServiceProvider,PSP
 end Groups
 
 Fairness

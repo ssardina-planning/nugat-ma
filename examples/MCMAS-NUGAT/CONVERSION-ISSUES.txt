@@ -2,7 +2,7 @@
         m : mcmas-1.2.2
         n : nugat-0.6.5
 ========================================
-m : Obsvars
+m : Obsvars ================================ DA TESTARE
 n : VAR -- (for environmental agent)
 
 m : Vars:
@@ -12,15 +12,16 @@ m : Actions : {cont1,cont2}
 n : VAR actions1 : {cont1,cont2}
 
 m : Protocol
-n : TRANS
+n : TRANS               -- case((.|\n)*)esac
         case
             a=b : next(actions1) in {cont1}
+                                            --   Others -> TRUE
         esac
 
 m : Evolution
-n : split with TRANS
+n : split with TRANS        ;    with      ;\n\tTRANS
 
-m : a=b if c=d   -- regex      \S(.*) if (.*);      with       $2 -> next( s$1 );
+m : a=b if c=d   -- regex      \S(.*) if (.*);      with       $2 -> next($1);      (\S.*) if ([\s\S]*?);
 n : c=d -> next(a=b)
 
 m : InitStates

@@ -789,7 +789,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
   */
     for(i=0;i<n_players-np;i++)
         if(i==0) tmp = bdd_dup(constrs[opponents[i]-1]);
-        else bdd_or_accumulate(self->dd, &tmp, bdd_dup(constrs[opponents[i]-1]));
+        else bdd_or_accumulate(self->dd, &tmp, constrs[opponents[i]-1]);
 
     bdd_and_accumulate(self->dd, &result, tmp);
 
@@ -807,7 +807,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
     /* apply Exist p2'.Tr_2 and negate. NOTE: there should be no input vars. */
     for(i=0;i<n_players-np;i++)
         if(i==0) tmp = bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, opponents[i]-1), result));
-        else bdd_or_accumulate(self->dd, &tmp, bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, opponents[i]-1), result)));
+        else bdd_or_accumulate(self->dd, &tmp, BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, opponents[i]-1), result));
 
     bdd_free(self->dd, result);
     gameBddFsm_trans2TotalTime += util_cpu_time() - time;
@@ -823,7 +823,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 
     for(i=0;i<np;i++)
         if(i==0) tmp = bdd_dup(BddEnc_state_var_to_next_state_var(self->enc, constrs[players[i]-1]));
-        else bdd_and_accumulate(self->dd, &tmp, bdd_dup(BddEnc_state_var_to_next_state_var(self->enc, constrs[players[i]-1])));
+        else bdd_and_accumulate(self->dd, &tmp, BddEnc_state_var_to_next_state_var(self->enc, constrs[players[i]-1]));
 
     gameBddFsm_andInvar1TotalTime += util_cpu_time() - time;
     time = util_cpu_time();
@@ -834,7 +834,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
   /* apply Exist p1'.Tr_1. NOTE: there should be no input vars. */
     for(i=0;i<np;i++)
         if(i==0) tmp = bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, players[i] - 1),result));
-        else bdd_and_accumulate(self->dd, &tmp, bdd_dup(BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, players[i] - 1),result)));
+        else bdd_and_accumulate(self->dd, &tmp, BddTrans_get_backward_image_state_input(GameBddFsm_get_trans(self, players[i] - 1),result));
 
   gameBddFsm_trans1TotalTime += util_cpu_time() - time;
   time = util_cpu_time();
@@ -1242,14 +1242,14 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
 
   for(i=0;i<n_players-np;i++)
     if(i==0) tmp2 = bdd_dup(constrs[opponents[i]-1]);
-    else bdd_and_accumulate(dd_manager, &tmp2, bdd_dup(constrs[opponents[i]-1]));
+    else bdd_and_accumulate(dd_manager, &tmp2, constrs[opponents[i]-1]);
 
   bdd_and_accumulate(dd_manager, &result, tmp2);
   bdd_free(dd_manager, tmp2);
 
   for(i=0;i<n_players-np;i++)
     if(i==0) tmp2 = bdd_dup(GameBddFsm_get_state_frozen_var_cube(self, opponents[i]-1));
-    else bdd_and_accumulate(dd_manager, &tmp2, bdd_dup(GameBddFsm_get_state_frozen_var_cube(self, opponents[i]-1)));
+    else bdd_and_accumulate(dd_manager, &tmp2, GameBddFsm_get_state_frozen_var_cube(self, opponents[i]-1));
 
   tmp = bdd_forsome(dd_manager,
                     result,
@@ -1263,7 +1263,7 @@ EXTERN boolean AtlGameBddFsm_can_player_satisfy(NuSMVEnv_ptr env,
 
   for(i=0;i<np;i++)
     if(i==0) tmp2 = bdd_dup(constrs[players[i]-1]);
-    else bdd_and_accumulate(dd_manager, &tmp2, bdd_dup(constrs[players[i]-1]));
+    else bdd_and_accumulate(dd_manager, &tmp2, constrs[players[i]-1]);
 
   bdd_and_accumulate(dd_manager, &result, tmp2);
 
