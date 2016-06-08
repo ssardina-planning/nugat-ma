@@ -18,17 +18,17 @@ GAME
         state1 = wait & serviced1 < 100 : next(actions1) in { signal, service, enter };
         
         -- Trains work correctly if the non-deterministic break action is removed 
-        -- Replace the following lines: next(actions1) in
+        -- Replace the following lines:
         state1 = tunnel & serviced1 >= 75 & serviced1 < 100 : next(actions1) in { leave, break };
         state1 = tunnel & serviced1 = 100 : next(actions1) in { break };
-        -- With: next(actions1) in
+        -- With:
         --state = tunnel : next(actions1) in { leave };
         
         state1 = away & serviced1 < 100 : next(actions1) in { service, back };
-        TRUE : next(actions1) in { break };
+        TRUE : next(actions1) in { service, back };
      esac
     TRANS
-        actions1=service -> next(serviced1= 0);
+        actions1 = service -> next(serviced1=0);
 	TRANS
         broken1 = TRUE & state1 = tunnel -> next(state1 = tunnel);
 	TRANS
@@ -38,7 +38,7 @@ GAME
 	TRANS
         serviced1 < 100 & state1 = away & actions1 = back -> next(state1 = wait & serviced1 = serviced1 + 1);
 	TRANS
-        serviced1 < 100 & state1 = wait & actions1 = enter & actions1 = enter1 -> next(state1 = tunnel & serviced1 = serviced1 + 1);
+        serviced1 < 100 & state1 = wait & actions1 = enter & actions4 = enter1 -> next(state1 = tunnel & serviced1 = serviced1 + 1);
 	TRANS
         serviced1 < 100 & state1 = tunnel & actions1 = leave -> next(state1 = away & serviced1 = serviced1 + 1);
 	TRANS
@@ -68,10 +68,10 @@ GAME
         --state = tunnel : next(actions2) in { leave };
         
         state2 = away & serviced2 < 100 : next(actions2) in { service, back };
-        TRUE : next(actions2) in { break };
+        TRUE : next(actions2) in { service, back };
      esac
     TRANS
-        actions2=service -> next(serviced2= 0);
+        actions2=service -> next(serviced2 = 0);
 	TRANS
         broken2 = TRUE & state2 = tunnel -> next(state2 = tunnel);
 	TRANS
@@ -81,7 +81,7 @@ GAME
 	TRANS
         serviced2 < 100 & state2 = away & actions2 = back -> next(state2 = wait & serviced2 = serviced2 + 1);
 	TRANS
-        serviced2 < 100 & state2 = wait & actions2 = enter & actions2 = enter2 -> next(state2 = tunnel & serviced2 = serviced2 + 1);
+        serviced2 < 100 & state2 = wait & actions2 = enter & actions4 = enter2 -> next(state2 = tunnel & serviced2 = serviced2 + 1);
 	TRANS
         -- The only edge case is that the train cannot be serviced2 in the tunnel
         serviced2 = 100 & state2 = tunnel & actions2 = leave -> next(state2 = away & serviced2 = 100);
@@ -107,14 +107,14 @@ GAME
         -- Replace the following lines: next(actions3) in
         state3 = tunnel & serviced3 >= 75 & serviced3 < 100 : next(actions3) in { leave, break };
         state3 = tunnel & serviced3 = 100 : next(actions3) in { break };
-        -- With: next(actions3) in
+        -- With:
         --state = tunnel : next(actions3) in { leave };
         
         state3 = away & serviced3 < 100 : next(actions3) in { service, back };
-        TRUE : next(actions3) in { break };
+        TRUE : next(actions3) in { service, back };
      esac
     TRANS
-        actions3=service -> next(serviced3= 0);
+        actions3 = service -> next(serviced3= 0);
 	TRANS
         broken3 = TRUE & state3 = tunnel -> next(state3 = tunnel);
 	TRANS
@@ -124,7 +124,7 @@ GAME
 	TRANS
         serviced3 < 100 & state3 = away & actions3 = back -> next(state3 = wait & serviced3 = serviced3 + 1);
 	TRANS
-        serviced3 < 100 & state3 = wait & actions3 = enter & actions3 = enter1 -> next(state3 = tunnel & serviced3 = serviced3 + 1);
+        serviced3 < 100 & state3 = wait & actions3 = enter & actions4 = enter1 -> next(state3 = tunnel & serviced3 = serviced3 + 1);
 	TRANS
         serviced3 < 100 & state3 = tunnel & actions3 = leave -> next(state3 = away & serviced3 = serviced3 + 1);
 	TRANS
@@ -177,9 +177,9 @@ GAME
     --    waiting = train1_train2 & lights = green & actions4 = enter1 & actions1 = enter -> next(lights = red & waiting = train2);
 
 	TRANS
-        actions4 = idle & actions1 = signal & lights = green -> next(train1_waiting = TRUE);
+        actions4 = idle & actions1 = signal & lights = green -> next(train1_waiting = TRUE);-- and lights = green;
 	TRANS
-        actions4 = idle & actions2 = signal & lights = green -> next(train2_waiting = TRUE);
+        actions4 = idle & actions2 = signal & lights = green -> next(train2_waiting = TRUE);-- and lights = green;
 	TRANS
     	actions4 = idle & actions3 = signal -> next(train3_waiting = TRUE);
 

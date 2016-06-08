@@ -59,7 +59,7 @@ Agent Train1
         --state = tunnel : { leave };
         
         state = away and serviced < 100 : { service, back };
-        Other : { break };
+        Other : { service, back };
     end Protocol
     Evolution:
         serviced = 0 if Action=service;
@@ -95,7 +95,7 @@ Agent Train2
         --state = tunnel : { leave };
         
         state = away and serviced < 100 : { service, back };
-        Other : { break };
+        Other : { service, back };
     end Protocol
     Evolution:
         serviced = 0 if Action=service;
@@ -132,7 +132,7 @@ Agent Train3
         --state = tunnel : { leave };
         
         state = away and serviced < 100 : { service, back };
-        Other : { break };
+        Other : { service, back };
     end Protocol
     Evolution:
         serviced = 0 if Action=service;
@@ -193,7 +193,5 @@ Formulae
     <g12>F train1_in_tunnel;
     <g13>F train1_in_tunnel;
     <g123>F train1_in_tunnel;
-    --EF(train2_in_tunnel);
-    --EF(train2_in_tunnel);
 
 end Formulae

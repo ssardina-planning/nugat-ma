@@ -1,0 +1,143 @@
+MODULE b1
+
+GAME
+
+
+0  -- agent: Environment
+    VAR
+        lights : { red, green };
+        train1_waiting : boolean;
+        train2_waiting : boolean;
+        --waiting : { none, train1, train2, train1_train2 };
+        counter : 0..2;
+    TRANS
+     case
+        lights = green & train1_waiting = TRUE : { enter1 };
+        lights = green & train2_waiting = TRUE : { enter2 };
+        lights = green & train1_waiting = TRUE & train2_waiting = TRUE : { enter1, enter2 };
+        Other: { idle };
+     esac
+    TRANS
+        counter < 2 & lights = red -> next(counter = counter + 1);
+        
+        counter = 2 & lights = red -> next(lights = green & counter = 0);
+        
+        train1_waiting = TRUE & lights = green & actions0 = enter1 & Train1.Action = enter -> next(lights = red & train1_waiting = FALSE);
+        train2_waiting = TRUE & lights = green & actions0 = enter2 & Train2.Action = enter -> next(lights = red & train2_waiting = FALSE);
+        
+        waiting = train2 & lights = green & actions0 = enter2 & Train2.Action = enter -> next(--lights = red & waiting = none);
+        waiting = train1_train2 & lights = green & actions0 = enter2 & Train2.Action = enter -> next(--lights = red & waiting = train1);
+        waiting = train1_train2 & lights = green & actions0 = enter1 & Train1.Action = enter -> next(--lights = red & waiting = train2);
+        
+        actions0 = idle & Train1.Action = signal;-- & lights = green -> next(train1_waiting = TRUE);
+        actions0 = idle & Train2.Action = signal;-- & lights = green -> next(train2_waiting = TRUE);
+        waiting = none & actions0 = idle & Train2.Action = signal & lights = green -> next(--waiting = train2);
+
+        waiting = train1 & actions0 = idle & Train2.Action = signal & lights = green -> next(--waiting = train1_train2);
+        waiting = train2 & actions0 = idle & Train1.Action = signal & lights = green -> next(--waiting = train1_train2);
+            
+
+1  -- agent: Train1
+    VAR
+        state1 : { wait, tunnel, away };
+        serviced1 : 0..100;
+        broken1 : boolean;
+    TRANS
+     case
+        serviced1 = 100 & (state1 = away | state1 = wait) : { service };
+        state1 = wait & serviced1 < 100 : { signal, service, enter };
+        
+        -- Trains work correctly if the non-deterministic break action is removed 
+        -- Replace the following lines:
+        state1 = tunnel & serviced1 >= 75 & serviced1 < 100 : { leave, break };
+        state1 = tunnel & serviced1 = 100 : { break };
+        -- With:
+        --state = tunnel : { leave };
+        
+        state1 = away & serviced1 < 100 : { service, back };
+     esac
+    TRANS
+        actions1 =service -> next(serviced = 0);
+        
+        broken1 = TRUE & state1 = tunnel -> next(state1 = tunnel);
+        state1 = tunnel & actions1 = break -> next(state1 = tunnel & broken1 = TRUE);
+        serviced1 < 100 & state1 = wait & actions1 = signal -> next(state1 = wait & serviced1 = serviced1 + 1);
+        serviced1 < 100 & state1 = away & actions1 = back -> next(state1 = wait & serviced1 = serviced1 + 1);
+        serviced1 < 100 & state1 = wait & actions1 = enter & actions0 = enter1 -> next(state1 = tunnel & serviced1 = serviced1 + 1);
+        serviced1 < 100 & state1 = tunnel & actions1 = leave -> next(state1 = away & serviced1 = serviced1 + 1);
+        
+        -- The only edge case is that the train cannot be serviced1 in the tunnel
+        serviced1 = 100 & state1 = tunnel & actions1 = leave -> next(state1 = away & serviced1 = 100);
+
+2  -- agent: Train2
+    VAR
+        state2 : { wait, tunnel, away };
+        serviced2 : 0..100;
+        broken2 : boolean;
+    TRANS
+     case
+        serviced2 = 100 & (state2 = away | state2 = wait) : { service };
+        state2 = wait & serviced2 < 100 : { signal, service, enter };
+        
+        -- Trains work correctly if the non-deterministic break action is removed 
+        -- Replace the following lines:
+        state2 = tunnel & serviced2 >= 75 & serviced2 < 100 : { leave, break };
+        state2 = tunnel & serviced2 = 100 : { break };
+        -- With:
+        --state = tunnel : { leave };
+        
+        state2 = away & serviced2 < 100 : { service, back };
+     esac
+    TRANS
+        actions2 =service -> next(serviced = 0);
+        broken2 = TRUE & state2 = tunnel -> next(state2 = tunnel);
+        state2 = tunnel & actions2 = break -> next(state2 = tunnel & broken2 = TRUE);
+        serviced2 < 100 & state2 = wait & actions2 = signal -> next(state2 = wait & serviced2 = serviced2 + 1);
+        serviced2 < 100 & state2 = away & actions2 = back -> next(state2 = wait & serviced2 = serviced2 + 1);
+        
+        serviced2 < 100 & state2 = wait & actions2 = enter & actions0 = enter2 -> next(state2 = tunnel & serviced2 = serviced2 + 1);
+        
+        -- The only edge case is that the train cannot be serviced2 in the tunnel
+        serviced2 = 100 & state2 = tunnel & actions2 = leave -> next(state2 = away & serviced2 = 100);
+        serviced2 < 100 & state2 = tunnel & actions2 = leave -> next(state2 = away & serviced2 = serviced2 + 1);
+        
+
+Evaluation
+    Train1.state = tunnel -> next(train1_in_tunnel);
+    Train1.serviced = 100 -> next(train1_unserviced);
+    
+    Train2.state = tunnel -> next(train2_in_tunnel);
+    Train2.serviced = 100 -> next(train2_unserviced);
+
+InitStates
+    lights = green &
+        train1_waiting = FALSE &
+        train2_waiting = FALSE &
+        counter = 0 &
+        Train1.state = away &
+        Train1.serviced = 0 &
+        Train1.broken = FALSE &
+        Train2.state = away &
+        Train2.serviced = 0 &
+        Train2.broken = FALSE;
+
+Formulae
+    
+    -- On all paths, there always exists a time in which the train is no longer in the tunnel.
+    AG(AF(!train1_in_tunnel));
+    -- AG(EF(train1_in_tunnel));
+    AG(AF(!train2_in_tunnel));
+    -- AG(EF(train2_in_tunnel));
+    
+    -- On all paths, either Train1 isn't the tunnel, | Train2 isn't in the tunnel, | neither of them are
+    -- This really checks that two trains aren't in the tunnel at the same time
+    AG((!train1_in_tunnel | !train2_in_tunnel));
+    
+    -- When a train is in the tunnel, then it knows that another train isn't in the tunnel
+    AG(train1_in_tunnel -> K(Train1, (!train2_in_tunnel)));
+    AG(train2_in_tunnel -> K(Train2, (!train1_in_tunnel)));
+    
+    -- Trains always know that they have exclusive use of the tunnel
+    AG(K(Train1, (!train1_in_tunnel | !train2_in_tunnel)));
+    AG(K(Train2, (!train1_in_tunnel | !train2_in_tunnel)));
+    

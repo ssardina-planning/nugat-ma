@@ -51,3 +51,14 @@ r :  )$1 ( \n
 
 --replace all agents vars starts with DC#
 regexp DC(.*?)\.(.*?)= WITH $2$1=
+
+
+STEPS
+1. drop environment at the end with last cntr number ( before Evaluation )
+2.
+
+STEPS test.ispl
+1.in Environment : Obsvars to VAR , remove VAR
+2.remove groups
+3.change formulae         <g(.*)>F        ATLREACHTARGET ($1)
+4.define target boolean in Env

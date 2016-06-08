@@ -60,7 +60,7 @@ GAME
 	TRANS
         stateHS = HardwareSupplier_12 & actionsHS = HardwareSupplier_Invoke1 & actionsE = Expert_Pick1__1 & actionsC = Client_Pick44__1 & actionsSP = ServiceProvider_getresult__1 & actionsPSP = PSP_Pick231__1 -> next(stateHS = HardwareSupplier_13);
 	TRANS
-        stateHS = HardwareSupplier_6 &  ! (failCountHS < 2) & actionsHS = HardwareSupplier_While1 -> next(stateHS = HardwareSupplier_14);
+        stateHS = HardwareSupplier_6 &  !(failCountHS < 2) & actionsHS = HardwareSupplier_While1 -> next(stateHS = HardwareSupplier_14);
         
 2  -- agent: TestingCompany
     VAR
@@ -916,20 +916,20 @@ VAR
         statePSP = PSP_51 -> next(PSP_red3);
 
 
-ATLREACHTARGET (1,2,5) HardwareSupplier_green;
-ATLREACHTARGET (1,2,5) HardwareSupplier_end;
-ATLREACHTARGET (1,2,5) HardwareSupplier_red0; -- TRUE
-ATLREACHTARGET (1,2,5) HardwareSupplier_red1;
-ATLREACHTARGET (1,2,5) TestingCompany_red0; -- TRUE
-ATLREACHTARGET (1,2,5) Expert_red0;
-ATLREACHTARGET (1,2,5) InsuranceCompany_red0;
-ATLREACHTARGET (1,2,5) Client_red0; -- TRUE
-ATLREACHTARGET (1,2,5) Client_red1;
-ATLREACHTARGET (1,2,5) ServiceProvider_red0; -- TRUE
-ATLREACHTARGET (1,2,5) ServiceProvider_red1; -- TRUE
-ATLREACHTARGET (1,2,5) ServiceProvider_red2; -- TRUE
-ATLREACHTARGET (1,2,5) PSP_red0; -- TRUE
-ATLREACHTARGET (1,2,5) PSP_red1; -- TRUE
-ATLREACHTARGET (1,2,5) PSP_red2; -- TRUE
-ATLREACHTARGET (1,2,5) PSP_red3;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_green;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_end;
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) HardwareSupplier_red1;
+ATLREACHTARGET (1,2,3,4,5,6,7) TestingCompany_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) Expert_red0;
+ATLREACHTARGET (1,2,3,4,5,6,7) InsuranceCompany_red0;
+ATLREACHTARGET (1,2,3,4,5,6,7) Client_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) Client_red1;
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red1; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) ServiceProvider_red2; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red0; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red1; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red2; -- TRUE
+ATLREACHTARGET (1,2,3,4,5,6,7) PSP_red3;
 

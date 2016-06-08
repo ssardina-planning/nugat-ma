@@ -42,7 +42,7 @@ Agent HardwareSupplier
         state = HardwareSupplier_11 if state = HardwareSupplier_10 and Action = HardwareSupplier_DeplyFailed and Expert.Action = Expert_Pick1__2 and Client.Action = Client_Pick44__2 and ServiceProvider.Action = ServiceProvider_getresult__2 and PSP.Action = PSP_Pick231__2;
         state = HardwareSupplier_12 if state = HardwareSupplier_7 and Action = HardwareSupplier_Pick2__2;
         state = HardwareSupplier_13 if state = HardwareSupplier_12 and Action = HardwareSupplier_Invoke1 and Expert.Action = Expert_Pick1__1 and Client.Action = Client_Pick44__1 and ServiceProvider.Action = ServiceProvider_getresult__1 and PSP.Action = PSP_Pick231__1;
-        state = HardwareSupplier_14 if state = HardwareSupplier_6 and  ! (failCount < 2) and Action = HardwareSupplier_While1;
+        state = HardwareSupplier_14 if state = HardwareSupplier_6 and  !(failCount < 2) and Action = HardwareSupplier_While1;
     end Evolution
 end Agent
 
@@ -691,22 +691,22 @@ Formulae
     --E ( ServiceProvider_green U ServiceProvider_end );
     --E ( PSP_green U PSP_end );
 
-    <g1>F HardwareSupplier_green; -- TRUE
-    <g1>F HardwareSupplier_end; -- FALSE
-    <g1>F HardwareSupplier_red0; -- TRUE
-    <g1>F HardwareSupplier_red1; -- FALSE
+    EF HardwareSupplier_green; -- TRUE
+    EF HardwareSupplier_end; -- FALSE
+    EF HardwareSupplier_red0; -- TRUE
+    EF HardwareSupplier_red1; -- FALSE
 
-    <g1>F TestingCompany_red0;
-    <g1>F Expert_red0; -- FALSE
-    <g1>F InsuranceCompany_red0;
-    <g1>F Client_red0;
-    <g1>F Client_red1;
-    <g1>F ServiceProvider_red0;
-    <g1>F ServiceProvider_red1;
-    <g1>F ServiceProvider_red2;
-    <g1>F PSP_red0;
-    <g1>F PSP_red1;
-    <g1>F PSP_red2;
-    <g1>F PSP_red3;
+    EF TestingCompany_red0;
+    EF Expert_red0; -- FALSE
+    EF InsuranceCompany_red0;
+    EF Client_red0;
+    EF Client_red1;
+    EF ServiceProvider_red0;
+    EF ServiceProvider_red1;
+    EF ServiceProvider_red2;
+    EF PSP_red0;
+    EF PSP_red1;
+    EF PSP_red2;
+    EF PSP_red3;
 end Formulae
 

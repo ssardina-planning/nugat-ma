@@ -1,0 +1,143 @@
+Agent Environment
+    Vars:
+        lights : { red, green };
+        train1_waiting : boolean;
+        train2_waiting : boolean;
+        --waiting : { none, train1, train2, train1_train2 };
+        counter : 0..2;
+    end Vars
+    Actions = { enter2, enter1, idle };
+    Protocol:
+        lights = green and train1_waiting = true : { enter1 };
+        lights = green and train2_waiting = true : { enter2 };
+        lights = green and train1_waiting = true and train2_waiting = true : { enter1, enter2 };
+        Other: { idle };
+    end Protocol
+    Evolution:
+        counter = counter + 1 if counter < 2 and lights = red;
+        
+        lights = green and counter = 0 if counter = 2 and lights = red;
+        
+        lights = red and train1_waiting = false if train1_waiting = true and lights = green and Action = enter1 and Train1.Action = enter;
+        lights = red and train2_waiting = false if train2_waiting = true and lights = green and Action = enter2 and Train2.Action = enter;
+        
+        --lights = red and waiting = none if waiting = train2 and lights = green and Action = enter2 and Train2.Action = enter;
+        --lights = red and waiting = train1 if waiting = train1_train2 and lights = green and Action = enter2 and Train2.Action = enter;
+        --lights = red and waiting = train2 if waiting = train1_train2 and lights = green and Action = enter1 and Train1.Action = enter;
+        
+        train1_waiting = true if Action = idle and Train1.Action = signal;-- and lights = green;
+        train2_waiting = true if Action = idle and Train2.Action = signal;-- and lights = green;
+        --waiting = train2 if waiting = none and Action = idle and Train2.Action = signal and lights = green;
+
+        --waiting = train1_train2 if waiting = train1 and Action = idle and Train2.Action = signal and lights = green;
+        --waiting = train1_train2 if waiting = train2 and Action = idle and Train1.Action = signal and lights = green;
+            
+    end Evolution
+end Agent
+
+Agent Train1
+    Vars:
+        state : { wait, tunnel, away };
+        serviced : 0..100;
+        broken : boolean;
+    end Vars
+    Actions = { signal, enter, leave, back, service, break };
+    Protocol:
+        serviced = 100 and (state = away or state = wait) : { service };
+        state = wait and serviced < 100 : { signal, service, enter };
+        
+        -- Trains work correctly if the non-deterministic break action is removed 
+        -- Replace the following lines:
+        state = tunnel and serviced >= 75 and serviced < 100 : { leave, break };
+        state = tunnel and serviced = 100 : { break };
+        -- With:
+        --state = tunnel : { leave };
+        
+        state = away and serviced < 100 : { service, back };
+    end Protocol
+    Evolution:
+        serviced = 0 if Action=service;
+        
+        state = tunnel if broken = true and state = tunnel;
+        state = tunnel and broken = true if state = tunnel and Action = break;
+        state = wait and serviced = serviced + 1 if serviced < 100 and state = wait and Action = signal;
+        state = wait and serviced = serviced + 1 if serviced < 100 and state = away and Action = back;
+        state = tunnel and serviced = serviced + 1 if serviced < 100 and state = wait and Action = enter and Environment.Action = enter1;
+        state = away and serviced = serviced + 1 if serviced < 100 and state = tunnel and Action = leave;
+        
+        -- The only edge case is that the train cannot be serviced in the tunnel
+        state = away and serviced = 100 if serviced = 100 and state = tunnel and Action = leave;
+    end Evolution
+end Agent
+
+Agent Train2
+    Vars:
+        state : { wait, tunnel, away };
+        serviced : 0..100;
+        broken : boolean;
+    end Vars
+    Actions = { signal, enter, leave, back, service, break };
+    Protocol:
+        serviced = 100 and (state = away or state = wait) : { service };
+        state = wait and serviced < 100 : { signal, service, enter };
+        
+        -- Trains work correctly if the non-deterministic break action is removed 
+        -- Replace the following lines:
+        state = tunnel and serviced >= 75 and serviced < 100 : { leave, break };
+        state = tunnel and serviced = 100 : { break };
+        -- With:
+        --state = tunnel : { leave };
+        
+        state = away and serviced < 100 : { service, back };
+    end Protocol
+    Evolution:
+        serviced = 0 if Action=service;
+        state = tunnel if broken = true and state = tunnel;
+        state = tunnel and broken = true if state = tunnel and Action = break;
+        state = wait and serviced = serviced + 1 if serviced < 100 and state = wait and Action = signal;
+        state = wait and serviced = serviced + 1 if serviced < 100 and state = away and Action = back;
+        
+        state = tunnel and serviced = serviced + 1 if serviced < 100 and state = wait and Action = enter and Environment.Action = enter2;
+        
+        -- The only edge case is that the train cannot be serviced in the tunnel
+        state = away and serviced = 100 if serviced = 100 and state = tunnel and Action = leave;
+        state = away and serviced = serviced + 1 if serviced < 100 and state = tunnel and Action = leave;
+        
+    end Evolution
+end Agent
+
+Evaluation
+    train1_in_tunnel if Train1.state = tunnel;
+    train1_unserviced if Train1.serviced = 100;
+    
+    train2_in_tunnel if Train2.state = tunnel;
+    train2_unserviced if Train2.serviced = 100;
+end Evaluation
+
+InitStates
+    Environment.lights = green and
+        Environment.train1_waiting = false and
+        Environment.train2_waiting = false and
+        Environment.counter = 0 and
+        Train1.state = away and
+        Train1.serviced = 0 and
+        Train1.broken = false and
+        Train2.state = away and
+        Train2.serviced = 0 and
+        Train2.broken = false;
+end InitStates
+
+
+Groups
+    g1={Train1};
+    g2={Train2};
+    g12={Train1,Train2};
+end Groups
+
+Formulae
+
+    <g1>F train1_in_tunnel;
+    <g2>F train1_in_tunnel;
+    <g12>F train1_in_tunnel;
+
+end Formulae
