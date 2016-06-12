@@ -62,3 +62,7 @@ STEPS test.ispl
 2.remove groups
 3.change formulae         <g(.*)>F        ATLREACHTARGET ($1)
 4.define target boolean in Env
+
+1. 0..100
+2. comments
+3. define ATL formula results

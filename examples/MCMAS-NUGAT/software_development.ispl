@@ -691,22 +691,22 @@ Formulae
     --E ( ServiceProvider_green U ServiceProvider_end );
     --E ( PSP_green U PSP_end );
 
-    EF HardwareSupplier_green; -- TRUE
-    EF HardwareSupplier_end; -- FALSE
-    EF HardwareSupplier_red0; -- TRUE
-    EF HardwareSupplier_red1; -- FALSE
+    <g1>F HardwareSupplier_green; -- TRUE
+    <g1>F HardwareSupplier_end; -- FALSE
+    <g1>F HardwareSupplier_red0; -- TRUE
+    <g1>F HardwareSupplier_red1; -- FALSE
 
-    EF TestingCompany_red0;
-    EF Expert_red0; -- FALSE
-    EF InsuranceCompany_red0;
-    EF Client_red0;
-    EF Client_red1;
-    EF ServiceProvider_red0;
-    EF ServiceProvider_red1;
-    EF ServiceProvider_red2;
-    EF PSP_red0;
-    EF PSP_red1;
-    EF PSP_red2;
-    EF PSP_red3;
+    <g1>F TestingCompany_red0;
+    <g1>F Expert_red0; -- FALSE
+    <g1>F InsuranceCompany_red0;
+    <g1>F Client_red0;
+    <g1>F Client_red1;
+    <g1>F ServiceProvider_red0;
+    <g1>F ServiceProvider_red1;
+    <g1>F ServiceProvider_red2;
+    <g1>F PSP_red0;
+    <g1>F PSP_red1;
+    <g1>F PSP_red2;
+    <g1>F PSP_red3;
 end Formulae
 

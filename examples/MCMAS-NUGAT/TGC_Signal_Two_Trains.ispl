@@ -52,8 +52,8 @@ Agent Train1
         state = tunnel and serviced = 100 : { break };
         -- With:
         --state = tunnel : { leave };
-        
-        state = away and serviced < 100 : { service, back };
+
+        Other : { service, back };
     end Protocol
     Evolution:
         serviced = 0 if Action=service;
@@ -62,7 +62,7 @@ Agent Train1
         state = tunnel and broken = true if state = tunnel and Action = break;
         state = wait and serviced = serviced + 1 if serviced < 100 and state = wait and Action = signal;
         state = wait and serviced = serviced + 1 if serviced < 100 and state = away and Action = back;
-        state = tunnel and serviced = serviced + 1 if serviced < 100 and state = wait and Action = enter and Environment.Action = enter1;
+        --state = tunnel and serviced = serviced + 1 if serviced < 100 and state = wait and Action = enter and Environment.Action = enter1;
         state = away and serviced = serviced + 1 if serviced < 100 and state = tunnel and Action = leave;
         
         -- The only edge case is that the train cannot be serviced in the tunnel
@@ -87,8 +87,8 @@ Agent Train2
         state = tunnel and serviced = 100 : { break };
         -- With:
         --state = tunnel : { leave };
-        
-        state = away and serviced < 100 : { service, back };
+
+        Other : { service, back };
     end Protocol
     Evolution:
         serviced = 0 if Action=service;

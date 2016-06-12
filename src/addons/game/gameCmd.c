@@ -1453,7 +1453,7 @@ static int CommandGameCheckProperty(NuSMVEnv_ptr env,int argc, char** argv)
 
         if (player_no > 0 ) {
             char str[50];
-            sprintf(str,"PLAYER_%d",player_no);
+            sprintf(str,"%d",player_no);
             player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),str);
         } else {
             nusmv_assert(player_no == 0);
@@ -1840,7 +1840,7 @@ static int CommandGameShowProperty(NuSMVEnv_ptr env,int argc, char** argv)
 
         if (player_no > 0 ) {
             char str[50];
-            sprintf(str,"PLAYER_%d",player_no);
+            sprintf(str,"%d",player_no);
             player_str = UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),str);
         } else {
             nusmv_assert(player_no == 0);

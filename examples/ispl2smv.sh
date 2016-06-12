@@ -22,13 +22,13 @@ cat $1 | sed -E '/Fairness|RedStates|Lobsvars|RedStates/d' \
        | sed -e 's/ or / | /g' | sed -e 's/ and / \& /g' \
        | sed -e 's/ or/ |/g' | sed -e 's/ and/ \&/g' \
        | sed -e 's/true/TRUE/g' | sed -e 's/false/FALSE/g' \
-       | sed -E 's/DinCrypt([0-9])\.([a-zA-Z]*)/\2\1/g' \
+       | sed -E 's/([a-zA-Z]*)([0-9])\.([a-zA-Z]*)/\3\2/g' \
        | sed -E 's/Action([0-9])/actions\1/g' \
        | sed -E '/^(\s*)g(.*)=/d' \
        | sed -E 's/    <g(.*)>F/ATLREACHTARGET (\1)/g' \
        | awk 'BEGIN { cntr = -1 }
-                   /Agent / {cntr++;print cntr," -- ",$2; agents[$2]}
-                   / Action(\s*)=/ {gsub(/ Action/, " actions"cntr" =");}
+                   /Agent / {cntr++;din=":";din2=";";print cntr," -- ",$2; agents[$2]}
+                   / Action(\s*)=/ {gsub(/ Action(\s*)=/, " actions"cntr" =");}
                    / Actions(\s*)=/ {gsub(/ Actions(\s*)=/, "   actions"cntr" :");}
 
                    /case/ { din=": next(actions"cntr") in";din2=";"; }
@@ -39,14 +39,13 @@ cat $1 | sed -E '/Fairness|RedStates|Lobsvars|RedStates/d' \
                    /;/ { gsub(/;/,din2);}
                    /VAR|INIT/ { din2=";" }
 
-                   /payer/ {gsub(/payer/, "payer"cntr);}
-                   /coinleft/ {gsub(/coinleft/, "coinleft"cntr);}
-                   /coinright/ {gsub(/coinright/, "coinright"cntr);}
-                   /seedifferent/ {gsub(/seedifferent/, "seedifferent"cntr);}
+                   /see/ {gsub(/see/, "see"cntr);}
+                   /mem/ {gsub(/mem/, "mem"cntr);}
+                   /othersayknow/ {gsub(/othersayknow/, "othersayknow"cntr);}
 
                    /Evaluation/ {cntr=""}
 
-                   !/(Agent |Actions =| payer | coinleft | coinright | seedifferent | Action(\s*)=)/ { print $0 }
+                   !/(Agent |Actions =| see | mem | othersayknow | Action(\s*)=)/ { print $0 }
 
                '  >> $1.auto.smv
 

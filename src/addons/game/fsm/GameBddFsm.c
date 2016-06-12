@@ -764,7 +764,7 @@ BddStates AtlGameBddFsm_get_strong_backward_image(const GameBddFsm_ptr self,
 
   bdd_ptr tmp, tmp2, constrs[n_players], result, local_result;
   int i;
-  
+
   GAME_BDD_FSM_CHECK_INSTANCE(self);
 
   long time;

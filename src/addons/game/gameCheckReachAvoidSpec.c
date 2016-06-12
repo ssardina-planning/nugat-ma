@@ -426,7 +426,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
     char str[50];
 
     for(i=0;i<n_players;i++) {
-        sprintf(str,"PLAYER_%d",i+1);
+        sprintf(str,"%d",i+1);
         if(UStringMgr_find_string(strings,str) == PropGame_get_player(prop))
             player = i+1;
     }
@@ -504,7 +504,7 @@ Game_RealizabilityStatus Game_UseStrongReachabilityAlgorithm(PropGame_ptr prop,
           expr |= expr_loc;
 
           if(expr_loc)
-              sprintf(str,"PLAYER_%d",i+1);
+              sprintf(str,"%d",i+1);
       }
       /* init is zero */
       if (expr) {
@@ -788,7 +788,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
     char  tmp[50];
 
-    strcpy(tmp,PropGame_get_player(prop)->text); // contain multiple players "PLAYER_1 PLAYER_2 ..."
+    strcpy(tmp,PropGame_get_player(prop)->text); // contain multiple players "1 PLAYER_2 ..."
     int k,count=0;
     char *p;
     int length = strlen(tmp);
@@ -811,7 +811,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
 
     for(i=0;i<n_players;i++) {
         found = 0;
-        sprintf(str,"PLAYER_%d",i+1);
+        sprintf(str,"%d",i+1);
         for(j=0;j<count&&!found;j++)
             if(UStringMgr_find_string(strings,str) == playersProp[j])
                 found = 1;
@@ -898,7 +898,7 @@ Game_RealizabilityStatus Game_UseStrongAtlReachabilityAlgorithm(PropGame_ptr pro
             expr |= expr_loc;
 
             if(expr_loc)
-                sprintf(str,"PLAYER_%d",i+1);
+                sprintf(str,"%d",i+1);
         }
         /* init is zero */
         if (expr) {

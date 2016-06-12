@@ -22,10 +22,10 @@ TRANS
 
 TRANS
     ( seedifferent1=empty & coin1=head & coin9=head ) |
-      ( seedifferent1=empty & coin1=tail & coin9=tail ) -> next(seedifferent1=no);
+      ( seedifferent1=empty & coin1=tail & coin9=tail ) -> next(seedifferent1)=no;
 TRANS
     ( seedifferent1=empty & coin1=head & coin9=tail ) |
-      ( seedifferent1=empty & coin1=tail & coin9=head ) -> next(seedifferent1=yes) ;
+      ( seedifferent1=empty & coin1=tail & coin9=head ) -> next(seedifferent1)=yes ;
 
 2 -- DC2
   VAR
@@ -46,10 +46,10 @@ TRANS
 
 TRANS
     ( seedifferent2=empty & coin2=head & coin1=head ) |
-      ( seedifferent2=empty & coin2=tail & coin1=tail ) -> next(seedifferent2=no);
+      ( seedifferent2=empty & coin2=tail & coin1=tail ) -> next(seedifferent2)=no;
 TRANS
     ( seedifferent2=empty & coin2=head & coin1=tail ) |
-      ( seedifferent2=empty & coin2=tail & coin1=head ) -> next(seedifferent2=yes) ;
+      ( seedifferent2=empty & coin2=tail & coin1=head ) -> next(seedifferent2)=yes ;
 
 3 -- DC3
   VAR
@@ -70,10 +70,10 @@ TRANS
 
 TRANS
     ( seedifferent3=empty & coin3=head & coin2=head ) |
-      ( seedifferent3=empty & coin3=tail & coin2=tail ) -> next(seedifferent3=no);
+      ( seedifferent3=empty & coin3=tail & coin2=tail ) -> next(seedifferent3)=no;
 TRANS
     ( seedifferent3=empty & coin3=head & coin2=tail ) |
-      ( seedifferent3=empty & coin3=tail & coin2=head ) -> next(seedifferent3=yes) ;
+      ( seedifferent3=empty & coin3=tail & coin2=head ) -> next(seedifferent3)=yes ;
 
 4 -- DC4
   VAR
@@ -94,10 +94,10 @@ TRANS
 
 TRANS
     ( seedifferent4=empty & coin4=head & coin3=head ) |
-      ( seedifferent4=empty & coin4=tail & coin3=tail ) -> next(seedifferent4=no);
+      ( seedifferent4=empty & coin4=tail & coin3=tail ) -> next(seedifferent4)=no;
 TRANS
     ( seedifferent4=empty & coin4=head & coin3=tail ) |
-      ( seedifferent4=empty & coin4=tail & coin3=head ) -> next(seedifferent4=yes) ;
+      ( seedifferent4=empty & coin4=tail & coin3=head ) -> next(seedifferent4)=yes ;
 
 5 -- DC5
   VAR
@@ -118,10 +118,10 @@ TRANS
 
 TRANS
     ( seedifferent5=empty & coin5=head & coin4=head ) |
-      ( seedifferent5=empty & coin5=tail & coin4=tail ) -> next(seedifferent5=no);
+      ( seedifferent5=empty & coin5=tail & coin4=tail ) -> next(seedifferent5)=no;
 TRANS
     ( seedifferent5=empty & coin5=head & coin4=tail ) |
-      ( seedifferent5=empty & coin5=tail & coin4=head ) -> next(seedifferent5=yes) ;
+      ( seedifferent5=empty & coin5=tail & coin4=head ) -> next(seedifferent5)=yes ;
 
 6 -- DC6
   VAR
@@ -142,10 +142,10 @@ TRANS
 
 TRANS  
     ( seedifferent6=empty & coin5=head & coin6=head ) |
-      ( seedifferent6=empty & coin5=tail & coin6=tail ) -> next(seedifferent6=no);
+      ( seedifferent6=empty & coin5=tail & coin6=tail ) -> next(seedifferent6)=no;
 TRANS
     ( seedifferent6=empty & coin5=head & coin6=tail ) |
-      ( seedifferent6=empty & coin5=tail & coin6=head ) -> next(seedifferent6=yes) ;
+      ( seedifferent6=empty & coin5=tail & coin6=head ) -> next(seedifferent6)=yes ;
 
 7 -- DC7
   VAR
@@ -166,10 +166,10 @@ TRANS
 
 TRANS
     ( seedifferent7=empty & coin7=head & coin6=head ) |
-      ( seedifferent7=empty & coin7=tail & coin6=tail ) -> next(seedifferent7=no);
+      ( seedifferent7=empty & coin7=tail & coin6=tail ) -> next(seedifferent7)=no;
 TRANS
     ( seedifferent7=empty & coin7=head & coin6=tail ) |
-      ( seedifferent7=empty & coin7=tail & coin6=head ) -> next(seedifferent7=yes) ;
+      ( seedifferent7=empty & coin7=tail & coin6=head ) -> next(seedifferent7)=yes ;
 
 8 -- DC8
   VAR
@@ -190,10 +190,10 @@ TRANS
 
 TRANS
     ( seedifferent8=empty & coin7=head & coin8=head ) |
-      ( seedifferent8=empty & coin7=tail & coin8=tail ) -> next(seedifferent8=no);
+      ( seedifferent8=empty & coin7=tail & coin8=tail ) -> next(seedifferent8)=no;
 TRANS
     ( seedifferent8=empty & coin7=head & coin8=tail ) |
-      ( seedifferent8=empty & coin7=tail & coin8=head ) -> next(seedifferent8=yes) ;
+      ( seedifferent8=empty & coin7=tail & coin8=head ) -> next(seedifferent8)=yes ;
 
 9 -- DC9
   VAR
@@ -214,10 +214,10 @@ TRANS
 
 TRANS
     ( seedifferent9=empty & coin9=head & coin8=head ) |
-      ( seedifferent9=empty & coin9=tail & coin8=tail ) -> next(seedifferent9=no);
+      ( seedifferent9=empty & coin9=tail & coin8=tail ) -> next(seedifferent9)=no;
 TRANS
     ( seedifferent9=empty & coin9=head & coin8=tail ) |
-      ( seedifferent9=empty & coin9=tail & coin8=head ) -> next(seedifferent9=yes) ;
+      ( seedifferent9=empty & coin9=tail & coin8=head ) -> next(seedifferent9)=yes ;
 
 10 -- DC10
   VAR
@@ -238,10 +238,10 @@ TRANS
 
 TRANS
     ( seedifferent10=empty & coin9=head & coin10=head ) |
-      ( seedifferent10=empty & coin9=tail & coin10=tail ) -> next(seedifferent10=no);
+      ( seedifferent10=empty & coin9=tail & coin10=tail ) -> next(seedifferent10)=no;
 TRANS
     ( seedifferent10=empty & coin9=head & coin10=tail ) |
-      ( seedifferent10=empty & coin9=tail & coin10=head ) -> next(seedifferent10=yes) ;
+      ( seedifferent10=empty & coin9=tail & coin10=head ) -> next(seedifferent10)=yes ;
 
 11 -- DC11
   VAR
@@ -262,10 +262,10 @@ TRANS
 
 TRANS
     ( seedifferent11=empty & coin11=head & coin10=head ) |
-      ( seedifferent11=empty & coin11=tail & coin10=tail ) -> next(seedifferent11=no);
+      ( seedifferent11=empty & coin11=tail & coin10=tail ) -> next(seedifferent11)=no;
 TRANS
     ( seedifferent11=empty & coin11=head & coin10=tail ) |
-      ( seedifferent11=empty & coin11=tail & coin10=head ) -> next(seedifferent11=yes) ;
+      ( seedifferent11=empty & coin11=tail & coin10=head ) -> next(seedifferent11)=yes ;
 
 12 -- DC12
   VAR
@@ -286,10 +286,10 @@ TRANS
 
 TRANS
     ( seedifferent12=empty & coin11=head & coin12=head ) |
-      ( seedifferent12=empty & coin11=tail & coin12=tail ) -> next(seedifferent12=no);
+      ( seedifferent12=empty & coin11=tail & coin12=tail ) -> next(seedifferent12)=no;
 TRANS
     ( seedifferent12=empty & coin11=head & coin12=tail ) |
-      ( seedifferent12=empty & coin11=tail & coin12=head ) -> next(seedifferent12=yes) ;
+      ( seedifferent12=empty & coin11=tail & coin12=head ) -> next(seedifferent12)=yes ;
 
 13 -- Environment
   VAR
@@ -6471,7 +6471,7 @@ TRANS
 (  actions1=sE &  actions2=sD &  actions3=sE & actions4=sD
 		& actions5=sD & actions6=sD & actions7=sD & actions8=sD
 		& actions9=sD & actions10=sD & actions11=sE & actions12=sE)
-		) ) -> next(numberofodd=even);
+		) ) -> next(numberofodd)=even;
 
 TRANS
   	    ( ( numberofodd=none) & (
@@ -12619,7 +12619,7 @@ TRANS
 (  actions1=sD &  actions2=sD &  actions3=sE & actions4=sD
 		& actions5=sD & actions6=sD & actions7=sD & actions8=sD
 		& actions9=sD & actions10=sD & actions11=sE & actions12=sE)
-			) ) -> next(numberofodd=odd);
+			) ) -> next(numberofodd)=odd;
 
 TRANS
     ( payer1=yes ) -> next(c1paid);

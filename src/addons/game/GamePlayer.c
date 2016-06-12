@@ -92,7 +92,7 @@ string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
   char str[50];
   int i;
 
-  sprintf(str,"PLAYER_%d",player);
+  sprintf(str,"%d",player);
 
   for(i=0;i<n_players;i++)
     if(player==i+1)
@@ -106,7 +106,7 @@ string_ptr Game_PlayerToStr(NuSMVEnv_ptr env,int player)
   Synopsis    [ Takes a player name as a string and returns it as GamePlayer. ]
 
   Description [ Player names can be constructed only from
-                "PLAYER_ i+1" . ]
+                " i+1" . ]
 
   SideEffects [ ]
 
@@ -119,7 +119,7 @@ int Game_StrToPlayer(NuSMVEnv_ptr env,string_ptr str)
   int i;
 
   for(i=0;i<n_players;i++) {
-    sprintf(tmp,"PLAYER_%d",i+1);
+    sprintf(tmp,"%d",i+1);
     if (UStringMgr_find_string(USTRING_MGR(NuSMVEnv_get_value(env, ENV_STRING_MGR)),tmp) == str) return (i+1);
   }
 

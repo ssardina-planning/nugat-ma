@@ -170,7 +170,7 @@ void Game_CheckGenReactivitySpec(PropGame_ptr prop, gameParams_ptr params)
                              &var);
 
     for(i=0;i<n_players;i++){
-      sprintf(str,"PLAYER_%d",i+1);
+      sprintf(str,"%d",i+1);
       varLists[i] = UStringMgr_find_string(strings,str) == PropGame_get_player(prop) ? cons(nodemgr,var, Nil) : Nil;
     }
 
@@ -258,7 +258,7 @@ void Game_CheckBuchiGameSpec(PropGame_ptr prop, gameParams_ptr params)
                              &var);
 
     for(i=0;i<n_players;i++) {
-      sprintf(str,"PLAYER_%d",i+1);
+      sprintf(str,"%d",i+1);
       varLists[i] = UStringMgr_find_string(strings,str) == PropGame_get_player(prop) ? cons(nodemgr,var, Nil) : Nil;
     }
 
@@ -735,7 +735,7 @@ static boolean game_compute_gen_reactivity(NuSMVEnv_ptr env,
     expr |= expr_loc;
 
     if(expr_loc)
-      sprintf(str,"PLAYER_%d",i+1);
+      sprintf(str,"%d",i+1);
   }
   /* init is zero */
   if (expr) {
@@ -1298,7 +1298,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
   char str[50];
 
   for(i=0;i<n_players;i++) {
-    sprintf(str,"PLAYER_%d",i+1);
+    sprintf(str,"%d",i+1);
     if(UStringMgr_find_string(strings,str) == PropGame_get_player(prop))
       player = i+1;
   }
@@ -1366,7 +1366,7 @@ static boolean game_compute_buchi_game(NuSMVEnv_ptr env,
       expr |= expr_loc;
 
       if(expr_loc)
-        sprintf(str,"PLAYER_%d",i+1);
+        sprintf(str,"%d",i+1);
     }
     /* init is zero */
     if (expr) {

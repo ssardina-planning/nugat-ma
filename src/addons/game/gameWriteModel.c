@@ -132,7 +132,7 @@ void Game_CommandWriteFlatModel(NuSMVEnv_ptr env,FILE* ofileid)
   for(i=0;i<n_players;i++) {
 
     char str[50];
-    sprintf(str,"PLAYER_%d",i+1);
+    sprintf(str,"%d",i+1);
 
     Compile_WriteFlattenFsm(env,
                             ofileid,
@@ -235,7 +235,7 @@ void Game_CommandWriteBooleanModel(NuSMVEnv_ptr env,FILE* ofileid)
   for(i=0;i<n_players;i++) {
     char str[50],strp[50];
     sprintf(str, "layer_of_PLAYER_%d", i + 1);
-    sprintf(strp, "PLAYER_%d", i + 1);
+    sprintf(strp, "%d", i + 1);
 
     layers = NodeList_create();
     NodeList_append(layers, (node_ptr) SymbTable_get_layer(st, str));

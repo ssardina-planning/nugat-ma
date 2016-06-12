@@ -101,13 +101,10 @@ Groups
 end Groups
 
 Formulae
-	--<g1>F Tianjiwin;
-	--<g1>G (<g1> F Tianjiwin);
-	--<g1> (Tianjinotwin U Tianjiwin);
-	
-	-- ADDED
+
 	<g1>F Tianjiwin;
 	<g1>F Kingwin;
 	<g2>F Tianjiwin;
 	<g2>F Kingwin;
+
 end Formulae

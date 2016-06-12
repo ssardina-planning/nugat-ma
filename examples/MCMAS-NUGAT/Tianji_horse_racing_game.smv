@@ -20,27 +20,27 @@ TRANS
     state1=none: next(actions1) in {none};
   esac
 TRANS
-  state1=HML & actions1=Lonly -> next(state1=HM);
+  state1=HML & actions1=Lonly -> next(state1)=HM;
 TRANS
-  state1=HML & actions1=Honly -> next(state1=ML);
+  state1=HML & actions1=Honly -> next(state1)=ML;
 TRANS
-  state1=HML & actions1=Monly -> next(state1=HL);
+  state1=HML & actions1=Monly -> next(state1)=HL;
 TRANS
-  state1=HM & actions1=Monly -> next(state1=Honly);
+  state1=HM & actions1=Monly -> next(state1)=Honly;
 TRANS
-  state1=HM & actions1=Honly -> next(state1=Monly);
+  state1=HM & actions1=Honly -> next(state1)=Monly;
 TRANS
-  state1=HL & actions1=Lonly -> next(state1=Honly);
+  state1=HL & actions1=Lonly -> next(state1)=Honly;
 TRANS
-  state1=HL & actions1=Honly -> next(state1=Lonly);
+  state1=HL & actions1=Honly -> next(state1)=Lonly;
 TRANS
-  state1=ML & actions1=Lonly -> next(state1=Monly);
+  state1=ML & actions1=Lonly -> next(state1)=Monly;
 TRANS
-  state1=ML & actions1=Monly -> next(state1=Lonly);
+  state1=ML & actions1=Monly -> next(state1)=Lonly;
 TRANS
-  (state1=Honly & actions1=Honly) | (state1=Monly & actions1=Monly) | (state1=Lonly & actions1=Lonly) -> next(state1=none);
+  (state1=Honly & actions1=Honly) | (state1=Monly & actions1=Monly) | (state1=Lonly & actions1=Lonly) -> next(state1)=none;
 -- TRANS
-  --state1=none -> next(state1=HML);
+  --state1=none -> next(state1)=HML;
 
 
 2 -- King
@@ -82,14 +82,14 @@ TRANS
     		(actions1=Lonly & actions2=Lonly) |
     		(actions1=Honly & actions2=Monly) |
     		(actions1=Monly & actions2=Lonly) |
-    		(actions1=Honly & actions2=Lonly) -> next(a=a+1);
+    		(actions1=Honly & actions2=Lonly) -> next(a)=a+1;
 TRANS
     (actions1=Honly & actions2=Honly) |
     		(actions1=Monly & actions2=Monly) |
     		(actions1=Lonly & actions2=Lonly) |
     		(actions1=Monly & actions2=Honly) |
     		(actions1=Lonly & actions2=Monly) |
-    		(actions1=Lonly & actions2=Honly) -> next(b=b+1);
+    		(actions1=Lonly & actions2=Honly) -> next(b)=b+1;
     	--a=0 & b=0 if actions1=none & actions2=none;
 TRANS
   a>b & (a+b)=3 -> next(Tianjiwin);

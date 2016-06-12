@@ -1943,7 +1943,7 @@ void game_process_unrealizable_core_with_params(
     fprintf(outstream, "\nLabels of Expressions (label, kind, expression)\n");
 
     for(i=0;i<n_players;i++) {
-      sprintf(str,"PLAYER_%d",i+1);
+      sprintf(str,"%d",i+1);
       strcpy(player_names[i],str);
     }
     player_names[i] = (char*) NULL;
@@ -1953,7 +1953,7 @@ void game_process_unrealizable_core_with_params(
     for (player_name = player_names; *player_name != NULL; ++player_name) {
 
         for(i=0;i<n_players;i++) {
-            sprintf(str,"PLAYER_%d",i+1);
+            sprintf(str,"%d",i+1);
             if(strcmp(*player_name, str) == 0)
                 parameters = self->parameterLists[i];
         }

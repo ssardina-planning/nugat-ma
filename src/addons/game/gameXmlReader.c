@@ -422,7 +422,7 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
 
       /* Create the players\' MODULE (the same as NuGaT parser does). */
       char str[50];
-      sprintf(str,"PLAYER_%d",i+1);
+      sprintf(str,"%d",i+1);
       modules[i] = new_node(nodemgr,MODULE,
                          new_node(nodemgr,MODTYPE,
                                   new_node(nodemgr,ATOM,
@@ -447,7 +447,7 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
 
     for(i=0;i<n_players;i++) {
 
-      fprintf(errstream, "PLAYER_%d\nVAR ",i+1);
+      fprintf(errstream, "%d\nVAR ",i+1);
       //print_sexp(errstream, parseResult->varss[0]);
       fprintf(errstream, "\nINIT :\n");
       print_node(wffprint, errstream, inits[i]);

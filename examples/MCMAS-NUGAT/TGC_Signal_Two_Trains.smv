@@ -1,0 +1,159 @@
+MODULE b1
+
+GAME
+
+1  --  Train1
+    VAR
+        state1 : { wait, tunnel, away };
+        serviced1 : 0..100;
+        broken1 : boolean;
+      actions1 : { signal, enter, leave, back, service, break };
+    INIT
+        state1 = away &
+        serviced1 = 0 &
+        broken1 = FALSE;
+    TRANS
+   case
+        serviced1 = 100 & (state1 = away | state1 = wait) : next(actions1) in { service };
+        state1 = wait & serviced1 < 100 : next(actions1) in { signal, service, enter };
+
+        -- Trains work correctly if the non-deterministic break action is removed
+        -- Replace the following lines: next(actions1) in
+        state1 = tunnel & serviced1 >= 75 & serviced1 < 100 : next(actions1) in { leave, break };
+        state1 = tunnel & serviced1 = 100 : next(actions1) in { break };
+        -- With:
+        --state1 = tunnel : next(actions1) in { leave };
+
+        state1 = away & serviced1 < 100 : next(actions1) in { service, back };
+        TRUE: next(actions1) in { service, back };
+     esac
+  TRANS
+        actions1 = service -> next(serviced1) = 0;
+  TRANS
+        broken1 = TRUE & state1 = tunnel -> next(state1) = tunnel;
+  TRANS
+        state1 = tunnel & actions1 = break -> next(state1) = tunnel & next(broken1) = TRUE;
+  TRANS
+        serviced1 < 100 & state1 = wait & actions1 = signal -> next(state1) = wait & next(serviced1) = serviced1 + 1;
+  TRANS
+        serviced1 < 100 & state1 = away & actions1 = back -> next(state1) = wait & next(serviced1) = serviced1 + 1;
+  TRANS
+        serviced1 < 100 & state1 = wait & actions1 = enter & actions0 = enter1 -> next(state1) = tunnel & next(serviced1) = serviced1 + 1;
+  TRANS
+        serviced1 < 100 & state1 = tunnel & actions1 = leave -> next(state1) = away & next(serviced1) = serviced1 + 1;
+  TRANS
+        -- The only edge case is that the train cannot be serviced1 in the tunnel
+        serviced1 = 100 & state1 = tunnel & actions1 = leave -> next(state1) = away & next(serviced1) = 100;
+
+2  --  Train2
+    VAR
+        state2 : { wait, tunnel, away };
+        serviced2 : 0..100;
+        broken2 : boolean;
+        actions2 : { signal, enter, leave, back, service, break };
+    INIT
+        state2 = away &
+        serviced2 = 0 &
+        broken2 = FALSE;
+    TRANS
+   case
+        serviced2 = 100 & (state2 = away | state2 = wait) : next(actions2) in { service };
+        state2 = wait & serviced2 < 100 : next(actions2) in { signal, service, enter };
+        
+        -- Trains work correctly if the non-deterministic break action is removed 
+        -- Replace the following lines: next(actions2) in
+        state2 = tunnel & serviced2 >= 75 & serviced2 < 100 : next(actions2) in { leave, break };
+        state2 = tunnel & serviced2 = 100 : next(actions2) in { break };
+        -- With: next(actions2) in
+        --state2 = tunnel : next(actions2) in { leave };
+
+        state2 = away & serviced2 < 100 : next(actions2) in { service, back };
+        TRUE: next(actions2) in { service, back };
+     esac
+  TRANS
+        actions2 =service -> next(serviced2) = 0;
+  TRANS
+        broken2 = TRUE & state2 = tunnel -> next(state2) = tunnel;
+  TRANS
+        state2 = tunnel & actions2 = break -> next(state2) = tunnel & next(broken2) = TRUE;
+  TRANS
+        serviced2 < 100 & state2 = wait & actions2 = signal -> next(state2) = wait & next(serviced2) = serviced2 + 1;
+  TRANS
+        serviced2 < 100 & state2 = away & actions2 = back -> next(state2) = wait & next(serviced2) = serviced2 + 1;
+
+  TRANS
+        serviced2 < 100 & state2 = wait & actions2 = enter & actions0 = enter2 -> next(state2) = tunnel & next(serviced2) = serviced2 + 1;
+
+  TRANS
+        -- The only edge case is that the train cannot be serviced2 in the tunnel
+        serviced2 = 100 & state2 = tunnel & actions2 = leave -> next(state2) = away & next(serviced2) = 100;
+  TRANS
+        serviced2 < 100 & state2 = tunnel & actions2 = leave -> next(state2) = away & next(serviced2) = serviced2 + 1;
+
+3  --  Environment
+    VAR
+        lights : { red, green };
+        train1_waiting : boolean;
+        train2_waiting : boolean;
+        --waiting : { none, train1, train2, train1_train2 };
+        counter : 0..2;
+        actions0 : { enter2, enter1, idle };
+
+  INIT
+      lights = green &
+      train1_waiting = FALSE &
+      train2_waiting = FALSE &
+      counter = 0;
+  TRANS
+   case
+        lights = green & train1_waiting = TRUE : next(actions0) in { enter1 };
+        lights = green & train2_waiting = TRUE : next(actions0) in { enter2 };
+        lights = green & train1_waiting = TRUE & train2_waiting = TRUE : next(actions0) in { enter1, enter2 };
+        TRUE: next(actions0) in { idle };
+     esac
+   TRANS
+        counter < 2 & lights = red -> next(counter) = counter + 1;
+   TRANS
+        counter = 2 & lights = red -> next(lights) = green & next(counter) = 0;
+   TRANS
+        train1_waiting = TRUE & lights = green & actions0 = enter1 & actions1 = enter -> next(lights) = red & next(train1_waiting) = FALSE;
+   TRANS
+        train2_waiting = TRUE & lights = green & actions0 = enter2 & actions2 = enter -> next(lights) = red & next(train2_waiting) = FALSE;
+
+  --TRANS waiting = train2 & lights = green & actions0 = enter2 & actions2 = enter -> next(lights) = red & next(waiting) = none;
+  --TRANS waiting = train1_train2 & lights = green & actions0 = enter2 & actions2 = enter -> next(lights) = red & next(waiting) = train1;
+  --TRANS waiting = train1_train2 & lights = green & actions0 = enter1 & actions1 = enter -> next(lights) = red & next(waiting) = train2;
+
+  TRANS
+        actions0 = idle & actions1 = signal -> next(train1_waiting) = TRUE; -- & lights = green
+  TRANS
+        actions0 = idle & actions2 = signal -> next(train2_waiting) = TRUE; -- & lights = green
+  --TRANS waiting = none & actions0 = idle & actions2 = signal & lights = green -> next(--waiting) = train2;
+
+  --TRANS waiting = train1 & actions0 = idle & actions2 = signal & lights = green -> next(--waiting) = train1_train2;
+  --TRANS waiting = train2 & actions0 = idle & actions1 = signal & lights = green -> next(--waiting) = train1_train2;
+
+
+
+4
+  VAR
+
+        train1_in_tunnel : boolean;
+        train1_unserviced : boolean;
+        train2_in_tunnel : boolean;
+        train2_unserviced : boolean;
+
+ TRANS -- Evaluation
+    state1 = tunnel -> next(train1_in_tunnel);
+  TRANS
+    serviced1 = 100 -> next(train1_unserviced);
+  TRANS
+    state2 = tunnel -> next(train2_in_tunnel);
+  TRANS
+    serviced2 = 100 -> next(train2_unserviced);
+
+
+ATLREACHTARGET (1) train1_in_tunnel;
+ATLREACHTARGET (2) train1_in_tunnel;
+ATLREACHTARGET (1,2) train1_in_tunnel;
+

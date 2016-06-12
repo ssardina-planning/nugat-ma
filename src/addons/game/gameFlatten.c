@@ -183,14 +183,14 @@ int Game_CommandFlattenHierarchy(NuSMVEnv_ptr env,boolean expand_bounded_arrays)
      Processing of the parse tree and constructions of all the
      expressions for the state machine(s).
 
-     Note that N special modules "PLAYER_ i+1"  are
+     Note that N special modules " i+1"  are
      actually the players\' declarations.
   */
     node_ptr modules[n_players];
 
   for(i=0;i<n_players;i++) {
     char str[50];
-    sprintf(str,"PLAYER_%d",i+1);
+    sprintf(str,"%d",i+1);
     modules[i] = sym_intern(env,str);
   }
 
@@ -448,14 +448,14 @@ game_flatten_game_hierarchy(NuSMVEnv_ptr env,
 
           if(NODE_TO_INT(car(spec))<1000) {
 
-            sprintf(str2, "PLAYER_%d ", NODE_TO_INT(car(spec)));
+            sprintf(str2, "%d ", NODE_TO_INT(car(spec)));
             strcat(str2,str);
           }
           strcpy(str,str2);
         }
 
       }
-      else sprintf(str, "PLAYER_%d", NODE_TO_INT(car(spec)));
+      else sprintf(str, "%d", NODE_TO_INT(car(spec)));
 
       spec = find_node(nodemgr, GAME_SPEC_WRAPPER,
                        sym_intern(env, str),

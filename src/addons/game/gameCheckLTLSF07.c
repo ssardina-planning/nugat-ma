@@ -1990,7 +1990,7 @@ static void Game_SF07_StructCheckLTLGameSF07_check
 
   for(i=0;i<n_players;i++)
       if (PTR_TO_INT(car(self->curr_goal)) == i + 1)
-          sprintf(str, "PLAYER_%d", i + 1);
+          sprintf(str, "%d", i + 1);
 
   /* Construct property. */
   expr = find_node(nodemgr,GAME_SPEC_WRAPPER,
