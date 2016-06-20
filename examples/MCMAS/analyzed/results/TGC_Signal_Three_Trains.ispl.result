@@ -1,0 +1,31 @@
+************************************************************************
+                       MCMAS v1.2.2
+
+ This software comes with ABSOLUTELY NO WARRANTY, to the extent
+ permitted by applicable law.
+
+ Please check http://vas.doc.ic.ac.uk/tools/mcmas/ for the latest release.
+ Please send any feedback to <mcmas@imperial.ac.uk>
+************************************************************************
+
+Command line: ./examples/MCMAS/mcmas-linux64-1.2.2 ./examples/MCMAS/analyzed/TGC_Signal_Three_Trains.ispl
+
+./examples/MCMAS/analyzed/TGC_Signal_Three_Trains.ispl has been parsed successfully.
+Global syntax checking...
+Done
+Encoding BDD parameters...
+Building partial transition relation...
+Building BDD for initial states...
+Building reachable state space...
+Checking formulae...
+Verifying properties...
+  Formula number 1: (<g1>F train1_in_tunnel), is FALSE in the model
+  Formula number 2: (<g2>F train1_in_tunnel), is FALSE in the model
+  Formula number 3: (<g3>F train1_in_tunnel), is FALSE in the model
+  Formula number 4: (<g12>F train1_in_tunnel), is FALSE in the model
+  Formula number 5: (<g13>F train1_in_tunnel), is FALSE in the model
+  Formula number 6: (<g123>F train1_in_tunnel), is TRUE in the model
+done, 6 formulae successfully read and checked
+execution time = 362.368
+number of reachable states = 3.07171e+09
+BDD memory in use = 93896416

@@ -63,7 +63,7 @@ GAME
         stateHS = HardwareSupplier_12 & actionsHS = HardwareSupplier_Invoke1 & actionsE = Expert_Pick1__1 & actionsC = Client_Pick44__1 & actionsSP = ServiceProvider_getresult__1 & actionsPSP = PSP_Pick231__1 -> next(stateHS) = HardwareSupplier_13;
 	TRANS
         stateHS = HardwareSupplier_6 &  !(failCountHS < 2) & actionsHS = HardwareSupplier_While1 -> next(stateHS) = HardwareSupplier_14;
-        
+
 2  -- agent: TestingCompany
     VAR
         stateTC : { TestingCompany_0, TestingCompany_1, TestingCompany_2, TestingCompany_3, TestingCompany_4, TestingCompany_5, TestingCompany_6, TestingCompany_7, TestingCompany_8, TestingCompany_9 };

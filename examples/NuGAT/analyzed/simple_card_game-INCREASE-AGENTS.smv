@@ -12,7 +12,7 @@ TRANS -- Protocol: 	(play=false):{keep,swap}; 	(play=true):{none}; end Protocol
   case
     play1 = TRUE  : next(actions1) in { keep,swap };
     play1 = FALSE : next(actions1) in { none };
-    TRUE : next(actions1) = none;
+    TRUE : next(actions1) in { none };
   esac
 
 TRANS

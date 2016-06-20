@@ -65,7 +65,7 @@ TRANS
 --TRANS
   --state2=none -> state2=HML;
 
-3 -- Environment (complete)
+3 -- Environment
 VAR
   a: 0..1000;
   b: 0..1000;
@@ -73,9 +73,7 @@ VAR
   Kingwin : boolean;
   Tianjinotwin : boolean;
 INIT
-  a=0;
-INIT
-  b=0;
+  a=0 & b=0;
 TRANS
    (actions1=Honly & actions2=Honly) |
     		(actions1=Monly & actions2=Monly) |

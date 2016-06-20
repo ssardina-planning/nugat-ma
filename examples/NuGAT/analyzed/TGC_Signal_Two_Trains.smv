@@ -59,8 +59,8 @@ GAME
    case
         serviced2 = 100 & (state2 = away | state2 = wait) : next(actions2) in { service };
         state2 = wait & serviced2 < 100 : next(actions2) in { signal, service, enter };
-        
-        -- Trains work correctly if the non-deterministic break action is removed 
+
+        -- Trains work correctly if the non-deterministic break action is removed
         -- Replace the following lines: next(actions2) in
         state2 = tunnel & serviced2 >= 75 & serviced2 < 100 : next(actions2) in { leave, break };
         state2 = tunnel & serviced2 = 100 : next(actions2) in { break };
@@ -90,7 +90,7 @@ GAME
   TRANS
         serviced2 < 100 & state2 = tunnel & actions2 = leave -> next(state2) = away & next(serviced2) = serviced2 + 1;
 
-3  --  Environment
+3  --  Environment ( Agent )
     VAR
         lights : { red, green };
         train1_waiting : boolean;
@@ -135,7 +135,7 @@ GAME
 
 
 
-4
+4 -- Extended Environment
   VAR
 
         train1_in_tunnel : boolean;

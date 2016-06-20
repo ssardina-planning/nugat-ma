@@ -53,6 +53,32 @@ r :  )$1 ( \n
 regexp DC(.*?)\.(.*?)= WITH $2$1=
 
 
+
+===== next( _ ) = _   to   next( _ = _ )
+
+next\((.*?)\)\s*=\s*(.*?)\s*( &|;)
+next($1=$2)$3
+
+
+next\((.*?)\)\s*=\s*(.*?)\s*( &|;)
+next($1=$2)$3
+
+===== next( _ = _ )  to next( _ ) = _
+
+next\((.*?)\s=\s*(.*)\);
+next($1)=$2;
+
+next\((.*?)\s=\s*(.*)\& (.*) = (.*)\);
+next($1)=$2 & next($3)=$4
+
+
+
+
+try equivalence
+
+TRUE : next(actions1) in { none };
+TRUE : next(actions1) =    none;
+
 STEPS
 1. drop environment at the end with last cntr number ( before Evaluation )
 2.
