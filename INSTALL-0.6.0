@@ -1,0 +1,15 @@
+
+
+export NUSMV_BUILD_DIR=/opt/NuSMV-2.6.0/
+export NUSMV_SOURCE_DIR=~/src/NuSMV/NuSMV-2.6.0/NuSMV/
+
+get into build
+delete everything rm -rf *
+
+cmake .. [this will generate the corresponding Makefile]
+
+make
+
+
+
+
