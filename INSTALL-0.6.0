@@ -6,4 +6,6 @@ export NUSMV_SOURCE_DIR=~/src/NuSMV/NuSMV-2.6.0/NuSMV/
 get into build
 delete everything rm -rf *
 
-cmake --build . [this will generate the executable NuGaT]
+cmake .. [this will generate the Makefile]
+
+make
