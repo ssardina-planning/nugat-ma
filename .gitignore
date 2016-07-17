@@ -167,8 +167,8 @@ config.log
 NuGaT
 .externalToolBuilders/
 config.h
-libtool
+#libtool
 
 build/
-configure
+#configure
 
