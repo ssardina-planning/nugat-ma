@@ -207,7 +207,7 @@ struct GameParams_TAG {
   boolean strategy_printout;
   boolean printout_as_dag;
   boolean indented_printout;
-  FILE* strategy_stream;
+  OStream_ptr strategy_stream;
 };
 typedef struct GameParams_TAG GameParams;
 

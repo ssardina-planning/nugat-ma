@@ -297,10 +297,10 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   MasterPrinter_ptr wffprint = MASTER_PRINTER(NuSMVEnv_get_value(env, ENV_WFF_PRINTER));
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
-  FILE* errstream = StreamMgr_get_error_stream(streams);
+  OStream_ptr errostream = StreamMgr_get_error_ostream(streams);
 
     if (cmp_struct_get_read_model(cmps)) {
-    fprintf(errstream,
+    OStream_printf(errostream,
             "A model appears to be already read from file: %s.\n",
             get_input_file(opts));
     return(1);
@@ -384,13 +384,13 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
     
 
 //     /* debugging printing */
-   fprintf(errstream, "\n--PARSED XML FILE:\n");
+   OStream_printf(errostream, "\n--PARSED XML FILE:\n");
 
     for(i=0;i<n_players;i++) {
-       fprintf(errstream, "\n--EXPS[%d]:\n--",i);
-       print_node(wffprint, errstream, parseResult->exps[i]);
+       OStream_printf(errostream, "\n--EXPS[%d]:\n--",i);
+       print_node(wffprint, (FILE*)errostream, parseResult->exps[i]);
     }
-   fprintf(errstream, "\n\n--GUARANTEES:\n--");
+   OStream_printf(errostream, "\n\n--GUARANTEES:\n--");
 
     /* Divide each of the assumptions and guarantees on 3 sets, i.e.,
        initial condition (no temporal operators), transitions relation
@@ -443,21 +443,21 @@ int Game_RatFileToGame(NuSMVEnv_ptr env,const char *filename)
                            tmp[0]);
 
 //     /* debugging printing */
-   fprintf(errstream, "PARSED XML FILE:\nGAME\n\n");
+   OStream_printf(errostream, "PARSED XML FILE:\nGAME\n\n");
 
     for(i=0;i<n_players;i++) {
 
-      fprintf(errstream, "%d\nVAR ",i+1);
-      //print_sexp(errstream, parseResult->varss[0]);
-      fprintf(errstream, "\nINIT :\n");
-      print_node(wffprint, errstream, inits[i]);
-      fprintf(errstream, "\nTRANS :\n");
-      print_node(wffprint, errstream, transs[i]);
+      OStream_printf(errostream, "%d\nVAR ",i+1);
+      //print_sexp((FILE*)errostream, parseResult->varss[0]);
+      OStream_printf(errostream, "\nINIT :\n");
+      print_node(wffprint, (FILE*)errostream, inits[i]);
+      OStream_printf(errostream, "\nTRANS :\n");
+      print_node(wffprint, (FILE*)errostream, transs[i]);
     }
 
-   fprintf(errstream, "\nPROPERTY:\n");
-   print_node(wffprint, errstream, property);
-   fprintf(errstream, "\n\n");
+   OStream_printf(errostream, "\nPROPERTY:\n");
+   print_node(wffprint, (FILE*)errostream, property);
+   OStream_printf(errostream, "\n\n");
   }
 
 

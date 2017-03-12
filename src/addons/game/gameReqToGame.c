@@ -251,7 +251,7 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
   const NodeMgr_ptr nodemgr = NODE_MGR(NuSMVEnv_get_value(env, ENV_NODE_MGR));
   MasterPrinter_ptr wffprint = MASTER_PRINTER(NuSMVEnv_get_value(env, ENV_WFF_PRINTER));
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
-  FILE *errstream = StreamMgr_get_error_stream(streams);
+  OStream_ptr errostream = StreamMgr_get_error_ostream(streams);
 
   for (i = 0; i < n_players; i++)
     reqs[i] = Nil;
@@ -281,8 +281,8 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
       exps[i] = game_normalize_syntactically(exps[i], false);
   
       //    /* debugging printing */
-      fprintf(errstream, "\n-- SIMPLIFIED:");
-      print_node(wffprint, errstream, exps[i]);
+      OStream_printf(errostream, "\n-- SIMPLIFIED:");
+      print_node(wffprint, (FILE*)errostream, exps[i]);
   
       game_property_to_game(env,
                             &exps[i],
@@ -295,7 +295,7 @@ boolean Game_PropertyToGame(NuSMVEnv_ptr env,
     expr &= (Nil == exps[i]);
   }
   
-  fprintf(errstream,"\n\n");/* debugging printing */
+  OStream_printf(errostream,"\n\n");/* debugging printing */
 
   /* All the expressions were processed. */
   nusmv_assert(expr);

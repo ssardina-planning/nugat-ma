@@ -111,11 +111,11 @@ int Game_CommandEncodeVariables(NuSMVEnv_ptr env, char* input_order_file_name)
   ErrorMgr_ptr const errmgr = ERROR_MGR(NuSMVEnv_get_value(env, ENV_ERROR_MANAGER));
   OptsHandler_ptr opts = OPTS_HANDLER(NuSMVEnv_get_value(env, ENV_OPTS_HANDLER));
   StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
-  FILE* errstream = StreamMgr_get_error_stream(streams);
+  OStream_ptr errostream = StreamMgr_get_error_ostream(streams);
   int i;
-
+  
   if (opt_verbose_level_gt(opts, 0)) {
-    fprintf(errstream, "Building variables...");
+    OStream_printf(errostream, "Building variables...");
   }
 
   if (input_order_file_name != NIL(char)) {
@@ -162,7 +162,7 @@ int Game_CommandEncodeVariables(NuSMVEnv_ptr env, char* input_order_file_name)
   }
 
   if (opt_verbose_level_gt(opts, 0)) {
-    fprintf(errstream, "...done\n");
+    OStream_printf(errostream, "...done\n");
   }
 
   return 0;
