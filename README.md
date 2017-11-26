@@ -2,7 +2,7 @@
 
 This is the NuGAT 0.6.5+ version of game solver NuGAT built on top of NuSMV model checker, compatible with NuSMV 2.6.0 and able to handle multi-agents (i.e., more than 2 players)
 
-### BACKGROUND ###
+## BACKGROUND ##
 
 NuGAT (https://es.fbk.eu/technologies/nugat-game-solver) was developed at FBK-ES
 group. The last version was 0.5.0 which worked with NuSMV 2.5.0, but not newer
@@ -24,7 +24,7 @@ Finally, NuGAT was extended in December 2015 to incoporate multi-agent ATL-like
 verificatoin.
 
 
-#### LOG OF MAJOR CHANGES ####
+### LOG OF MAJOR CHANGES ###
 
 These are the instructions to make NuGAT work under Linux.
 
@@ -33,8 +33,7 @@ These are the instructions to make NuGAT work under Linux.
 * March 2015 - Version 0.5.0 (for NuSMV 2.5.0)
 * October 2012 - First install for NuSMV 2.5.0
 
-### INSTALLATION INSTRUCTIONS ###
-
+## INSTALLATION INSTRUCTIONS ##
 
 1. Make sure you have compiled and installed NuSMV 2.6.0 and then set
 the following environmet variables:
@@ -94,7 +93,7 @@ the following environmet variables:
 
 
 
-### USAGE ###
+## USAGE ##
 
 It is assumed that the reader is familiar with concepts of two player games.
 
@@ -116,7 +115,7 @@ force/reach the spec.
 
 Try some examples in examples/
 
-#### TWO PLAYER AGENT ONES (as in original NuGaT): ####
+### TWO PLAYER AGENT ONES (as in original NuGaT): ###
 
     The port of the original NuGaT example (gets same results):
     
@@ -127,7 +126,7 @@ Try some examples in examples/
     ./NuGaT -dynamic ../examples/NuGAT/test-nugat.smv
 
 
-#### MULTI-AGENT ONES: ####
+### MULTI-AGENT ONES: ###
 
 
     ./NuGaT ../examples/atl/simple-atl-01.smv     # just one query
@@ -230,16 +229,7 @@ or interactively:
 
 
 
-
-
-
-
-
-
-
-
-
-### CONTACT ###
+## CONTACT ##
 
 * Sebastian Sardina - ssardina@gmail.com 
 * Lorenzo Dibenedetto - lorenzodibenedetto90@gmail.com
