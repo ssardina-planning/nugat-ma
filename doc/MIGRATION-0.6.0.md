@@ -9,7 +9,7 @@ Nitin Yadav - nitin.yadav@rmit.edu.au
 
 ================================================================================
 
-**Summary** (Draft)
+**Summary**
 
 - changed **libraries paths** in Makefile.in/.am
 
@@ -467,7 +467,7 @@ Nitin Yadav - nitin.yadav@rmit.edu.au
     
         *   added parameter 'outostream'
                 StreamMgr_ptr streams = STREAM_MGR(NuSMVEnv_get_value(env, ENV_STREAM_MANAGER));
-                FILE* outostream = StreamMgr_get_output_ostream(streams);
+                FILE* outstream = StreamMgr_get_output_stream(streams);
         
 57.gameCheckLTLSF07_gba_wring.c
 
@@ -703,7 +703,6 @@ EOF
 
 TODO
 
-    *   IMPORTANT : include generation of input.l and grammar.y in cmake build and run
     *   check outstream usage in "CommandGameShowProperty()" for gameCmd.c file (usage of setter?)
     *   there are 4 stderr in smgameMain.c from the old version of NuGaT ( need to replace with errstream? )
     *   check 'expand_bounded_arrays' overall implementation
