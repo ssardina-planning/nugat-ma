@@ -1,0 +1,55 @@
+MODULE b
+
+GAME
+
+1 -- semaphore
+VAR
+  light : {green, red};
+  counter : 0..2;
+INIT
+  counter = 0 & light = red;		
+TRANS
+	case
+	  counter = 0 : next(counter) = 1 & next(light) = light;
+  	  counter = 1 : next(counter) = 2 & next(light) = light;
+  	  counter = 2 & light = green: next(counter) = 0 & next(light) = red;
+  	  counter = 2 & light = red: next(counter) = 0 & next(light) = green;
+    esac
+
+2 -- car
+VAR
+  at : {before,middle,after};
+  crashed : boolean;
+INIT
+  at = before & !crashed;			
+TRANS
+	case
+	  (action = stop | at = after) : next(at) = at;
+  	  action = move & at = before & light = green : next(at) = middle;
+  	  action = move & at = middle & light = green : next(at) = after;
+	  TRUE : TRUE; --- if we move on red then we do not know where we will be or whether crashed!
+    esac
+TRANS
+	-- if we move on green or we do not move, we keep state crashed (otherwise var crashed is free to take any)
+  (light = green | action = stop) -> next(crashed) = crashed 
+
+
+
+3  -- driver
+VAR
+  action : {stop, move};
+INIT
+  action = stop
+
+
+-- here we show some examples; X means that it is not given the intended result as we expect!
+
+ATLREACHTARGET (2) (counter = 2)-- realizable; counter cycles from 0 to 2
+ATLREACHTARGET (1) (counter = 2)-- realizable; counter cycles from 0 to 2 regardless of agents actions - X
+ATLREACHTARGET (3) (counter = 2)-- realizable; counter cycles from 0 to 2 regardless of agents actions - X
+
+
+ATLREACHTARGET (3) (at = after & !crashed)-- realizable; driver can cross when green at counter 0 - X
+ATLREACHTARGET (3) (at = after & !crashed)-- unrealizable; no way to guaranteee a crash! - X
+
+

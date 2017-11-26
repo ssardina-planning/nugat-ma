@@ -1,0 +1,26 @@
+-- SIMPLE ATL CAR-SEMAPHORE GAME WITH 2 PLAYERS
+MODULE b
+
+GAME
+
+1 -- car
+VAR
+  at : {before,middle,after};
+  action : {stop, move};
+INIT
+  at = before & action = stop;			
+TRANS
+  at = before & action = move -> next(at) = middle
+TRANS
+  at = middle & action = move -> next(at) = after
+TRANS
+  at = after -> next(at) = after
+
+2 -- semaphore
+VAR
+        state2 : { wait, tunnel, away };
+        counta : 0..100;
+
+
+-- can agent 1 alone be at after?
+ATLREACHTARGET (1)   at = after -- unrealizable

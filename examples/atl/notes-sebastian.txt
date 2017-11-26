@@ -1,0 +1,7 @@
+
+
+- if I use a variable called "count" it gives segmentation fault!
+
+- in the script check_altreach_target is not recognized
+
+- seems also the pick_state and simulate is not working either : nusmv or nugat?
