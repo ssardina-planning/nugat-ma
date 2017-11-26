@@ -1,6 +1,8 @@
-# MULTI-AGENT NuGaT Game Solver #
+# MULTI-AGENT NuGaT Game Solver (for NuSMV 2.6.0+)#
 
 This is the NuGAT 0.6.5+ version of game solver NuGAT built on top of NuSMV model checker, compatible with NuSMV 2.6.0 and able to handle multi-agents (i.e., more than 2 players)
+
+Develped as part of Lorenzo Dibenedetto Master's thesis at RMIT University, supervised by A/Prof. Sebastian Sardina and Dr. Nitin Yadav.
 
 ## BACKGROUND ##
 
@@ -50,12 +52,19 @@ the following environmet variables:
 
 2. Some of the packages needed:
 
-        sudo apt-get install libc6-dev g++ pkg-config automake
+        sudo apt-get install libc6-dev g++ pkg-config automake pkgconf icu-config
         sudo apt-get install flex bison 
         sudo apt-get install libreadline5 libreadline6
-        sudo apt-get install libexpat1 libexpat1-dev libxml2-dev liblzma-dev 
+        sudo apt-get install libexpat1 libexpat1-dev libxml2-dev liblzma-dev libicu-dev
         sudo apt-get install ruby-libxml 
         sudo apt-get install libncurses5:amd64 libncurses5:i386 libncurses5-dev:amd64 libncurses5-dev:i386
+
+Note: 
+
+- pkgconf is a program which helps to configure compiler and linker flags for development frameworks. It is similar to pkg-config from freedesktop.org. libpkgconf is a library which provides access to most of pkgconf's functionality, to allow other tooling such as compilers and IDEs to discover and use frameworks configured by pkgconf.
+ 
+- icu-config simplifies the task of building and linking against ICU as compared to manually configuring user makefiles or equivalent. Because icu-config is an executable script, it also solves the problem of locating the ICU libraries and headers, by allowing the system PATH to locate it.
+
 
 3. BUILD WITH CMAKE (newer):
 
