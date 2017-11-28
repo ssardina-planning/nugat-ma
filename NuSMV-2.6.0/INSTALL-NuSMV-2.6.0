@@ -40,13 +40,24 @@ ps2pdf : sudo apt install ghostscript
 
 5. NEW SETP COMPILE:
 
+	cd NuSMV
+	mkdir build
+	cd build
+	
+	cmake -DCMAKE_INSTALL_PREFIX=/opt/NuSMV-2.6.0 -Wno-dev ..
+	OR
 	cmake -D CMAKE_C_COMPILER=gcc -D CMAKE_CXX_COMPILER=c++ .. -DCMAKE_INSTALL_PREFIX=/opt/NuSMV-2.6.0 -Wno-dev
+	
 	make
 	sudo make install
 
 	touch /home/nugat/src/NuSMV-2.6.0/NuSMV/build/doc/prog-man/html
 	sudo make install
 
+
+	more compile options with make help
+
+6. Build documentation: make docs
 
 
 ===================================================================
