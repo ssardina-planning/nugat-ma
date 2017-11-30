@@ -1,13 +1,14 @@
 # MULTI-AGENT NuGaT Game Solver (for NuSMV 2.6.0+)#
 
-This is the NuGAT 0.6.5+ version of game solver NuGAT built on top of NuSMV model checker, compatible with NuSMV 2.6.0 and able to handle multi-agents (i.e., more than 2 players)
+This is the Multi-Player/Agent NuGAT Game Solver 0.6.5+, built as an extension of the original NuGAT Game Solver built on top of NuSMV model checker. 
 
-Develped as part of Lorenzo Dibenedetto Master's thesis at RMIT University, supervised by A/Prof. Sebastian Sardina and Dr. Nitin Yadav.
+This version is compatible with NuSMV 2.6.0 and is able to handle many players/agents with ATL-like reachability/ability specifications: <<A>>p means can group of agents A jointly achieve/reach p.
+
+Develped as part of Lorenzo Dibenedetto Master's thesis, supervised by A/Prof. Sebastian Sardina and Dr. Nitin Yadav at RMIT University (in 2015-2016).
 
 ## OVERVIEW ##
 
-NuGAT (https://es.fbk.eu/technologies/nugat-game-solver) was developed at [FBK-ES](https://es.fbk.eu/)
-group. The last version was 0.5.0 which worked with NuSMV 2.5.0 (but not with newer
+[NuGAT Game Solver](https://es.fbk.eu/technologies/nugat-game-solver) was developed at the [FBK-ES](https://es.fbk.eu/) group. The last version was 0.5.0 which worked with NuSMV 2.5.0 (but not with newer
 versions). 
 
 NuSMV had an important upgrade to 2.5.4.
@@ -21,15 +22,6 @@ Sebastian Sardina and Nitin Yadav: [NuGaT 0.6.0 repo](https://bitbucket.org/nuga
 
 Finally, NuGAT was extended in December 2015 to incoporate multi-agent ATL-like verificatoin.
 
-
-### LOG OF MAJOR CHANGES ###
-
-These are the instructions to make NuGAT work under Linux.
-
-* October 2015 - Version 0.6.0 based on 0.5.4 to work with NuSMV 2.6.0
-* June 2015 - Version 0.5.4 based on 0.5.0 to work with NuSMV 2.5.4
-* March 2015 - Version 0.5.0 (for NuSMV 2.5.0)
-* October 2012 - First install for NuSMV 2.5.0
 
 ## INSTALLATION INSTRUCTIONS ##
 
@@ -45,6 +37,7 @@ the following environmet variables:
         make
         make install
 
+    See extras/NuSMV-2.6.0/ for NuSMV package and install instructions for this version..
 
 2. Some of the packages needed:
 
