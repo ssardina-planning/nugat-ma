@@ -12,18 +12,14 @@ versions.
 
 NuSMV had an important upgrade to 2.5.4.
 
-Then, in June 2015, NuGAT 0.5.0 was ported 0.5.4 to work with NuSMV 2.5.4 by 
-Nitin Yadav and Sebastian Sardina: [NuGaT 0.5.4 repo](https://bitbucket.org/nitinyadav/nugat-0.5.4)
+Then, in June 2015, NuGAT 0.5.0 was ported to 0.5.4 to work with NuSMV 2.5.4 by Nitin Yadav and Sebastian Sardina: [NuGaT 0.5.4 repo](https://bitbucket.org/nitinyadav/nugat-0.5.4)
 
-After that, NuSMV had a major upgrade to version 2.6.0 that changed the whole 
-architecture: [NuSMV 2.6.0 release news](http://nusmv.fbk.eu/announce-NuSMV-2.6.0.txt)
+After that, NuSMV had a major upgrade to version 2.6.0 that changed the whole  architecture: [NuSMV 2.6.0 release news](http://nusmv.fbk.eu/announce-NuSMV-2.6.0.txt)
 
-Then, NuGAT was upgraded, in October 2015, to version 0.6.0 to work with this 
-new NuSMV 2.6.0 as part of Lorenzo Dibenedetto Master's thesis, supervised by
-Sebastian Sardina and Nitin Yadav. 
+Then, NuGAT was upgraded, in October 2015, to version 0.6.0 to work with this new NuSMV 2.6.0 as part of Lorenzo Dibenedetto Master's thesis, supervised by 
+Sebastian Sardina and Nitin Yadav: [NuGaT 0.6.0 repo](https://bitbucket.org/nugaton/nugat-0.6.0)
 
-Finally, NuGAT was extended in December 2015 to incoporate multi-agent ATL-like
-verificatoin.
+Finally, NuGAT was extended in December 2015 to incoporate multi-agent ATL-like verificatoin.
 
 
 ### LOG OF MAJOR CHANGES ###
@@ -236,9 +232,15 @@ or interactively:
     %
 
 
+## COPYRIGHT ##
+
+NuGaT version is licensed under the GNU Lesser General Public License (LGPL in short) as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version. File LGPL-2.1 contains a copy of the License.
+For license information on Lily see its documentation.
 
 
 ## CONTACT ##
+
+This extension of NuGAT to multi-agent was carried out by:
 
 * Sebastian Sardina - ssardina@gmail.com 
 * Lorenzo Dibenedetto - lorenzodibenedetto90@gmail.com
