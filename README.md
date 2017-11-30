@@ -234,7 +234,7 @@ or interactively:
 
 ## COPYRIGHT ##
 
-NuGaT version is licensed under the GNU Lesser General Public License (LGPL in short) as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version. File LGPL-2.1 contains a copy of the License.
+NuGAT version is licensed under the GNU Lesser General Public License (LGPL in short) as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version. File LGPL-2.1 contains a copy of the License.
 For license information on Lily see its documentation.
 
 
