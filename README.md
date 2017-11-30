@@ -246,4 +246,6 @@ This extension of NuGAT to multi-agent was carried out by:
 * Lorenzo Dibenedetto - lorenzodibenedetto90@gmail.com
 * Nitin Yadav - nitin.yadav@rmit.edu.au
 
+For the original authors of NuGAT refer to the [AUTHORS](https://bitbucket.org/nugaton/nugat-ma/src/6df35e49638e8f19d96bc3cb6267b9bc26b84985/AUTHORS?at=master&fileviewer=file-view-default) file in the distribution.
+
 
