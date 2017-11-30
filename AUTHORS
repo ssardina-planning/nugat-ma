@@ -17,6 +17,19 @@ Contributors:
   Marco Pensallorto <pensallorto@fbk.eu>
 
 
+Porting to 0.6.0 to work with NuSMV 2.6.0:
+------------------------------------------
+
+    Sebastian Sardina - ssardina@gmail.com
+    Lorenzo Dibenedetto - lorenzodibenedetto90@gmail.com
+    Nitin Yadav - nitin.yadav@rmit.edu.au
+
+Porting to 0.5.4 to work with NuSMV 2.5.0:
+------------------------------------------
+
+    Sebastian Sardina - ssardina@gmail.com
+    Nitin Yadav - nitin.yadav@rmit.edu.au
+
 
 Migration to NuSMV 2.6.0 and extentions to multi-agent:
 (October 2015 - January 2016)
