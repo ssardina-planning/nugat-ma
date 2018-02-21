@@ -173,3 +173,4 @@ build/
 configure
 
 cmake-build-debug
+cmake-*
