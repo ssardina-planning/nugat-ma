@@ -2,7 +2,7 @@
 
 This is the Multi-Player/Agent NuGAT Game Solver 0.6.5+, built as an extension of the original NuGAT Game Solver built on top of NuSMV model checker. 
 
-This version is compatible with NuSMV 2.6.0 and is able to handle many players/agents with ATL-like reachability/ability specifications: <<A>>p means can group of agents A jointly achieve/reach p.
+This version is compatible with NuSMV 2.6.0 and is able to handle many players/agents with ATL-like reachability/ability specifications: `<<A>>p` means can group of agents A jointly achieve/reach p.
 
 Develped as part of Lorenzo Dibenedetto Master's thesis, supervised by A/Prof. Sebastian Sardina and Dr. Nitin Yadav at RMIT University (in 2015-2016).
 
